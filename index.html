@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cocina Destello</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+/* Layout: panel de cocina. Barra lateral amarilla + contenido sobre crema; tarjetas pastel como etiquetas de caja de galletas. */
+:root{color-scheme:light;
+  --bg:#fff7e6; --surface:#ffffff; --surface-2:#fff0c7; --ink:#3d2417; --ink-2:#7d5d4a; --line:#f1e1bf;
+  --yellow:#ffd23f; --yellow-deep:#f5b700; --on-yellow:#3d2417;
+  --banana:#fdf1b0; --strawberry:#ffc6d1; --lilac:#e6d5f3; --peach:#ffd9c2; --sky:#d3e5ff;
+  --cherry:#cf3f5a; --orange:#c96a12; --blue:#2f5f9e;
+  --shadow:0 10px 30px rgba(120,80,20,.10);
+  --display:'Bagel Fat One','Cooper Black',Georgia,serif;
+  --body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d140f; --surface:#2a1e16; --surface-2:#3a2a19; --ink:#fbecd6; --ink-2:#cfb49e; --line:#4a3627;
+  --banana:#4a3f1c; --strawberry:#57293a; --lilac:#3f3152; --peach:#563624; --sky:#233a58;
+  --cherry:#ff8aa0; --orange:#ffb46b; --blue:#9cc3ff; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1d140f; --surface:#2a1e16; --surface-2:#3a2a19; --ink:#fbecd6; --ink-2:#cfb49e; --line:#4a3627;
+  --banana:#4a3f1c; --strawberry:#57293a; --lilac:#3f3152; --peach:#563624; --sky:#233a58;
+  --cherry:#ff8aa0; --orange:#ffb46b; --blue:#9cc3ff; --shadow:0 10px 30px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.05;margin:0;text-wrap:balance;letter-spacing:.2px}
+h1{font-size:clamp(28px,4vw,40px)}
+h2{font-size:22px}
+h3{font-size:18px}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-2)}
+.small{font-size:13px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+:focus-visible{outline:3px solid var(--yellow-deep);outline-offset:2px;border-radius:6px}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+.side{background:var(--yellow);color:var(--on-yellow);padding:22px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand b{font-family:var(--display);font-weight:400;font-size:26px;line-height:1}
+.brand small{display:block;font-size:12px;font-weight:600;opacity:.75}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;color:var(--on-yellow);text-decoration:none;font-weight:600;white-space:nowrap}
+.nav a:hover{background:rgba(255,255,255,.35)}
+.nav a.on{background:#fffaf0;box-shadow:0 4px 0 rgba(61,36,23,.12)}
+.nav svg{width:20px;height:20px;flex:none}
+.side .foot{margin-top:auto;font-size:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.4)}
+.side .foot button{margin-top:8px}
+.main{min-width:0;padding-inline:clamp(16px,3vw,36px);padding-block:22px 60px}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;margin-bottom:22px}
+.top .who{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--strawberry);color:var(--ink);flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:600;background:var(--surface);border:1px solid var(--line);white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--yellow-deep);display:inline-block}
+.head{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.head p{margin-top:6px;max-width:62ch}
+
+/* ---------- Building blocks ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;background:var(--ink);color:var(--bg);white-space:nowrap;text-decoration:none}
+.btn:hover{transform:translateY(-1px)}
+.btn.yellow{background:var(--yellow);color:var(--on-yellow);box-shadow:0 4px 0 var(--yellow-deep)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.soft{background:var(--surface-2);color:var(--ink)}
+.btn.danger{background:var(--cherry);color:#fff}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn svg{width:18px;height:18px}
+.iconbtn{border:0;background:transparent;cursor:pointer;padding:6px;border-radius:10px;color:var(--ink-2)}
+.iconbtn:hover{background:var(--surface-2);color:var(--ink)}
+.iconbtn svg{width:18px;height:18px;display:block}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.btn:hover{transform:none}}
+
+.card{background:var(--surface);border-radius:22px;padding:20px;border:1px solid var(--line)}
+.card h2,.card h3{margin-bottom:12px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr))}
+@media (max-width:560px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .v{font-size:22px}.top .pill.num{display:none}}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.c-banana{background:var(--banana);border-color:transparent}
+.c-strawberry{background:var(--strawberry);border-color:transparent}
+.c-lilac{background:var(--lilac);border-color:transparent}
+.c-peach{background:var(--peach);border-color:transparent}
+.c-sky{background:var(--sky);border-color:transparent}
+.c-yellow{background:var(--yellow);color:var(--on-yellow);border-color:transparent}
+
+.kpi{display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi .v{font-size:30px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .l{font-size:13px;font-weight:600}
+.kpi .s{font-size:12px;opacity:.8}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--surface-2);color:var(--ink)}
+.chip.ok{background:var(--sky);color:var(--blue)}
+.chip.warn{background:var(--peach);color:var(--orange)}
+.chip.bad{background:var(--strawberry);color:var(--cherry)}
+.chip.lilac{background:var(--lilac)}
+.chip.banana{background:var(--banana)}
+.chip.dark{background:var(--ink);color:var(--bg)}
+
+.tbl{overflow-x:auto;border-radius:18px;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);text-align:left;padding:12px 14px;background:var(--surface-2);font-weight:700}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:middle}
+td.r,th.r{text-align:right}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--bg)}
+.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden;min-width:80px}
+.bar>span{display:block;height:100%;border-radius:99px;background:var(--yellow-deep)}
+.bar.bad>span{background:var(--cherry)}
+.bar.warn>span{background:var(--orange)}
+
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.tabs button{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.search{flex:1;min-width:180px;max-width:320px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 16px}
+
+.list{display:flex;flex-direction:column}
+.list .it{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px dashed var(--line)}
+.list .it:first-child{border-top:0;padding-top:0}
+.list .it>div{min-width:0}
+.empty{padding:28px;text-align:center;color:var(--ink-2);border:2px dashed var(--line);border-radius:18px}
+
+/* cookie illustration */
+.cookie{width:var(--s,54px);height:var(--s,54px);border-radius:50%;flex:none;position:relative;
+  background:radial-gradient(circle at 30% 30%,#5a3220 0 5%,transparent 6%),radial-gradient(circle at 64% 40%,#5a3220 0 6%,transparent 7%),radial-gradient(circle at 42% 68%,#5a3220 0 5%,transparent 6%),radial-gradient(circle at 72% 72%,#5a3220 0 4%,transparent 5%),radial-gradient(circle at 50% 50%,#e9b86e 0 58%,#d79a4a 70%);box-shadow:inset -4px -6px 0 rgba(0,0,0,.08)}
+.cookie.choco{background:radial-gradient(circle at 30% 34%,#f5e6d0 0 5%,transparent 6%),radial-gradient(circle at 62% 42%,#2c160c 0 6%,transparent 7%),radial-gradient(circle at 44% 70%,#f5e6d0 0 4%,transparent 5%),radial-gradient(circle at 50% 50%,#6b3a22 0 60%,#4e2817 72%)}
+.cookie.roll{background:repeating-radial-gradient(circle at 50% 50%,#f4d6a8 0 6%,#c98642 6% 10%),#f4d6a8}
+.cookie.bread{border-radius:46% 46% 40% 40%;background:radial-gradient(circle at 50% 30%,#f3c27d,#c9853b 75%)}
+.cookie.pump{background:radial-gradient(circle at 50% 50%,#ff9f43 0 60%,#e77f1f 72%)}
+.cookie.star{background:radial-gradient(circle at 50% 50%,#fff2b3 0 55%,#f2c94c 72%)}
+
+/* ---------- Modal ---------- */
+.veil{position:fixed;inset:0;background:rgba(40,22,10,.45);display:grid;place-items:center;padding:16px;z-index:50;overflow:auto}
+.modal{background:var(--bg);border-radius:26px;width:min(640px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:var(--shadow)}
+.modal header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 24px 6px;position:sticky;top:0;background:var(--bg);z-index:1}
+.modal .body{padding:10px 24px 8px;display:flex;flex-direction:column;gap:14px}
+.modal footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;padding:14px 24px 22px;position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:700;min-width:0}
+label.f span.h{font-weight:400;color:var(--ink-2);font-size:12px}
+.f input,.f select,.f textarea,.line input,.line select{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 12px;width:100%;min-width:0}
+.f textarea{min-height:70px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus,.line input:focus,.line select:focus{outline:none;border-color:var(--yellow-deep);box-shadow:0 0 0 3px rgba(245,183,0,.25)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:inline-block;padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:13px}
+.seg input:checked+span{background:var(--yellow);color:var(--on-yellow);border-color:var(--yellow-deep)}
+.seg input:focus-visible+span{outline:3px solid var(--yellow-deep)}
+.lines{display:flex;flex-direction:column;gap:8px}
+.line{display:grid;gap:8px;align-items:center;grid-template-columns:minmax(0,1fr) 110px 36px}
+.line.k-purchase{grid-template-columns:minmax(0,1fr) 90px 80px 120px 36px}
+.line .u{font-size:12px;color:var(--ink-2)}
+@media (max-width:560px){.line.k-purchase{grid-template-columns:1fr 1fr 36px}.line.k-purchase>:first-child{grid-column:1/-1}}
+.callout{border-radius:16px;padding:12px 14px;font-size:14px}
+.err{color:var(--cherry);font-size:13px;font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;font-weight:600;z-index:60;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+
+/* ---------- Login ---------- */
+.login{min-height:100%;display:grid;grid-template-columns:1.1fr 1fr}
+.login .art{background:var(--yellow);color:var(--on-yellow);padding:clamp(24px,5vw,64px);display:flex;flex-direction:column;justify-content:space-between;gap:30px;position:relative;overflow:hidden}
+.login .art h1{font-size:clamp(46px,8vw,96px);line-height:.92}
+.login .art p{font-size:18px;max-width:34ch;margin-top:14px}
+.plate{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.plate .cookie{--s:84px}
+.login .form{display:grid;place-items:center;padding:32px 16px}
+.login form{width:min(380px,100%);display:flex;flex-direction:column;gap:14px}
+
+/* ---------- Charts ---------- */
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--ink-2);font-size:11px;font-family:var(--body)}
+.chart .lbl{fill:var(--ink);font-weight:700}
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hbar{display:grid;grid-template-columns:minmax(0,1fr) 60px;gap:4px 10px;align-items:center}
+.hbar .t{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar .bar{grid-column:1/-1;height:12px}
+.hbar .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+.check{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px dashed var(--line)}
+.check:first-child{border-top:0}
+.check input{width:20px;height:20px;accent-color:var(--yellow-deep)}
+.check.done span{text-decoration:line-through;color:var(--ink-2)}
+
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{min-width:0}
+  .pill{white-space:normal}
+  .top .who>div:first-child{display:none}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);height:auto;z-index:20;padding:12px 16px;gap:10px;flex-direction:column;overflow:visible}
+  .brand b{font-size:22px}
+  .nav{flex-direction:row;overflow-x:auto;gap:4px;margin-inline:-16px;padding-inline:16px;scrollbar-width:none}
+  .nav a{padding:7px 12px}
+  .side .foot{display:none}
+  .login{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+<div id="modal-root"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ================= Datos de ejemplo ================= */
+const KEY = 'destello-prototipo-v1';
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const addDays = (s,n) => { const d = new Date(s+'T12:00:00'); d.setDate(d.getDate()+n); return iso(d); };
+const TODAY = iso(new Date());
+const uid = p => p + Math.random().toString(36).slice(2,8);
+
+function seed(){
+  return {
+    session:false,
+    settings:{ name:'Cocina Destello', whatsapp:'300 555 1020', cutoff:'12:00', closed:[0], margin:50,
+      accounts:[{id:'a1',bank:'Bancolombia',type:'Ahorros',number:'123-456789-01',owner:'Cocina Destello SAS'},{id:'a2',bank:'Nequi',type:'Celular',number:'300 555 1020',owner:'Cocina Destello'}],
+      couriers:[{id:'r1',name:'Don Jairo',phone:'311 402 8899'},{id:'r2',name:'Marcela Ruiz',phone:'316 220 1144'},{id:'r3',name:'Esteban Gil',phone:'320 908 3321'}],
+      team:[{id:'t1',name:'Administración',role:'Dueña del negocio',email:'dueno@destello.demo'},{id:'t2',name:'Cocina',role:'Producción',email:'cocina@destello.demo'}]},
+    suppliers:[
+      {id:'p1',name:'Molinos del Valle',contact:'Andrea Rojas',phone:'310 456 7788',email:'pedidos@molinosdelvalle.co',address:'Cra 15 # 45-20, Bogotá',notes:'Entrega martes y viernes. Pedido mínimo 25 kg.',color:'banana'},
+      {id:'p2',name:'Lácteos La Pradera',contact:'Camilo Ortiz',phone:'315 220 3344',email:'camilo@lapradera.co',address:'Calle 80 # 22-10',notes:'Mantequilla sin sal en bloque de 1 kg.',color:'sky'},
+      {id:'p3',name:'Chocolates Andinos',contact:'Laura Méndez',phone:'301 998 1122',email:'laura@chocandinos.co',address:'Av. 68 # 13-50',notes:'Chips de chocolate 54 %. Descuento por 5 kg.',color:'peach'},
+      {id:'p4',name:'Empaques Dulce Caja',contact:'Sofía Pardo',phone:'320 777 6655',email:'ventas@dulcecaja.co',address:'Calle 13 # 68-90',notes:'Cajas kraft con ventana. Stickers personalizados en 5 días.',color:'strawberry'},
+      {id:'p5',name:'Especias de Oriente',contact:'Julián Vargas',phone:'318 333 4455',email:'julian@especiasoriente.co',address:'Plaza de Paloquemao, local 112',notes:'Canela de Ceilán molida.',color:'lilac'}
+    ],
+    supplies:[
+      {id:'harina',name:'Harina de trigo',kind:'mass',cat:'ing',stock:12000,min:5000,cost:3.2,sup:'p1'},
+      {id:'azucar',name:'Azúcar blanca',kind:'mass',cat:'ing',stock:8000,min:3000,cost:3.8,sup:'p1'},
+      {id:'morena',name:'Azúcar morena',kind:'mass',cat:'ing',stock:3000,min:2000,cost:4.5,sup:'p1'},
+      {id:'mantequilla',name:'Mantequilla sin sal',kind:'mass',cat:'ing',stock:3400,min:3000,cost:28,sup:'p2'},
+      {id:'huevos',name:'Huevos',kind:'unit',cat:'ing',stock:60,min:30,cost:600,sup:'p2'},
+      {id:'leche',name:'Leche entera',kind:'vol',cat:'ing',stock:4000,min:2000,cost:4.2,sup:'p2'},
+      {id:'queso',name:'Queso crema',kind:'mass',cat:'ing',stock:1500,min:1000,cost:22,sup:'p2'},
+      {id:'chocolate',name:'Chips de chocolate 54 %',kind:'mass',cat:'ing',stock:1800,min:2000,cost:38,sup:'p3'},
+      {id:'cacao',name:'Cacao en polvo',kind:'mass',cat:'ing',stock:900,min:500,cost:30,sup:'p3'},
+      {id:'canela',name:'Canela molida',kind:'mass',cat:'ing',stock:240,min:300,cost:60,sup:'p5'},
+      {id:'vainilla',name:'Esencia de vainilla',kind:'vol',cat:'ing',stock:400,min:100,cost:25,sup:'p5'},
+      {id:'levadura',name:'Levadura seca',kind:'mass',cat:'ing',stock:500,min:200,cost:25,sup:'p1'},
+      {id:'caja9',name:'Caja kraft x9',kind:'unit',cat:'emp',stock:40,min:20,cost:900,sup:'p4'},
+      {id:'caja3',name:'Caja rollos x3',kind:'unit',cat:'emp',stock:12,min:15,cost:750,sup:'p4'},
+      {id:'caja6',name:'Caja rollos x6',kind:'unit',cat:'emp',stock:30,min:15,cost:800,sup:'p4'},
+      {id:'sticker',name:'Sticker Destello',kind:'unit',cat:'emp',stock:300,min:100,cost:60,sup:'p4'},
+      {id:'capacillo',name:'Capacillo',kind:'unit',cat:'emp',stock:500,min:200,cost:12,sup:'p4'}
+    ],
+    purchases:[
+      {id:'c1',date:addDays(TODAY,-6),sup:'p1',lines:[{supply:'harina',qty:25000,total:80000},{supply:'azucar',qty:10000,total:38000}]},
+      {id:'c2',date:addDays(TODAY,-4),sup:'p3',lines:[{supply:'chocolate',qty:3000,total:114000}]},
+      {id:'c3',date:addDays(TODAY,-2),sup:'p2',lines:[{supply:'mantequilla',qty:5000,total:140000},{supply:'huevos',qty:60,total:36000}]}
+    ],
+    recipes:[
+      {id:'r-chips',name:'Masa de galleta con chips',yield:2400,color:'banana',items:[{supply:'harina',qty:1000},{supply:'mantequilla',qty:500},{supply:'morena',qty:400},{supply:'chocolate',qty:400},{supply:'huevos',qty:4},{supply:'vainilla',qty:10}]},
+      {id:'r-doble',name:'Masa de doble chocolate',yield:2200,color:'peach',items:[{supply:'harina',qty:900},{supply:'mantequilla',qty:450},{supply:'azucar',qty:400},{supply:'cacao',qty:150},{supply:'chocolate',qty:300},{supply:'huevos',qty:4}]},
+      {id:'r-rollos',name:'Masa de rollos de canela',yield:1800,color:'strawberry',items:[{supply:'harina',qty:1000},{supply:'leche',qty:400},{supply:'mantequilla',qty:200},{supply:'azucar',qty:150},{supply:'levadura',qty:20},{supply:'huevos',qty:3},{supply:'canela',qty:60}]},
+      {id:'r-brioche',name:'Masa de pan brioche',yield:1500,color:'lilac',items:[{supply:'harina',qty:900},{supply:'mantequilla',qty:250},{supply:'leche',qty:250},{supply:'huevos',qty:5},{supply:'azucar',qty:100},{supply:'levadura',qty:15}]}
+    ],
+    lots:[
+      {id:'l1',recipe:'r-chips',grams:2400,left:1650,date:addDays(TODAY,-1),expires:addDays(TODAY,3)},
+      {id:'l2',recipe:'r-doble',grams:2200,left:600,date:addDays(TODAY,-2),expires:addDays(TODAY,2)}
+    ],
+    products:[
+      {id:'galleta',name:'Galleta con chips',mode:'lote',recipe:'r-chips',grams:20,look:'',extras:[{supply:'capacillo',qty:1}]},
+      {id:'doble',name:'Galleta doble chocolate',mode:'lote',recipe:'r-doble',grams:20,look:'choco',extras:[{supply:'capacillo',qty:1}]},
+      {id:'rollo',name:'Rollo de canela',mode:'pedido',recipe:'r-rollos',grams:120,look:'roll',extras:[{supply:'queso',qty:25}]},
+      {id:'brioche',name:'Pan brioche',mode:'pedido',recipe:'r-brioche',grams:400,look:'bread',extras:[]}
+    ],
+    presentations:[
+      {id:'x9chips',name:'Caja x9 galletas con chips',price:20000,active:true,items:[{product:'galleta',units:9}],pack:[{supply:'caja9',qty:1},{supply:'sticker',qty:1}]},
+      {id:'x9doble',name:'Caja x9 doble chocolate',price:22000,active:true,items:[{product:'doble',units:9}],pack:[{supply:'caja9',qty:1},{supply:'sticker',qty:1}]},
+      {id:'surtida',name:'Caja surtida x9',price:21000,active:true,items:[{product:'galleta',units:5},{product:'doble',units:4}],pack:[{supply:'caja9',qty:1},{supply:'sticker',qty:1}]},
+      {id:'x3rollos',name:'Caja x3 rollos de canela',price:18000,active:true,items:[{product:'rollo',units:3}],pack:[{supply:'caja3',qty:1},{supply:'sticker',qty:1}]},
+      {id:'x6rollos',name:'Caja x6 rollos de canela',price:34000,active:true,items:[{product:'rollo',units:6}],pack:[{supply:'caja6',qty:1},{supply:'sticker',qty:1}]},
+      {id:'rollo1',name:'Rollo de canela suelto',price:3000,active:true,items:[{product:'rollo',units:1}],pack:[{supply:'sticker',qty:1}]},
+      {id:'brioche1',name:'Pan brioche',price:12000,active:true,items:[{product:'brioche',units:1}],pack:[{supply:'sticker',qty:1}]},
+      {id:'brioche2x1',name:'Promo 2x1 pan brioche',price:7000,active:true,items:[{product:'brioche',units:2}],pack:[{supply:'sticker',qty:2}]},
+      {id:'halloween',name:'Caja Halloween x9',price:25000,active:true,items:[{product:'doble',units:5},{product:'galleta',units:4}],pack:[{supply:'caja9',qty:1},{supply:'sticker',qty:1}]}
+    ],
+    orders:[
+      {id:'o1',n:1041,customer:'Valentina Gómez',phone:'312 555 0198',address:'Cra 7 # 72-14, apto 502',date:TODAY,prod:TODAY,lines:[{pres:'x9chips',qty:2}],delivery:'domicilio',pay:'transferencia',fee:6000,status:'pendiente',produced:false},
+      {id:'o2',n:1042,customer:'Andrés Molina',phone:'300 812 4410',address:'Calle 93 # 11-30',date:TODAY,prod:TODAY,lines:[{pres:'x3rollos',qty:1},{pres:'surtida',qty:1}],delivery:'domicilio',pay:'efectivo',fee:5000,status:'pendiente',produced:false},
+      {id:'o3',n:1043,customer:'Daniela Ríos',phone:'318 220 7733',address:'',date:TODAY,prod:TODAY,lines:[{pres:'x6rollos',qty:1}],delivery:'recoge',pay:'transferencia',fee:0,status:'pendiente',produced:false},
+      {id:'o4',n:1044,customer:'Felipe Castro',phone:'301 777 9012',address:'Av. 19 # 104-60, torre 2',date:TODAY,prod:TODAY,lines:[{pres:'halloween',qty:2},{pres:'brioche1',qty:1}],delivery:'domicilio',pay:'transferencia',fee:7000,status:'pendiente',produced:false},
+      {id:'o5',n:1039,customer:'Mariana Peña',phone:'314 090 3366',address:'Calle 53 # 24-08',date:addDays(TODAY,-1),prod:addDays(TODAY,-1),lines:[{pres:'x9doble',qty:1}],delivery:'domicilio',pay:'efectivo',fee:5000,status:'camino',courier:'r1',produced:true},
+      {id:'o6',n:1038,customer:'Sebastián Duarte',phone:'305 600 1245',address:'Cra 50 # 98-21',date:addDays(TODAY,-1),prod:addDays(TODAY,-1),lines:[{pres:'x9chips',qty:1},{pres:'rollo1',qty:2}],delivery:'domicilio',pay:'transferencia',fee:6000,status:'entregado',courier:'r2',produced:true}
+    ],
+    nextOrder:1045,
+    editions:[
+      {id:'e1',name:'Halloween de Destello',desc:'Galletas con calabaza y doble chocolate en caja naranja.',start:addDays(TODAY,-5),end:'2026-10-30',cap:80,sold:23,pres:['halloween'],look:'pump',color:'peach'},
+      {id:'e2',name:'Navidad dulce',desc:'Caja de regalo con galletas de jengibre y rollos.',start:'2026-12-01',end:'2026-12-22',cap:150,sold:0,pres:['surtida','x6rollos'],look:'star',color:'lilac'}
+    ],
+    history:{ weeks:[620000,710000,680000,820000,760000,905000,870000,960000],
+      units:{x9chips:48,x9doble:31,surtida:22,x3rollos:36,x6rollos:14,rollo1:9,brioche1:7,brioche2x1:5,halloween:21} },
+    seenProd:{}
+  };
+}
+
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) || seed(); } catch(e) { S = seed(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ================= Utilidades ================= */
+const $ = (s,el=document) => el.querySelector(s);
+const $$ = (s,el=document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtN = (n,d=0) => Number(n||0).toLocaleString('es-CO',{maximumFractionDigits:d});
+const money = n => '$ ' + fmtN(Math.round(n));
+const byId = (arr,id) => arr.find(x => x.id === id);
+const sup = id => byId(S.supplies,id);
+const unitOf = k => k==='mass'?'g':k==='vol'?'ml':'und';
+function qty(n,kind){
+  n = Number(n)||0;
+  if(kind==='mass') return Math.abs(n)>=1000 ? fmtN(n/1000,2)+' kg' : fmtN(n)+' g';
+  if(kind==='vol') return Math.abs(n)>=1000 ? fmtN(n/1000,2)+' l' : fmtN(n)+' ml';
+  return fmtN(n,1)+' und';
+}
+const grams = n => qty(n,'mass');
+const costLabel = s => s.kind==='unit' ? money(s.cost)+' / und' : money(s.cost*1000)+(s.kind==='mass'?' / kg':' / l');
+const MONTHS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const DAYS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function dateLabel(s){ if(s===TODAY) return 'Hoy'; if(s===addDays(TODAY,1)) return 'Mañana'; if(s===addDays(TODAY,-1)) return 'Ayer'; const d=new Date(s+'T12:00:00'); return d.getDate()+' '+MONTHS[d.getMonth()]; }
+function longDate(s){ const d=new Date(s+'T12:00:00'); return DAYS[d.getDay()]+' '+d.getDate()+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][d.getMonth()]; }
+function initials(n){ return String(n).split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast.h); toast.h=setTimeout(()=>t.hidden=true,2600); }
+
+/* ================= Reglas de cocina ================= */
+function recipeCostPerG(r){ return r.items.reduce((a,i)=>a+i.qty*(sup(i.supply)?.cost||0),0)/r.yield; }
+function productCost(p){
+  const r = byId(S.recipes,p.recipe);
+  const dough = r ? p.grams*recipeCostPerG(r) : 0;
+  return dough + (p.extras||[]).reduce((a,e)=>a+e.qty*(sup(e.supply)?.cost||0),0);
+}
+function presCost(pr){
+  return pr.items.reduce((a,i)=>a+i.units*productCost(byId(S.products,i.product)||{extras:[]}),0)
+       + pr.pack.reduce((a,k)=>a+k.qty*(sup(k.supply)?.cost||0),0);
+}
+function presMargin(pr){ const c=presCost(pr); return pr.price ? (pr.price-c)/pr.price : 0; }
+function presHealth(pr){
+  const c=presCost(pr), m=presMargin(pr), target=S.settings.margin/100;
+  if(pr.price < c) return {k:'bad',t:'Pierde dinero',sug:Math.ceil(c/(1-target)/500)*500};
+  if(m < target) return {k:'warn',t:'Margen bajo',sug:Math.ceil(c/(1-target)/500)*500};
+  return {k:'ok',t:'Margen sano',sug:null};
+}
+function orderSubtotal(o){ return o.lines.reduce((a,l)=>a+l.qty*(byId(S.presentations,l.pres)?.price||0),0); }
+function orderTotal(o){ return orderSubtotal(o)+(Number(o.fee)||0); }
+function lotGrams(recipeId){ return S.lots.filter(l=>l.recipe===recipeId).reduce((a,l)=>a+l.left,0); }
+
+/* Requisitos de una lista de líneas {pres,qty} */
+function requirements(lines){
+  const dough={}, direct={}, units={}, boxes={};
+  for(const l of lines){
+    const pr=byId(S.presentations,l.pres); if(!pr) continue;
+    boxes[pr.id]=(boxes[pr.id]||0)+l.qty;
+    for(const k of pr.pack) direct[k.supply]=(direct[k.supply]||0)+k.qty*l.qty;
+    for(const it of pr.items){
+      const p=byId(S.products,it.product); if(!p) continue;
+      const u=it.units*l.qty; units[p.id]=(units[p.id]||0)+u;
+      dough[p.recipe]=(dough[p.recipe]||0)+u*p.grams;
+      for(const e of p.extras||[]) direct[e.supply]=(direct[e.supply]||0)+e.qty*u;
+    }
+  }
+  return {dough,direct,units,boxes};
+}
+/* Plan: usa primero masa de lotes (solo productos con lote), lo demás se hace con insumos */
+function plan(lines){
+  const req=requirements(lines), need={...req.direct}, doughRows=[];
+  for(const [rid,g] of Object.entries(req.dough)){
+    const r=byId(S.recipes,rid); if(!r) continue;
+    const usesLots = S.products.some(p=>p.recipe===rid && p.mode==='lote');
+    const fromLots = usesLots ? Math.min(lotGrams(rid),g) : 0;
+    const toMake = g-fromLots;
+    doughRows.push({recipe:r,need:g,fromLots,toMake,batches:toMake/r.yield});
+    for(const i of r.items) need[i.supply]=(need[i.supply]||0)+i.qty*toMake/r.yield;
+  }
+  const supplies=Object.entries(need).map(([id,q])=>{ const s=sup(id); return {s,need:q,short:Math.max(0,q-(s?.stock||0))}; }).filter(x=>x.s);
+  return {...req,doughRows,supplies,shortages:supplies.filter(x=>x.short>0.0001)};
+}
+function prodDateFor(now=new Date()){
+  const [h,m]=S.settings.cutoff.split(':').map(Number);
+  let d=iso(now); if(now.getHours()*60+now.getMinutes() >= h*60+m) d=addDays(d,1);
+  for(let i=0;i<7 && S.settings.closed.includes(new Date(d+'T12:00:00').getDay());i++) d=addDays(d,1);
+  return d;
+}
+
+/* ================= Iconos ================= */
+const I = {
+  hoy:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  pedidos:'<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  produccion:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".6"/><circle cx="10" cy="6.5" r=".6"/><rect x="7" y="12" width="10" height="5" rx="1.5"/>',
+  proveedores:'<path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  insumos:'<path d="M8 3h8v3H8z"/><path d="M7 6h10l1 3v10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9z"/><path d="M6 12h12"/>',
+  compras:'<path d="M3 4h2l2.4 11h10.2L20 7H6.2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+  recetas:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/><path d="M9 8h6"/>',
+  productos:'<path d="M3 8l9-4 9 4-9 4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/>',
+  ediciones:'<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+  analitica:'<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+  configuracion:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>', trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>', copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+  up:'<path d="m6 15 6-6 6 6"/>', down:'<path d="m6 9 6 6 6-6"/>', phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>', pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>'
+};
+const icon = (n,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]}</svg>`;
+
+/* ================= Navegación ================= */
+const PAGES = [
+  ['hoy','Hoy'],['pedidos','Pedidos'],['produccion','Producción'],['proveedores','Proveedores'],['insumos','Insumos'],
+  ['compras','Compras'],['recetas','Recetas y masas'],['productos','Productos y cajas'],['ediciones','Ediciones especiales'],
+  ['analitica','Analítica'],['configuracion','Configuración']
+];
+const UI = { tab:{}, q:{} };
+function current(){ const h=location.hash.replace('#',''); return PAGES.some(p=>p[0]===h)?h:'hoy'; }
+
+function render(){
+  const root=$('#root');
+  if(!S.session){ root.innerHTML=viewLogin(); return; }
+  const page=current();
+  const html = VIEWS[page]();
+  root.innerHTML = `<div class="app">
+    <aside class="side">
+      <div class="brand"><span class="cookie" style="--s:38px"></span><div><b>Destello</b><small>Cocina oculta</small></div></div>
+      <nav class="nav" aria-label="Secciones">${PAGES.map(([k,t])=>`<a href="#${k}" class="${k===page?'on':''}">${icon(k)}<span>${t}</span></a>`).join('')}</nav>
+      <div class="foot"><b>Prototipo de demostración.</b> Lo que agregues se guarda solo en este navegador.<br><button class="btn ghost sm" data-act="reset-ask">Volver a los datos de ejemplo</button></div>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <div class="row"><span class="pill"><i></i>Pedidos para hoy hasta las ${esc(S.settings.cutoff)}</span><span class="pill num">${longDate(TODAY)}</span></div>
+        <div class="who"><div style="text-align:right"><b>Administración</b><div class="small muted">${esc(S.settings.name)}</div></div><div class="avatar">AD</div><button class="btn ghost sm" data-act="logout">Salir</button></div>
+      </div>
+      ${html}
+    </main></div>`;
+  const on=$('.nav a.on'); if(on && window.innerWidth<900) on.scrollIntoView({inline:'center',block:'nearest'});
+}
+window.addEventListener('hashchange',()=>{ render(); window.scrollTo(0,0); });
+
+/* ================= Vistas ================= */
+function viewLogin(){
+  return `<div class="login">
+    <section class="art">
+      <div><div class="eyebrow" style="color:inherit;opacity:.7">Panel de la cocina</div>
+      <h1 style="margin-top:10px">Destello</h1>
+      <p>Pedidos del día, producción, inventario por peso y proveedores. Todo en un solo lugar.</p></div>
+      <div class="plate"><span class="cookie"></span><span class="cookie choco"></span><span class="cookie roll"></span><span class="cookie bread"></span></div>
+    </section>
+    <section class="form">
+      <form data-form="login">
+        <h2>Entrar</h2>
+        <p class="muted">Usa los datos de ejemplo ya escritos.</p>
+        <label class="f">Correo<input id="login-email" type="email" value="dueno@destello.demo" required></label>
+        <label class="f">Contraseña<input id="login-pass" type="password" value="destello123" required></label>
+        <button class="btn yellow" type="submit">Entrar al panel</button>
+        <p class="small muted">Prototipo de demostración: no está conectado a ningún sistema.</p>
+      </form>
+    </section></div>`;
+}
+
+function kpi(v,l,s,c){ return `<div class="card ${c} kpi"><span class="l">${l}</span><span class="v">${v}</span>${s?`<span class="s">${s}</span>`:''}</div>`; }
+
+const VIEWS = {
+hoy(){
+  const h=new Date().getHours(), hi=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches';
+  const todays=S.orders.filter(o=>o.prod===TODAY && o.status!=='cancelado');
+  const pend=todays.filter(o=>!o.produced);
+  const p=plan(pend.flatMap(o=>o.lines));
+  const boxes=Object.values(p.boxes).reduce((a,b)=>a+b,0);
+  const low=S.supplies.filter(s=>s.stock<s.min);
+  const sales=todays.reduce((a,o)=>a+orderSubtotal(o),0);
+  const onWay=S.orders.filter(o=>o.status==='camino');
+  const ed=S.editions.find(e=>e.start<=TODAY && e.end>=TODAY);
+  return `<div class="head"><div><h1>${hi}</h1><p class="muted">Así va la cocina hoy, ${longDate(TODAY)}.</p></div>
+    <div class="row"><button class="btn soft" data-act="voice">${icon('mic')}Preguntar cuánto producir</button><button class="btn yellow" data-act="order-new">${icon('plus')}Nuevo pedido</button></div></div>
+  <div class="grid g4">
+    ${kpi(todays.length,'Pedidos para hoy',pend.length+' por producir','c-yellow')}
+    ${kpi(money(sales),'Ventas de hoy','Sin contar domicilios','c-strawberry')}
+    ${kpi(boxes,'Cajas por armar',Object.keys(p.boxes).length+' presentaciones','c-lilac')}
+    ${kpi(low.length,'Insumos bajos',low.length?'Revisa antes de producir':'Todo en orden','c-peach')}
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><div class="row between"><h2>Producción de hoy</h2><a class="btn ghost sm" href="#produccion">Ver lista completa</a></div>
+      ${p.doughRows.length?`<div class="list">${p.doughRows.map(d=>`<div class="it"><div><b>${esc(d.recipe.name)}</b><div class="small muted">Necesitas ${grams(d.need)}${d.fromLots?` · ${grams(d.fromLots)} salen del lote`:''}</div></div>${d.toMake>0?`<span class="chip warn">Hacer ${grams(d.toMake)}</span>`:`<span class="chip ok">Alcanza el lote</span>`}</div>`).join('')}</div>`:`<div class="empty">No hay nada pendiente por producir hoy.</div>`}
+      ${p.shortages.length?`<div class="callout c-strawberry" style="margin-top:12px"><b>Falta para producir:</b> ${p.shortages.map(x=>esc(x.s.name)+' ('+qty(x.short,x.s.kind)+')').join(', ')}</div>`:''}
+    </div>
+    <div class="card"><div class="row between"><h2>Pedidos por producir</h2><a class="btn ghost sm" href="#pedidos">Ver pedidos</a></div>
+      ${pend.length?`<div class="list">${pend.map(o=>`<div class="it"><div><b>${esc(o.customer)}</b><div class="small muted">${o.lines.map(l=>l.qty+' × '+esc(byId(S.presentations,l.pres)?.name||'')).join(', ')}</div></div><b class="num">${money(orderTotal(o))}</b></div>`).join('')}</div>`:`<div class="empty">Todo producido.</div>`}
+    </div>
+    <div class="card"><h2>Insumos bajos</h2>
+      ${low.length?`<div class="list">${low.map(s=>`<div class="it"><div><b>${esc(s.name)}</b><div class="small muted">Quedan ${qty(s.stock,s.kind)} · mínimo ${qty(s.min,s.kind)}</div></div><a class="btn soft sm" href="#compras">Comprar</a></div>`).join('')}</div>`:`<div class="empty">Ningún insumo bajo.</div>`}
+    </div>
+    <div class="stack">
+      ${ed?`<div class="card c-${ed.color}"><div class="row"><span class="cookie ${ed.look}" style="--s:48px"></span><div><div class="eyebrow">Edición activa</div><h2 style="margin:4px 0 0">${esc(ed.name)}</h2></div></div>
+        <p style="margin-top:12px">${editionSold(ed)} de ${ed.cap||'∞'} vendidas · cierra el ${dateLabel(ed.end)}</p>
+        ${ed.cap?`<div class="bar" style="margin-top:8px;background:rgba(255,255,255,.5)"><span style="width:${Math.min(100,editionSold(ed)/ed.cap*100)}%"></span></div>`:''}</div>`:''}
+      <div class="card"><h2>En camino</h2>${onWay.length?`<div class="list">${onWay.map(o=>`<div class="it"><div><b>${esc(o.customer)}</b><div class="small muted">Con ${esc(byId(S.settings.couriers,o.courier)?.name||'repartidor')} · ${o.pay==='efectivo'?'cobra '+money(orderTotal(o)):'ya pagó'}</div></div><button class="btn soft sm" data-act="order-deliver" data-id="${o.id}">Entregado</button></div>`).join('')}</div>`:`<div class="empty">Nada en camino.</div>`}</div>
+    </div>
+  </div>`;
+},
+
+pedidos(){
+  const tab=UI.tab.pedidos||'pendiente';
+  const tabs=[['pendiente','Por producir'],['listo','Listos para enviar'],['camino','En camino'],['entregado','Entregados'],['todos','Todos']];
+  const f=o=> tab==='todos'?true : tab==='pendiente'? o.status==='pendiente'&&!o.produced : tab==='listo'? o.status==='pendiente'&&o.produced : o.status===tab;
+  const rows=S.orders.filter(f).sort((a,b)=>b.n-a.n);
+  const count=k=>S.orders.filter(o=>k==='todos'||(k==='pendiente'?o.status==='pendiente'&&!o.produced:k==='listo'?o.status==='pendiente'&&o.produced:o.status===k)).length;
+  return `<div class="head"><div><h1>Pedidos</h1><p class="muted">Los pedidos llegan por WhatsApp. Aquí puedes registrar uno a mano y seguir su entrega.</p></div><button class="btn yellow" data-act="order-new">${icon('plus')}Nuevo pedido</button></div>
+  <div class="tabs">${tabs.map(([k,t])=>`<button data-act="tab" data-tab="pedidos" data-v="${k}" class="${tab===k?'on':''}">${t} · ${count(k)}</button>`).join('')}</div>
+  ${rows.length?`<div class="tbl"><table><thead><tr><th>#</th><th>Cliente</th><th>Productos</th><th>Entrega</th><th>Pago</th><th class="r">Total</th><th>Estado</th><th></th></tr></thead><tbody>
+  ${rows.map(o=>`<tr><td class="num muted">${o.n}</td><td><b>${esc(o.customer)}</b><div class="small muted">${esc(o.phone)}</div></td>
+    <td class="small">${o.lines.map(l=>l.qty+' × '+esc(byId(S.presentations,l.pres)?.name||'')).join('<br>')}</td>
+    <td class="small">${o.delivery==='domicilio'?'Domicilio<div class="muted">'+esc(o.address)+'</div>':'Recoge en cocina'}<div class="muted">Se produce: ${dateLabel(o.prod)}</div></td>
+    <td><span class="chip ${o.pay==='efectivo'?'banana':'lilac'}">${o.pay==='efectivo'?'Efectivo':'Transferencia'}</span></td>
+    <td class="r num"><b>${money(orderTotal(o))}</b>${o.fee?`<div class="small muted">incluye ${money(o.fee)} domicilio</div>`:''}</td>
+    <td>${statusChip(o)}</td>
+    <td>${orderActions(o)}</td></tr>`).join('')}
+  </tbody></table></div>`:`<div class="empty">No hay pedidos en esta lista.</div>`}`;
+},
+
+produccion(){
+  const day=UI.tab.produccion||TODAY;
+  const days=[TODAY,addDays(TODAY,1)];
+  const orders=S.orders.filter(o=>o.prod===day && o.status!=='cancelado');
+  const pend=orders.filter(o=>!o.produced);
+  const p=plan(pend.flatMap(o=>o.lines));
+  const seen=S.seenProd[day]||{};
+  const boxes=Object.entries(p.boxes);
+  return `<div class="head"><div><h1>Producción del día</h1><p class="muted">Calculada con los pedidos tomados hasta la hora de corte. Primero se usa la masa de los lotes y lo que falta se hace con insumos.</p></div>
+    ${pend.length?`<button class="btn yellow" data-act="prod-done" data-day="${day}">Registrar producción terminada</button>`:''}</div>
+  <div class="tabs">${days.map(d=>`<button data-act="tab" data-tab="produccion" data-v="${d}" class="${d===day?'on':''}">${dateLabel(d)} · ${longDate(d)}</button>`).join('')}</div>
+  ${!pend.length?`<div class="empty">${orders.length?'La producción de este día ya está registrada. Los pedidos están listos para enviar.':'Todavía no hay pedidos para este día.'}</div>`:`
+  <div class="grid g4">${kpi(pend.length,'Pedidos','por producir','c-yellow')}${kpi(boxes.reduce((a,b)=>a+b[1],0),'Cajas','por armar','c-lilac')}${kpi(Object.values(p.units).reduce((a,b)=>a+b,0),'Unidades','galletas, rollos y panes','c-strawberry')}${kpi(grams(p.doughRows.reduce((a,d)=>a+d.toMake,0)),'Masa por hacer','sin contar lotes','c-peach')}</div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2>Masa</h2><div class="list">${p.doughRows.map(d=>`<div class="it"><div><b>${esc(d.recipe.name)}</b><div class="small muted">Necesitas ${grams(d.need)}${d.fromLots?' · '+grams(d.fromLots)+' del lote':''}</div></div>
+      <div style="text-align:right">${d.toMake>0?`<span class="chip warn">Hacer ${grams(d.toMake)}</span><div class="small muted num">${fmtN(d.batches,2)} tandas</div>`:'<span class="chip ok">Alcanza el lote</span>'}</div></div>`).join('')}</div></div>
+    <div class="card"><h2>Lista para armar</h2><div>${boxes.map(([id,n])=>{const pr=byId(S.presentations,id);const k='b-'+id;return `<label class="check ${seen[k]?'done':''}"><input type="checkbox" data-act="prod-check" data-day="${day}" data-k="${k}" ${seen[k]?'checked':''}><span><b class="num">${n} ×</b> ${esc(pr.name)}</span></label>`;}).join('')}</div></div>
+    <div class="card"><h2>Unidades a hornear</h2><div class="list">${Object.entries(p.units).map(([id,n])=>{const pr=byId(S.products,id);return `<div class="it"><div class="row"><span class="cookie ${pr.look}" style="--s:34px"></span><b>${esc(pr.name)}</b></div><span class="num"><b>${n}</b> und · ${grams(n*pr.grams)}</span></div>`;}).join('')}</div></div>
+    <div class="card"><h2>Insumos que se usan</h2>
+      ${p.shortages.length?`<div class="callout c-strawberry" style="margin-bottom:10px"><b>No alcanza:</b> ${p.shortages.map(x=>esc(x.s.name)).join(', ')}. Registra una compra antes de producir.</div>`:`<div class="callout c-sky" style="margin-bottom:10px">Hay insumos suficientes para toda la producción.</div>`}
+      <div class="list">${p.supplies.sort((a,b)=>b.short-a.short).map(x=>`<div class="it"><span>${esc(x.s.name)}</span><span class="num small">${qty(x.need,x.s.kind)} de ${qty(x.s.stock,x.s.kind)} ${x.short>0?'<span class="chip bad">falta '+qty(x.short,x.s.kind)+'</span>':''}</span></div>`).join('')}</div></div>
+  </div>`}`;
+},
+
+proveedores(){
+  const q=(UI.q.prov||'').toLowerCase();
+  const list=S.suppliers.filter(p=>!q||(p.name+' '+p.contact+' '+suppliesOf(p.id).map(s=>s.name).join(' ')).toLowerCase().includes(q));
+  return `<div class="head"><div><h1>Proveedores</h1><p class="muted">A quién le compras cada insumo y cómo contactarlo.</p></div><button class="btn yellow" data-act="sup-new">${icon('plus')}Nuevo proveedor</button></div>
+  <div class="row" style="margin-bottom:16px"><input class="search" id="q-prov" placeholder="Buscar por nombre, contacto o insumo" value="${esc(UI.q.prov||'')}" data-q="prov"></div>
+  ${list.length?`<div class="grid g3">${list.map(p=>{
+    const items=suppliesOf(p.id); const buys=S.purchases.filter(c=>c.sup===p.id);
+    const spent=buys.reduce((a,c)=>a+c.lines.reduce((x,l)=>x+l.total,0),0);
+    const last=buys.map(c=>c.date).sort().pop();
+    return `<article class="card c-${p.color} stack" style="gap:12px">
+      <div class="row between" style="flex-wrap:nowrap"><div class="row" style="flex-wrap:nowrap;min-width:0"><div class="avatar" style="background:var(--surface)">${esc(initials(p.name))}</div><div style="min-width:0"><h3 style="margin:0">${esc(p.name)}</h3><div class="small">${esc(p.contact||'Sin contacto')}</div></div></div>
+      <div class="row" style="flex-wrap:nowrap;gap:0"><button class="iconbtn" title="Editar" aria-label="Editar ${esc(p.name)}" data-act="sup-edit" data-id="${p.id}">${icon('edit')}</button><button class="iconbtn" title="Eliminar" aria-label="Eliminar ${esc(p.name)}" data-act="sup-del" data-id="${p.id}">${icon('trash')}</button></div></div>
+      <div class="stack small" style="gap:6px">
+        ${p.phone?`<div class="row" style="gap:6px">${icon('phone','style="width:16px;height:16px"')}<span class="num" style="user-select:all">${esc(p.phone)}</span><button class="iconbtn" aria-label="Copiar teléfono" data-act="copy" data-v="${esc(p.phone)}">${icon('copy','style="width:14px;height:14px"')}</button></div>`:''}
+        ${p.email?`<div class="row" style="gap:6px;flex-wrap:nowrap">${icon('mail','style="width:16px;height:16px;flex:none"')}<span style="user-select:all;overflow-wrap:anywhere">${esc(p.email)}</span></div>`:''}
+        ${p.address?`<div class="row" style="gap:6px;flex-wrap:nowrap">${icon('pin','style="width:16px;height:16px;flex:none"')}<span>${esc(p.address)}</span></div>`:''}
+      </div>
+      <div class="row" style="gap:6px">${items.length?items.map(s=>`<span class="chip" style="background:var(--surface)">${esc(s.name)}</span>`).join(''):'<span class="small muted">Aún no tiene insumos asociados</span>'}</div>
+      ${p.notes?`<p class="small" style="opacity:.85">${esc(p.notes)}</p>`:''}
+      <div class="row between small" style="border-top:1px dashed rgba(61,36,23,.2);padding-top:10px"><span>${last?'Última compra: '+dateLabel(last):'Sin compras'}</span><b class="num">${money(spent)}</b></div>
+    </article>`;}).join('')}</div>`:`<div class="empty">No hay proveedores con esa búsqueda.</div>`}`;
+},
+
+insumos(){
+  const tab=UI.tab.insumos||'todos', q=(UI.q.ins||'').toLowerCase();
+  const list=S.supplies.filter(s=>(tab==='todos'||(tab==='bajos'?s.stock<s.min:s.cat===tab)) && (!q||s.name.toLowerCase().includes(q)));
+  const value=S.supplies.reduce((a,s)=>a+s.stock*s.cost,0);
+  return `<div class="head"><div><h1>Insumos</h1><p class="muted">Todo se mide por peso, volumen o unidad. El costo es el promedio de lo que has pagado a todos los proveedores.</p></div><button class="btn yellow" data-act="supply-new">${icon('plus')}Nuevo insumo</button></div>
+  <div class="grid g4" style="margin-bottom:16px">${kpi(S.supplies.length,'Insumos registrados','','c-banana')}${kpi(money(value),'Valor del inventario','a costo promedio','c-sky')}${kpi(S.supplies.filter(s=>s.stock<s.min).length,'Por debajo del mínimo','','c-strawberry')}</div>
+  <div class="row between" style="margin-bottom:12px"><div class="tabs" style="margin:0">${[['todos','Todos'],['ing','Ingredientes'],['emp','Empaques'],['bajos','Bajos']].map(([k,t])=>`<button data-act="tab" data-tab="insumos" data-v="${k}" class="${tab===k?'on':''}">${t}</button>`).join('')}</div>
+  <input class="search" id="q-ins" placeholder="Buscar insumo" value="${esc(UI.q.ins||'')}" data-q="ins"></div>
+  ${list.length?`<div class="tbl"><table><thead><tr><th>Insumo</th><th>Proveedor</th><th>Existencia</th><th class="r">Costo promedio</th><th class="r">Valor</th><th>Estado</th></tr></thead><tbody>
+  ${list.map(s=>{const r=s.stock/s.min, k=r<1?'bad':r<1.3?'warn':'';return `<tr class="click" data-act="supply-edit" data-id="${s.id}"><td><b>${esc(s.name)}</b><div class="small muted">${s.cat==='emp'?'Empaque':'Ingrediente'} · mínimo ${qty(s.min,s.kind)}</div></td>
+  <td class="small">${esc(byId(S.suppliers,s.sup)?.name||'—')}</td>
+  <td><div class="num" style="font-weight:700">${qty(s.stock,s.kind)}</div><div class="bar ${k}" style="margin-top:4px"><span style="width:${Math.min(100,r/3*100)}%"></span></div></td>
+  <td class="r num">${costLabel(s)}</td><td class="r num">${money(s.stock*s.cost)}</td>
+  <td>${r<1?'<span class="chip bad">Comprar ya</span>':r<1.3?'<span class="chip warn">Casi en el mínimo</span>':'<span class="chip ok">Bien</span>'}</td></tr>`;}).join('')}
+  </tbody></table></div>`:`<div class="empty">No hay insumos en esta lista.</div>`}`;
+},
+
+compras(){
+  const list=[...S.purchases].sort((a,b)=>b.date.localeCompare(a.date));
+  const month=S.purchases.filter(c=>c.date.slice(0,7)===TODAY.slice(0,7)).reduce((a,c)=>a+c.lines.reduce((x,l)=>x+l.total,0),0);
+  return `<div class="head"><div><h1>Compras</h1><p class="muted">Al registrar una compra sube la existencia del insumo y se actualiza su costo promedio.</p></div><button class="btn yellow" data-act="purchase-new">${icon('plus')}Registrar compra</button></div>
+  <div class="grid g4" style="margin-bottom:16px">${kpi(money(month),'Compras del mes','','c-peach')}${kpi(list.length,'Compras registradas','','c-lilac')}</div>
+  ${list.length?`<div class="stack">${list.map(c=>{const p=byId(S.suppliers,c.sup);return `<div class="card"><div class="row between"><div class="row"><div class="avatar" style="background:var(--${p?.color||'banana'})">${esc(initials(p?.name||'?'))}</div><div><b>${esc(p?.name||'Proveedor eliminado')}</b><div class="small muted">${dateLabel(c.date)} · ${longDate(c.date)}</div></div></div><b class="num">${money(c.lines.reduce((a,l)=>a+l.total,0))}</b></div>
+  <div class="row" style="margin-top:12px;gap:6px">${c.lines.map(l=>{const s=sup(l.supply);return `<span class="chip banana">${esc(s?.name||'')} · ${qty(l.qty,s?.kind)} · ${money(l.total)}</span>`;}).join('')}</div></div>`;}).join('')}</div>`:`<div class="empty">Aún no hay compras.</div>`}`;
+},
+
+recetas(){
+  return `<div class="head"><div><h1>Recetas y masas</h1><p class="muted">Cada receta rinde una tanda de masa en gramos. Las galletas se hacen por lote y se guardan; los rollos y panes se hacen solo con pedido.</p></div>
+  <div class="row"><button class="btn soft" data-act="lot-new">Producir lote de masa</button><button class="btn yellow" data-act="recipe-new">${icon('plus')}Nueva receta</button></div></div>
+  <h2 style="margin-bottom:12px">Masa guardada</h2>
+  ${S.lots.filter(l=>l.left>0).length?`<div class="grid g3" style="margin-bottom:26px">${S.lots.filter(l=>l.left>0).map(l=>{const r=byId(S.recipes,l.recipe);const exp=l.expires<=addDays(TODAY,1);return `<div class="card"><div class="row between"><b>${esc(r?.name||'')}</b>${exp?'<span class="chip warn">Usar pronto</span>':'<span class="chip ok">Fresca</span>'}</div>
+  <div class="kpi" style="margin-top:10px"><span class="v">${grams(l.left)}</span><span class="s">de ${grams(l.grams)} · hecha ${dateLabel(l.date).toLowerCase()} · vence ${dateLabel(l.expires).toLowerCase()}</span></div>
+  <div class="bar" style="margin-top:10px"><span style="width:${l.left/l.grams*100}%"></span></div></div>`;}).join('')}</div>`:`<div class="empty" style="margin-bottom:26px">No hay masa guardada.</div>`}
+  <h2 style="margin-bottom:12px">Recetas</h2>
+  <div class="grid g3">${S.recipes.map(r=>{const cpg=recipeCostPerG(r);const lot=S.products.some(p=>p.recipe===r.id&&p.mode==='lote');return `<article class="card c-${r.color}">
+    <div class="row between"><h3 style="margin:0">${esc(r.name)}</h3><button class="iconbtn" aria-label="Editar receta" data-act="recipe-edit" data-id="${r.id}">${icon('edit')}</button></div>
+    <div class="row" style="margin:10px 0 12px;gap:6px"><span class="chip" style="background:var(--surface)">Rinde ${grams(r.yield)}</span><span class="chip" style="background:var(--surface)">${money(cpg*1000)} / kg</span><span class="chip dark">${lot?'Por lote':'Sobre pedido'}</span></div>
+    <div class="list small">${r.items.map(i=>{const s=sup(i.supply);return `<div class="it" style="padding:6px 0;border-color:rgba(61,36,23,.15)"><span>${esc(s?.name||'')}</span><span class="num">${qty(i.qty,s?.kind)}</span></div>`;}).join('')}</div>
+    ${lot?`<button class="btn sm" style="margin-top:12px" data-act="lot-new" data-id="${r.id}">Producir lote</button>`:''}
+  </article>`;}).join('')}</div>`;
+},
+
+productos(){
+  return `<div class="head"><div><h1>Productos y cajas</h1><p class="muted">El producto dice cuántos gramos de masa lleva cada unidad. La caja es lo que se vende y descuenta su empaque.</p></div>
+  <div class="row"><button class="btn soft" data-act="product-new">Nuevo producto</button><button class="btn yellow" data-act="pres-new">${icon('plus')}Nueva caja o presentación</button></div></div>
+  <div class="grid g4" style="margin-bottom:26px">${S.products.map(p=>{const r=byId(S.recipes,p.recipe);return `<div class="card"><div class="row" style="flex-wrap:nowrap"><span class="cookie ${p.look}"></span><div style="min-width:0"><b>${esc(p.name)}</b><div class="small muted">${grams(p.grams)} de ${esc(r?.name.replace('Masa de ','masa de ')||'')}</div></div></div>
+  <div class="row between" style="margin-top:12px"><span class="chip ${p.mode==='lote'?'banana':'lilac'}">${p.mode==='lote'?'Con lote de masa':'Solo sobre pedido'}</span><span class="small num">Costo ${money(productCost(p))}</span></div></div>`;}).join('')}</div>
+  <h2 style="margin-bottom:12px">Lo que se vende</h2>
+  <div class="tbl"><table><thead><tr><th>Presentación</th><th>Contenido</th><th class="r">Precio</th><th class="r">Costo</th><th class="r">Margen</th><th>Estado</th></tr></thead><tbody>
+  ${S.presentations.map(pr=>{const c=presCost(pr),h=presHealth(pr);return `<tr class="click" data-act="pres-edit" data-id="${pr.id}"><td><b>${esc(pr.name)}</b>${pr.active?'':'<div class="small muted">Pausada</div>'}</td>
+  <td class="small">${pr.items.map(i=>i.units+' '+esc(byId(S.products,i.product)?.name.toLowerCase()||'')).join(' + ')}<div class="muted">${pr.pack.map(k=>k.qty+' '+esc(sup(k.supply)?.name.toLowerCase()||'')).join(', ')}</div></td>
+  <td class="r num"><b>${money(pr.price)}</b></td><td class="r num">${money(c)}</td><td class="r num">${fmtN(presMargin(pr)*100)} %</td>
+  <td><span class="chip ${h.k}">${h.t}</span>${h.sug?`<div class="small muted" style="margin-top:4px">Sugerido ${money(h.sug)}</div>`:''}</td></tr>`;}).join('')}
+  </tbody></table></div>`;
+},
+
+ediciones(){
+  return `<div class="head"><div><h1>Ediciones especiales</h1><p class="muted">Productos de temporada que se venden hasta una fecha o hasta completar un cupo.</p></div><button class="btn yellow" data-act="edition-new">${icon('plus')}Nueva edición</button></div>
+  <div class="grid g2">${S.editions.map(e=>{const sold=editionSold(e);const st=e.end<TODAY||(e.cap&&sold>=e.cap)?['bad','Cerrada']:e.start>TODAY?['lilac','Próxima']:['ok','Activa'];
+  return `<article class="card c-${e.color}"><div class="row between" style="flex-wrap:nowrap"><div class="row" style="flex-wrap:nowrap"><span class="cookie ${e.look}" style="--s:64px"></span><div><span class="chip ${st[0]}">${st[1]}</span><h2 style="margin:6px 0 0">${esc(e.name)}</h2></div></div>
+  <button class="iconbtn" aria-label="Eliminar edición" data-act="edition-del" data-id="${e.id}">${icon('trash')}</button></div>
+  <p style="margin:12px 0">${esc(e.desc)}</p>
+  <div class="row small" style="gap:6px">${e.pres.map(id=>`<span class="chip" style="background:var(--surface)">${esc(byId(S.presentations,id)?.name||'')}</span>`).join('')}</div>
+  <div class="grid g4" style="margin-top:14px;gap:10px"><div class="kpi"><span class="l">Vendidas</span><span class="v" style="font-size:24px">${sold}${e.cap?' / '+e.cap:''}</span></div><div class="kpi"><span class="l">Desde</span><span class="v" style="font-size:18px">${dateLabel(e.start)}</span></div><div class="kpi"><span class="l">Hasta</span><span class="v" style="font-size:18px">${dateLabel(e.end)}</span></div></div>
+  ${e.cap?`<div class="bar" style="margin-top:12px;height:10px;background:rgba(255,255,255,.55)"><span style="width:${Math.min(100,sold/e.cap*100)}%"></span></div>`:''}
+  </article>`;}).join('')}</div>`;
+},
+
+analitica(){
+  const units={...S.history.units};
+  for(const o of S.orders) if(o.status!=='cancelado') for(const l of o.lines) units[l.pres]=(units[l.pres]||0)+l.qty;
+  const ranked=S.presentations.map(p=>({p,n:units[p.id]||0})).sort((a,b)=>b.n-a.n);
+  const max=Math.max(1,...ranked.map(r=>r.n));
+  const weeks=[...S.history.weeks]; weeks[weeks.length-1]+=S.orders.filter(o=>o.date>=addDays(TODAY,-6)&&o.status!=='cancelado').reduce((a,o)=>a+orderSubtotal(o),0);
+  const month=weeks.slice(-4).reduce((a,b)=>a+b,0);
+  const nOrders=Math.round(month/31000);
+  const flagged=S.presentations.map(p=>({p,h:presHealth(p),c:presCost(p)})).filter(x=>x.h.k!=='ok');
+  return `<div class="head"><div><h1>Analítica</h1><p class="muted">Qué se vende más, qué se vende poco y qué productos no dejan ganancia.</p></div><span class="pill">Últimas 8 semanas</span></div>
+  <div class="grid g4">${kpi(money(month),'Ventas de las últimas 4 semanas','+12 % frente a las 4 anteriores','c-yellow')}${kpi(nOrders,'Pedidos','en 4 semanas','c-lilac')}${kpi(money(month/nOrders),'Ticket promedio','sin domicilio','c-strawberry')}${kpi(flagged.length,'Con margen bajo o pérdida','revisa el precio','c-peach')}</div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2>Ventas por semana</h2>${weekChart(weeks)}</div>
+    <div class="card"><h2>Los más vendidos</h2><div class="hbars">${ranked.slice(0,5).map(r=>`<div class="hbar"><span class="t">${esc(r.p.name)}</span><span class="n">${r.n}</span><div class="bar"><span style="width:${r.n/max*100}%"></span></div></div>`).join('')}</div></div>
+    <div class="card"><h2>Productos que no dejan ganancia</h2>${flagged.length?`<div class="list">${flagged.map(x=>`<div class="it"><div><b>${esc(x.p.name)}</b><div class="small muted">Precio ${money(x.p.price)} · cuesta ${money(x.c)}</div></div><div style="text-align:right"><span class="chip ${x.h.k}">${x.h.t}</span><div class="small" style="margin-top:4px">Sube a <b>${money(x.h.sug)}</b></div></div></div>`).join('')}</div>`:'<div class="empty">Todos los productos tienen buen margen.</div>'}
+      <p class="small muted" style="margin-top:10px">El precio sugerido busca un margen del ${S.settings.margin} %, que puedes cambiar en Configuración.</p></div>
+    <div class="card"><h2>Los que menos se venden</h2><div class="hbars">${ranked.slice(-4).reverse().map(r=>`<div class="hbar"><span class="t">${esc(r.p.name)}</span><span class="n">${r.n}</span><div class="bar warn"><span style="width:${r.n/max*100}%"></span></div></div>`).join('')}</div></div>
+  </div>`;
+},
+
+configuracion(){
+  const st=S.settings;
+  return `<div class="head"><div><h1>Configuración</h1><p class="muted">Datos que usa el asistente de WhatsApp para responder a los clientes.</p></div></div>
+  <div class="grid g2">
+    <form class="card stack" data-form="settings"><h2 style="margin:0">El negocio</h2>
+      <div class="fields"><label class="f">Nombre<input id="st-name" name="name" value="${esc(st.name)}" required></label><label class="f">WhatsApp del negocio<input id="st-wa" name="whatsapp" value="${esc(st.whatsapp)}"></label>
+      <label class="f">Hora de corte de pedidos<input id="st-cut" name="cutoff" type="time" value="${esc(st.cutoff)}" required><span class="h">Después de esta hora, el pedido pasa al siguiente día.</span></label>
+      <label class="f">Margen que buscas (%)<input id="st-margin" name="margin" type="number" min="5" max="90" value="${st.margin}" required></label></div>
+      <div><div class="eyebrow" style="margin-bottom:6px">Días sin producción</div><div class="seg">${DAYS.map((d,i)=>`<label><input type="checkbox" name="closed" value="${i}" ${st.closed.includes(i)?'checked':''}><span>${d[0].toUpperCase()+d.slice(1)}</span></label>`).join('')}</div></div>
+      <div><button class="btn yellow" type="submit">Guardar cambios</button></div></form>
+    <div class="card"><div class="row between"><h2 style="margin:0">Cuentas para transferencia</h2><button class="btn soft sm" data-act="account-new">${icon('plus')}Agregar</button></div>
+      <p class="small muted" style="margin:6px 0 10px">El asistente las envía al cliente cuando elige pagar por transferencia.</p>
+      <div class="list">${st.accounts.map(a=>`<div class="it"><div><b>${esc(a.bank)} · ${esc(a.type)}</b><div class="small num">${esc(a.number)} · ${esc(a.owner)}</div></div><button class="iconbtn" aria-label="Eliminar cuenta" data-act="account-del" data-id="${a.id}">${icon('trash')}</button></div>`).join('')||'<div class="empty">Sin cuentas.</div>'}</div></div>
+    <div class="card"><div class="row between"><h2 style="margin:0">Repartidores</h2><button class="btn soft sm" data-act="courier-new">${icon('plus')}Agregar</button></div>
+      <p class="small muted" style="margin:6px 0 10px">Se le pregunta primero al de arriba. Si no puede, se pasa al siguiente.</p>
+      <div class="list">${st.couriers.map((c,i)=>`<div class="it"><div class="row"><span class="chip ${i===0?'dark':''}">${i===0?'Principal':i+1+'º'}</span><div><b>${esc(c.name)}</b><div class="small num">${esc(c.phone)}</div></div></div>
+      <div class="row" style="gap:0;flex-wrap:nowrap"><button class="iconbtn" aria-label="Subir" data-act="courier-up" data-i="${i}" ${i===0?'disabled':''}>${icon('up')}</button><button class="iconbtn" aria-label="Bajar" data-act="courier-down" data-i="${i}" ${i===st.couriers.length-1?'disabled':''}>${icon('down')}</button><button class="iconbtn" aria-label="Eliminar" data-act="courier-del" data-i="${i}">${icon('trash')}</button></div></div>`).join('')||'<div class="empty">Sin repartidores.</div>'}</div></div>
+    <div class="card"><h2>Equipo</h2><div class="list">${st.team.map(t=>`<div class="it"><div class="row"><div class="avatar">${esc(initials(t.name))}</div><div><b>${esc(t.name)}</b><div class="small muted">${esc(t.role)} · ${esc(t.email)}</div></div></div></div>`).join('')}</div>
+      <div class="callout c-banana" style="margin-top:14px"><b>Datos de demostración.</b> Puedes volver al estado inicial cuando quieras.<div style="margin-top:8px"><button class="btn sm" data-act="reset-ask">Volver a los datos de ejemplo</button></div></div></div>
+  </div>`;
+}
+};
+
+function suppliesOf(id){ return S.supplies.filter(s=>s.sup===id); }
+function editionSold(e){ return e.sold + S.orders.filter(o=>o.status!=='cancelado'&&o.date>=e.start&&o.date<=e.end).reduce((a,o)=>a+o.lines.filter(l=>e.pres.includes(l.pres)).reduce((x,l)=>x+l.qty,0),0); }
+function statusChip(o){
+  if(o.status==='cancelado') return '<span class="chip bad">Cancelado</span>';
+  if(o.status==='entregado') return '<span class="chip ok">Entregado</span>';
+  if(o.status==='camino') return `<span class="chip lilac">En camino</span><div class="small muted">${esc(byId(S.settings.couriers,o.courier)?.name||'')}</div>`;
+  return o.produced?'<span class="chip banana">Listo para enviar</span>':'<span class="chip warn">Por producir</span>';
+}
+function orderActions(o){
+  if(o.status==='pendiente' && o.produced) return `<button class="btn sm" data-act="order-send" data-id="${o.id}">Enviar</button>`;
+  if(o.status==='pendiente') return `<button class="btn ghost sm" data-act="order-cancel" data-id="${o.id}">Cancelar</button>`;
+  if(o.status==='camino') return `<button class="btn soft sm" data-act="order-deliver" data-id="${o.id}">Entregado</button>`;
+  return '';
+}
+function weekChart(weeks){
+  const W=560,H=230,pl=56,pb=28,pt=24,max=Math.ceil(Math.max(...weeks)/250000)*250000;
+  const bw=(W-pl-10)/weeks.length;
+  const y=v=>H-pb-(v/max)*(H-pb-pt);
+  const ticks=[0,max/2,max];
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas por semana">
+    ${ticks.map(t=>`<line x1="${pl}" x2="${W-6}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${pl-8}" y="${y(t)+4}" text-anchor="end">${t>=1e6?fmtN(t/1e6,1)+' M':fmtN(t/1000)+' mil'}</text>`).join('')}
+    ${weeks.map((v,i)=>{const x=pl+i*bw+bw*.18,w=bw*.64,last=i===weeks.length-1;return `<rect x="${x}" y="${y(v)}" width="${w}" height="${H-pb-y(v)}" rx="8" fill="${last?'var(--yellow-deep)':'var(--peach)'}"/>${last?`<text class="lbl" x="${x+w/2}" y="${y(v)-7}" text-anchor="middle">${fmtN(v/1000)} mil</text>`:''}<text x="${x+w/2}" y="${H-8}" text-anchor="middle">${i===weeks.length-1?'Esta':'S'+(i+1)}</text>`;}).join('')}
+  </svg></div>`;
+}
+
+/* ================= Modales ================= */
+let MODAL=null;
+function openModal({title,sub='',body,submit='Guardar',onSubmit,onInput,danger=false,wide=false}){
+  MODAL={onSubmit,onInput};
+  $('#modal-root').innerHTML=`<div class="veil" data-act="veil"><form class="modal" data-form="modal" ${wide?'style="width:min(760px,100%)"':''} novalidate role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <header><div><h2>${esc(title)}</h2>${sub?`<p class="muted small" style="margin-top:6px">${sub}</p>`:''}</div><button type="button" class="iconbtn" data-act="close" aria-label="Cerrar">${icon('x')}</button></header>
+    <div class="body">${body}<div class="err" id="m-err" hidden></div></div>
+    <footer><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="submit" class="btn ${danger?'danger':'yellow'}">${submit}</button></footer></form></div>`;
+  const f=$('#modal-root form'); onInput?.(f);
+  setTimeout(()=>f.querySelector('input:not([type=hidden]):not([type=radio]):not([type=checkbox]),select,textarea')?.focus(),30);
+}
+function closeModal(){ $('#modal-root').innerHTML=''; MODAL=null; }
+function mErr(msg){ const e=$('#m-err'); if(!e) return; e.textContent=msg; e.hidden=!msg; }
+
+const opt = (list,sel,label=x=>x.name) => list.map(x=>`<option value="${x.id}" ${x.id===sel?'selected':''}>${esc(label(x))}</option>`).join('');
+const supOpts = sel => `<option value="">Elige un insumo</option>`+opt([...S.supplies].sort((a,b)=>a.name.localeCompare(b.name)),sel,s=>s.name+' ('+unitOf(s.kind)+')');
+const LINE = {
+  recipe:(v={})=>`<div class="line k-recipe"><select data-f="supply" aria-label="Insumo">${supOpts(v.supply)}</select><input data-f="qty" type="number" min="0" step="any" placeholder="Cantidad" value="${v.qty??''}" aria-label="Cantidad"><button type="button" class="iconbtn" data-act="rmline" aria-label="Quitar">${icon('x')}</button></div>`,
+  pack:(v={})=>LINE.recipe(v).replace('k-recipe','k-pack'),
+  items:(v={})=>`<div class="line k-items"><select data-f="product" aria-label="Producto"><option value="">Elige un producto</option>${opt(S.products,v.product)}</select><input data-f="units" type="number" min="1" step="1" placeholder="Unidades" value="${v.units??''}" aria-label="Unidades"><button type="button" class="iconbtn" data-act="rmline" aria-label="Quitar">${icon('x')}</button></div>`,
+  order:(v={})=>`<div class="line k-order"><select data-f="pres" aria-label="Presentación"><option value="">Elige qué pidió</option>${opt(S.presentations.filter(p=>p.active),v.pres,p=>p.name+' · '+money(p.price))}</select><input data-f="qty" type="number" min="1" step="1" value="${v.qty??1}" aria-label="Cantidad"><button type="button" class="iconbtn" data-act="rmline" aria-label="Quitar">${icon('x')}</button></div>`,
+  purchase:(v={})=>`<div class="line k-purchase"><select data-f="supply" aria-label="Insumo">${supOpts(v.supply)}</select><input data-f="qty" type="number" min="0" step="any" placeholder="Cantidad" aria-label="Cantidad" value="${v.qty??''}"><select data-f="unit" aria-label="Unidad"><option>kg</option><option>g</option><option>l</option><option>ml</option><option>und</option></select><input data-f="total" type="number" min="0" step="100" placeholder="Total $" aria-label="Total pagado"><button type="button" class="iconbtn" data-act="rmline" aria-label="Quitar">${icon('x')}</button></div>`
+};
+function linesBlock(kind,values,addLabel){ return `<div class="lines" data-kind="${kind}">${(values.length?values:[{}]).map(v=>LINE[kind](v)).join('')}</div><div><button type="button" class="btn soft sm" data-act="addline" data-kind="${kind}">${icon('plus')}${addLabel}</button></div>`; }
+function readLines(form,kind){ return $$(`.lines[data-kind="${kind}"] .line`,form).map(r=>Object.fromEntries($$('[data-f]',r).map(i=>[i.dataset.f,i.type==='number'?(i.value===''?NaN:Number(i.value)):i.value]))); }
+const val = (f,n) => f.elements[n]?.value?.trim?.() ?? '';
+const COLORS=['banana','strawberry','lilac','peach','sky'];
+const colorSeg=(name,sel)=>`<div class="seg">${COLORS.map(c=>`<label><input type="radio" name="${name}" value="${c}" ${c===sel?'checked':''}><span style="background:var(--${c});border-color:transparent">${{banana:'Vainilla',strawberry:'Fresa',lilac:'Lavanda',peach:'Durazno',sky:'Cielo'}[c]}</span></label>`).join('')}</div>`;
+
+/* --- Proveedor --- */
+function supplierForm(p={}){
+  const linked=new Set(S.supplies.filter(s=>s.sup&&s.sup===p.id).map(s=>s.id));
+  openModal({title:p.id?'Editar proveedor':'Nuevo proveedor',sub:'Guarda a quién le compras y cómo contactarlo.',
+    body:`<div class="fields">
+      <label class="f">Nombre del proveedor<input id="sp-name" name="name" required value="${esc(p.name||'')}" placeholder="Ej. Harinas El Trigal"></label>
+      <label class="f">Persona de contacto<input id="sp-contact" name="contact" value="${esc(p.contact||'')}" placeholder="Ej. Marta López"></label>
+      <label class="f">Teléfono o WhatsApp<input id="sp-phone" name="phone" inputmode="tel" value="${esc(p.phone||'')}" placeholder="300 000 0000"></label>
+      <label class="f">Correo<input id="sp-email" name="email" type="email" value="${esc(p.email||'')}" placeholder="ventas@proveedor.co"></label></div>
+      <label class="f">Dirección<input id="sp-address" name="address" value="${esc(p.address||'')}"></label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Qué le compras</div><div class="seg">${S.supplies.map(s=>`<label><input type="checkbox" name="sells" value="${s.id}" ${linked.has(s.id)?'checked':''}><span>${esc(s.name)}</span></label>`).join('')}</div></div>
+      <label class="f">Notas<textarea id="sp-notes" name="notes" placeholder="Días de entrega, pedido mínimo, descuentos…">${esc(p.notes||'')}</textarea></label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Color de la tarjeta</div>${colorSeg('color',p.color||'banana')}</div>`,
+    onSubmit(f){
+      const name=val(f,'name'); if(!name) return mErr('Escribe el nombre del proveedor.');
+      const data={name,contact:val(f,'contact'),phone:val(f,'phone'),email:val(f,'email'),address:val(f,'address'),notes:val(f,'notes'),color:f.elements.color.value};
+      let id=p.id; if(id) Object.assign(byId(S.suppliers,id),data); else { id=uid('p'); S.suppliers.push({id,...data}); }
+      const sells=new Set($$('input[name=sells]:checked',f).map(i=>i.value));
+      for(const s of S.supplies){ if(sells.has(s.id)) s.sup=id; else if(s.sup===id) s.sup=''; }
+      return p.id?'Proveedor actualizado':'Proveedor agregado';
+    }});
+}
+
+/* --- Insumo --- */
+function supplyForm(s={}){
+  const kind=s.kind||'mass';
+  const per=k=>k==='unit'?'unidad':k==='vol'?'litro':'kilo';
+  const disp=(n,k)=>n===undefined?'':k==='unit'?n:n/1000;
+  openModal({title:s.id?'Editar insumo':'Nuevo insumo',sub:'La existencia y el mínimo se escriben en kilos, litros o unidades.',
+    body:`<label class="f">Nombre<input id="su-name" name="name" required value="${esc(s.name||'')}" placeholder="Ej. Nueces picadas"></label>
+    <div><div class="eyebrow" style="margin-bottom:6px">Cómo se mide</div><div class="seg">${[['mass','Por peso'],['vol','Por volumen'],['unit','Por unidad']].map(([k,t])=>`<label><input type="radio" name="kind" value="${k}" ${k===kind?'checked':''}><span>${t}</span></label>`).join('')}</div></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Tipo</div><div class="seg">${[['ing','Ingrediente'],['emp','Empaque']].map(([k,t])=>`<label><input type="radio" name="cat" value="${k}" ${k===(s.cat||'ing')?'checked':''}><span>${t}</span></label>`).join('')}</div></div>
+    <div class="fields">
+      <label class="f">Existencia actual (<span data-u>${{mass:'kg',vol:'l',unit:'und'}[kind]}</span>)<input id="su-stock" name="stock" type="number" min="0" step="any" value="${disp(s.stock,kind)}" required></label>
+      <label class="f">Mínimo para alertar (<span data-u>${{mass:'kg',vol:'l',unit:'und'}[kind]}</span>)<input id="su-min" name="min" type="number" min="0" step="any" value="${disp(s.min,kind)}" required></label>
+      <label class="f">Costo por <span data-per>${per(kind)}</span> ($)<input id="su-cost" name="cost" type="number" min="0" step="any" value="${s.cost===undefined?'':kind==='unit'?s.cost:Math.round(s.cost*1000)}" required></label>
+      <label class="f">Proveedor<select id="su-sup" name="sup"><option value="">Sin proveedor</option>${opt(S.suppliers,s.sup)}</select></label></div>
+    ${s.id?`<div><button type="button" class="btn ghost sm" data-act="supply-del" data-id="${s.id}">${icon('trash')}Eliminar insumo</button></div>`:''}`,
+    onInput(f){ const k=f.elements.kind.value; $$('[data-u]',f).forEach(e=>e.textContent={mass:'kg',vol:'l',unit:'und'}[k]); $('[data-per]',f).textContent=per(k); },
+    onSubmit(f){
+      const name=val(f,'name'), k=f.elements.kind.value, m=k==='unit'?1:1000;
+      const stock=Number(val(f,'stock')), min=Number(val(f,'min')), cost=Number(val(f,'cost'));
+      if(!name) return mErr('Escribe el nombre del insumo.');
+      if(val(f,'stock')===''||val(f,'min')===''||val(f,'cost')==='' || stock<0||min<0||cost<0) return mErr('Completa existencia, mínimo y costo con números positivos.');
+      const data={name,kind:k,cat:f.elements.cat.value,stock:stock*m,min:min*m,cost:cost/m,sup:val(f,'sup')};
+      if(s.id) Object.assign(sup(s.id),data); else S.supplies.push({id:uid('s'),...data});
+      return s.id?'Insumo actualizado':'Insumo agregado';
+    }});
+}
+
+/* --- Compra --- */
+const UNIT_F={kg:['mass',1000],g:['mass',1],l:['vol',1000],ml:['vol',1],und:['unit',1]};
+function purchaseForm(){
+  openModal({title:'Registrar compra',sub:'Escribe lo que compraste y cuánto pagaste por cada insumo.',wide:true,
+    body:`<div class="fields"><label class="f">Proveedor<select id="pu-sup" name="sup" required><option value="">Elige un proveedor</option>${opt(S.suppliers)}</select></label><label class="f">Fecha<input id="pu-date" name="date" type="date" value="${TODAY}" max="${TODAY}" required></label></div>
+    <div class="eyebrow">Insumos comprados</div>${linesBlock('purchase',[],'Agregar insumo')}
+    <div class="callout c-banana row between"><span>Total de la compra</span><b class="num" id="pu-total">$ 0</b></div>`,
+    onInput(f){
+      const sel=val(f,'sup');
+      $$('.line.k-purchase',f).forEach(r=>{ const s=sup(r.querySelector('[data-f=supply]').value), u=r.querySelector('[data-f=unit]');
+        if(s && !r.dataset.touched){ u.value={mass:'kg',vol:'l',unit:'und'}[s.kind]; r.dataset.touched=s.id; }
+        else if(s && r.dataset.touched!==s.id){ u.value={mass:'kg',vol:'l',unit:'und'}[s.kind]; r.dataset.touched=s.id; } });
+      $('#pu-total').textContent=money(readLines(f,'purchase').reduce((a,l)=>a+(l.total||0),0));
+    },
+    onSubmit(f){
+      const supId=val(f,'sup'); if(!supId) return mErr('Elige el proveedor.');
+      const lines=readLines(f,'purchase').filter(l=>l.supply);
+      if(!lines.length) return mErr('Agrega al menos un insumo.');
+      const out=[];
+      for(const l of lines){ const s=sup(l.supply), [k,m]=UNIT_F[l.unit];
+        if(!(l.qty>0)||!(l.total>=0)||isNaN(l.total)) return mErr('Escribe cantidad y total de '+s.name+'.');
+        if(k!==s.kind) return mErr(s.name+' se mide en '+unitOf(s.kind)+'. Cambia la unidad.');
+        out.push({supply:s.id,qty:l.qty*m,total:l.total}); }
+      for(const l of out){ const s=sup(l.supply); s.cost=(s.stock*s.cost+l.total)/(s.stock+l.qty); s.stock+=l.qty; if(!s.sup) s.sup=supId; }
+      S.purchases.push({id:uid('c'),date:val(f,'date')||TODAY,sup:supId,lines:out});
+      return 'Compra registrada. Existencias actualizadas';
+    }});
+}
+
+/* --- Receta y lote --- */
+function recipeForm(r={}){
+  openModal({title:r.id?'Editar receta':'Nueva receta',sub:'Ingredientes de una tanda y cuántos gramos de masa rinde.',wide:true,
+    body:`<div class="fields"><label class="f">Nombre<input id="re-name" name="name" required value="${esc(r.name||'')}" placeholder="Ej. Masa de avena y pasas"></label><label class="f">Rinde (gramos de masa)<input id="re-yield" name="yield" type="number" min="1" value="${r.yield||''}" required></label></div>
+    <div class="eyebrow">Ingredientes por tanda (g, ml o und)</div>${linesBlock('recipe',r.items||[],'Agregar ingrediente')}
+    <div class="callout c-banana row between"><span>Costo de la masa</span><b class="num" id="re-cost">—</b></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Color</div>${colorSeg('color',r.color||'banana')}</div>`,
+    onInput(f){ const items=readLines(f,'recipe').filter(i=>i.supply&&i.qty>0), y=Number(val(f,'yield'));
+      $('#re-cost').textContent = items.length&&y>0 ? money(recipeCostPerG({items,yield:y})*1000)+' por kg' : '—'; },
+    onSubmit(f){
+      const name=val(f,'name'), y=Number(val(f,'yield')), items=readLines(f,'recipe').filter(i=>i.supply);
+      if(!name) return mErr('Escribe el nombre de la receta.'); if(!(y>0)) return mErr('Escribe cuántos gramos rinde.');
+      if(!items.length||items.some(i=>!(i.qty>0))) return mErr('Agrega los ingredientes con su cantidad.');
+      const data={name,yield:y,items:items.map(i=>({supply:i.supply,qty:i.qty})),color:f.elements.color.value};
+      if(r.id) Object.assign(byId(S.recipes,r.id),data); else S.recipes.push({id:uid('r'),...data});
+      return r.id?'Receta actualizada':'Receta agregada';
+    }});
+}
+function lotForm(recipeId){
+  const lotRecipes=S.recipes.filter(r=>S.products.some(p=>p.recipe===r.id&&p.mode==='lote'));
+  const list=lotRecipes.length?lotRecipes:S.recipes;
+  openModal({title:'Producir lote de masa',sub:'Descuenta los insumos y guarda la masa para usarla en los próximos pedidos.',
+    body:`<div class="fields"><label class="f">Receta<select id="lo-recipe" name="recipe">${opt(list,recipeId||list[0]?.id)}</select></label>
+    <label class="f">Tandas<input id="lo-b" name="batches" type="number" min="0.25" step="0.25" value="1"></label>
+    <label class="f">Días que dura<input id="lo-days" name="days" type="number" min="1" value="4"></label></div>
+    <div id="lo-sum"></div>`,
+    onInput(f){ const r=byId(S.recipes,val(f,'recipe')), b=Number(val(f,'batches'))||0; if(!r) return;
+      const rows=r.items.map(i=>{const s=sup(i.supply),n=i.qty*b;return {s,n,short:n>s.stock};});
+      $('#lo-sum').innerHTML=`<div class="callout c-banana"><b>Salen ${grams(r.yield*b)} de masa.</b></div><div class="list small" style="margin-top:10px">${rows.map(x=>`<div class="it"><span>${esc(x.s.name)}</span><span class="num">${qty(x.n,x.s.kind)} ${x.short?'<span class="chip bad">solo hay '+qty(x.s.stock,x.s.kind)+'</span>':''}</span></div>`).join('')}</div>`; },
+    onSubmit(f){ const r=byId(S.recipes,val(f,'recipe')), b=Number(val(f,'batches')); if(!(b>0)) return mErr('Escribe cuántas tandas.');
+      const short=r.items.filter(i=>i.qty*b>sup(i.supply).stock); if(short.length) return mErr('No alcanza: '+short.map(i=>sup(i.supply).name).join(', ')+'.');
+      for(const i of r.items){ const s=sup(i.supply); s.stock-= s.kind==='unit'?Math.ceil(i.qty*b):i.qty*b; }
+      S.lots.push({id:uid('l'),recipe:r.id,grams:r.yield*b,left:r.yield*b,date:TODAY,expires:addDays(TODAY,Number(val(f,'days'))||4)});
+      return 'Lote guardado: '+grams(r.yield*b)+' de '+r.name.toLowerCase(); }});
+}
+
+/* --- Producto y presentación --- */
+function productForm(){
+  openModal({title:'Nuevo producto',sub:'Una unidad de lo que horneas, con los gramos de masa que lleva.',
+    body:`<label class="f">Nombre<input id="pr-name" name="name" required placeholder="Ej. Galleta de avena"></label>
+    <div><div class="eyebrow" style="margin-bottom:6px">Cómo se produce</div><div class="seg"><label><input type="radio" name="mode" value="lote" checked><span>Con lote de masa</span></label><label><input type="radio" name="mode" value="pedido"><span>Solo sobre pedido</span></label></div></div>
+    <div class="fields"><label class="f">Masa<select id="pr-recipe" name="recipe">${opt(S.recipes)}</select></label><label class="f">Gramos por unidad<input id="pr-g" name="grams" type="number" min="1" required><span class="h">Solo para la cocina. El cliente no lo ve.</span></label></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Figura</div><div class="seg">${[['','Clásica'],['choco','Chocolate'],['roll','Rollo'],['bread','Pan'],['pump','Calabaza'],['star','Dorada']].map(([k,t],i)=>`<label><input type="radio" name="look" value="${k}" ${i===0?'checked':''}><span>${t}</span></label>`).join('')}</div></div>`,
+    onSubmit(f){ const name=val(f,'name'), g=Number(val(f,'grams')); if(!name) return mErr('Escribe el nombre.'); if(!(g>0)) return mErr('Escribe los gramos por unidad.');
+      S.products.push({id:uid('pd'),name,mode:f.elements.mode.value,recipe:val(f,'recipe'),grams:g,look:f.elements.look.value,extras:[]}); return 'Producto agregado'; }});
+}
+function presForm(pr={}){
+  openModal({title:pr.id?'Editar presentación':'Nueva caja o presentación',sub:'Lo que el cliente compra: qué lleva, en qué empaque y a qué precio.',wide:true,
+    body:`<div class="fields"><label class="f">Nombre<input id="ps-name" name="name" required value="${esc(pr.name||'')}" placeholder="Ej. Caja x12 surtida"></label><label class="f">Precio de venta ($)<input id="ps-price" name="price" type="number" min="0" step="500" value="${pr.price||''}" required></label></div>
+    <div class="eyebrow">Qué lleva</div>${linesBlock('items',pr.items||[],'Agregar producto')}
+    <div class="eyebrow">Empaque (se descuenta por unidad)</div>${linesBlock('pack',pr.pack||[],'Agregar empaque')}
+    <label class="row small" style="gap:8px"><input type="checkbox" name="active" ${pr.active!==false?'checked':''} style="width:18px;height:18px;accent-color:var(--yellow-deep)"> Disponible para la venta</label>
+    <div id="ps-sum"></div>`,
+    onInput(f){ const tmp={price:Number(val(f,'price'))||0,items:readLines(f,'items').filter(i=>i.product&&i.units>0),pack:readLines(f,'pack').filter(k=>k.supply&&k.qty>0)};
+      const c=presCost(tmp), h=presHealth(tmp); const dough=tmp.items.reduce((a,i)=>a+i.units*(byId(S.products,i.product)?.grams||0),0);
+      $('#ps-sum').innerHTML=tmp.items.length?`<div class="callout ${h.k==='ok'?'c-sky':h.k==='warn'?'c-peach':'c-strawberry'}"><div class="row between"><span>Lleva ${grams(dough)} de masa · cuesta <b class="num">${money(c)}</b></span>${tmp.price?`<span class="chip ${h.k}">${h.t} · ${fmtN(presMargin(tmp)*100)} %</span>`:''}</div>${h.sug&&tmp.price?`<div class="small" style="margin-top:6px">Precio sugerido: <b>${money(h.sug)}</b></div>`:''}</div>`:''; },
+    onSubmit(f){ const name=val(f,'name'), price=Number(val(f,'price')), items=readLines(f,'items').filter(i=>i.product), pack=readLines(f,'pack').filter(k=>k.supply);
+      if(!name) return mErr('Escribe el nombre.'); if(!(price>0)) return mErr('Escribe el precio.'); if(!items.length||items.some(i=>!(i.units>0))) return mErr('Agrega qué productos lleva y cuántas unidades.');
+      const data={name,price,active:f.elements.active.checked,items:items.map(i=>({product:i.product,units:i.units})),pack:pack.filter(k=>k.qty>0).map(k=>({supply:k.supply,qty:k.qty}))};
+      if(pr.id) Object.assign(byId(S.presentations,pr.id),data); else S.presentations.push({id:uid('ps'),...data});
+      return pr.id?'Presentación actualizada':'Presentación agregada'; }});
+}
+
+/* --- Pedido --- */
+function orderForm(){
+  const pd=prodDateFor();
+  openModal({title:'Nuevo pedido',sub:`Se produce ${dateLabel(pd).toLowerCase()} (${longDate(pd)}). El domicilio lo cotiza el repartidor.`,wide:true,
+    body:`<div class="fields"><label class="f">Cliente<input id="or-name" name="customer" required placeholder="Nombre"></label><label class="f">WhatsApp<input id="or-phone" name="phone" inputmode="tel" placeholder="300 000 0000"></label></div>
+    <div class="eyebrow">Qué pidió</div>${linesBlock('order',[],'Agregar producto')}
+    <div class="fields"><div><div class="eyebrow" style="margin-bottom:6px">Entrega</div><div class="seg"><label><input type="radio" name="delivery" value="domicilio" checked><span>Domicilio</span></label><label><input type="radio" name="delivery" value="recoge"><span>Recoge en cocina</span></label></div></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Pago</div><div class="seg"><label><input type="radio" name="pay" value="transferencia" checked><span>Transferencia</span></label><label><input type="radio" name="pay" value="efectivo"><span>Efectivo</span></label></div></div></div>
+    <div class="fields" data-dom><label class="f">Dirección<input id="or-addr" name="address" placeholder="Calle, número, apto"></label><label class="f">Domicilio cotizado ($)<input id="or-fee" name="fee" type="number" min="0" step="500" value="5000"></label></div>
+    <div id="or-sum"></div>`,
+    onInput(f){
+      const dom=f.elements.delivery.value==='domicilio'; $('[data-dom]',f).hidden=!dom;
+      const lines=readLines(f,'order').filter(l=>l.pres&&l.qty>0);
+      const committed=S.orders.filter(o=>o.prod===pd&&o.status==='pendiente'&&!o.produced).flatMap(o=>o.lines);
+      const p=plan([...committed,...lines]);
+      const sub=lines.reduce((a,l)=>a+l.qty*byId(S.presentations,l.pres).price,0), fee=dom?Number(val(f,'fee'))||0:0;
+      $('#or-sum').innerHTML=lines.length?`<div class="callout ${p.shortages.length?'c-strawberry':'c-sky'}">${p.shortages.length?`<b>Con los pedidos de ese día no alcanza:</b> ${p.shortages.map(x=>esc(x.s.name)).join(', ')}.`:'<b>Se puede hacer.</b> Hay masa o insumos suficientes.'}</div>
+      <div class="card c-banana" style="padding:14px 16px"><div class="row between"><span>Productos</span><span class="num">${money(sub)}</span></div>${dom?`<div class="row between"><span>Domicilio</span><span class="num">${money(fee)}</span></div>`:''}<div class="row between" style="margin-top:6px;font-size:18px"><b>Total para el cliente</b><b class="num">${money(sub+fee)}</b></div>
+      ${f.elements.pay.value==='efectivo'&&dom?`<div class="small" style="margin-top:6px">El repartidor paga ${money(sub)} al recoger y cobra ${money(sub+fee)} al cliente.</div>`:''}</div>`:'';
+    },
+    onSubmit(f){
+      const customer=val(f,'customer'); if(!customer) return mErr('Escribe el nombre del cliente.');
+      const lines=readLines(f,'order').filter(l=>l.pres); if(!lines.length||lines.some(l=>!(l.qty>0))) return mErr('Agrega al menos un producto con su cantidad.');
+      const dom=f.elements.delivery.value==='domicilio'; if(dom&&!val(f,'address')) return mErr('Escribe la dirección de entrega.');
+      S.orders.push({id:uid('o'),n:S.nextOrder++,customer,phone:val(f,'phone'),address:dom?val(f,'address'):'',date:TODAY,prod:pd,lines:lines.map(l=>({pres:l.pres,qty:l.qty})),delivery:dom?'domicilio':'recoge',pay:f.elements.pay.value,fee:dom?Number(val(f,'fee'))||0:0,status:'pendiente',produced:false});
+      UI.tab.pedidos='pendiente';
+      return 'Pedido #'+(S.nextOrder-1)+' agregado';
+    }});
+}
+function sendForm(o){
+  openModal({title:'Enviar pedido #'+o.n,sub:'Se le pregunta primero al repartidor principal. El cliente recibe solo el aviso de que va en camino.',submit:'Marcar en camino',
+    body:`<div class="seg" style="flex-direction:column">${S.settings.couriers.map((c,i)=>`<label><input type="radio" name="courier" value="${c.id}" ${i===0?'checked':''}><span style="display:block">${i===0?'Principal · ':''}${esc(c.name)} · ${esc(c.phone)}</span></label>`).join('')}</div>
+    <div class="callout c-banana small">${o.pay==='efectivo'?`Pago en efectivo: el repartidor paga ${money(orderSubtotal(o))} al recoger y cobra <b>${money(orderTotal(o))}</b> al cliente.`:'Pagado por transferencia: el repartidor no cobra nada.'}</div>`,
+    onSubmit(f){ if(!f.elements.courier) return mErr('Agrega un repartidor en Configuración.'); o.status='camino'; o.courier=f.elements.courier.value; return 'Pedido #'+o.n+' va en camino'; }});
+}
+
+/* --- Edición especial --- */
+function editionForm(){
+  openModal({title:'Nueva edición especial',sub:'Se vende hasta la fecha de cierre o hasta completar el cupo, lo que pase primero.',
+    body:`<label class="f">Nombre<input id="ed-name" name="name" required placeholder="Ej. Día de la madre"></label>
+    <label class="f">Descripción<textarea id="ed-desc" name="desc" placeholder="Qué trae y por qué es especial"></textarea></label>
+    <div class="fields"><label class="f">Desde<input id="ed-start" name="start" type="date" value="${TODAY}" required></label><label class="f">Hasta<input id="ed-end" name="end" type="date" value="${addDays(TODAY,14)}" required></label><label class="f">Cupo (opcional)<input id="ed-cap" name="cap" type="number" min="1" placeholder="Sin límite"></label></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Qué se vende</div><div class="seg">${S.presentations.map(p=>`<label><input type="checkbox" name="pres" value="${p.id}"><span>${esc(p.name)}</span></label>`).join('')}</div></div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Color</div>${colorSeg('color','strawberry')}</div>`,
+    onSubmit(f){ const name=val(f,'name'), pres=$$('input[name=pres]:checked',f).map(i=>i.value);
+      if(!name) return mErr('Escribe el nombre.'); if(val(f,'end')<val(f,'start')) return mErr('La fecha de cierre debe ser después del inicio.'); if(!pres.length) return mErr('Elige al menos una presentación.');
+      S.editions.push({id:uid('e'),name,desc:val(f,'desc'),start:val(f,'start'),end:val(f,'end'),cap:Number(val(f,'cap'))||0,sold:0,pres,look:'star',color:f.elements.color.value}); return 'Edición creada'; }});
+}
+
+/* --- Confirmación genérica --- */
+function confirmBox(title,text,label,fn){ openModal({title,body:`<p>${text}</p>`,submit:label,danger:true,onSubmit:()=>fn()}); }
+
+/* --- Registrar producción --- */
+function registerProduction(day){
+  const pend=S.orders.filter(o=>o.prod===day&&o.status==='pendiente'&&!o.produced);
+  const p=plan(pend.flatMap(o=>o.lines));
+  if(p.shortages.length){ toast('Faltan insumos: '+p.shortages.map(x=>x.s.name).join(', ')); return; }
+  for(const d of p.doughRows){
+    let take=d.fromLots; for(const l of S.lots.filter(l=>l.recipe===d.recipe.id&&l.left>0).sort((a,b)=>a.expires.localeCompare(b.expires))){ const t=Math.min(l.left,take); l.left-=t; take-=t; if(take<=0) break; }
+  }
+  for(const x of p.supplies){ x.s.stock = Math.max(0, x.s.stock - (x.s.kind==='unit'?Math.ceil(x.need):x.need)); }
+  S.lots=S.lots.filter(l=>l.left>0.5);
+  pend.forEach(o=>o.produced=true);
+  save(); render(); toast('Producción registrada. '+pend.length+' pedidos listos para enviar');
+}
+
+/* ================= Eventos ================= */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const a=t.dataset.act, id=t.dataset.id;
+  if(a==='veil'){ if(e.target===t) closeModal(); return; }
+  if(t.tagName==='INPUT' && a!=='prod-check') return;
+  const done=msg=>{ save(); render(); if(msg) toast(msg); };
+  switch(a){
+    case 'close': closeModal(); break;
+    case 'logout': S.session=false; done(); break;
+    case 'tab': UI.tab[t.dataset.tab]=t.dataset.v; render(); break;
+    case 'addline': { const box=t.closest('.body').querySelector(`.lines[data-kind="${t.dataset.kind}"]`); box.insertAdjacentHTML('beforeend',LINE[t.dataset.kind]()); box.lastElementChild.querySelector('select')?.focus(); MODAL?.onInput?.(t.closest('form')); break; }
+    case 'rmline': { const f=t.closest('form'), r=t.closest('.line'), box=r.parentElement; if(box.children.length>1) r.remove(); else $$('input,select',r).forEach(i=>i.value=i.type==='number'&&box.dataset.kind==='order'?1:''); MODAL?.onInput?.(f); break; }
+    case 'copy': navigator.clipboard?.writeText(t.dataset.v).then(()=>toast('Copiado: '+t.dataset.v)).catch(()=>toast('Selecciona el número para copiarlo')); break;
+    case 'voice': openModal({title:'¿Cuánto produzco hoy?',sub:'Así responderá el asistente de voz de la cocina.',submit:'Entendido',body:voiceAnswer(),onSubmit:()=>null}); break;
+    case 'sup-new': supplierForm(); break;
+    case 'sup-edit': supplierForm(byId(S.suppliers,id)); break;
+    case 'sup-del': { const p=byId(S.suppliers,id); confirmBox('Eliminar proveedor','Se eliminará <b>'+esc(p.name)+'</b>. Sus insumos quedarán sin proveedor y las compras se conservan.','Eliminar',()=>{ S.suppliers=S.suppliers.filter(x=>x.id!==id); S.supplies.forEach(s=>{if(s.sup===id)s.sup='';}); return 'Proveedor eliminado'; }); break; }
+    case 'supply-new': supplyForm(); break;
+    case 'supply-edit': supplyForm(sup(id)); break;
+    case 'supply-del': { const s=sup(id); const used=S.recipes.some(r=>r.items.some(i=>i.supply===id))||S.presentations.some(p=>p.pack.some(k=>k.supply===id))||S.products.some(p=>p.extras.some(x=>x.supply===id));
+      if(used){ mErr('No se puede eliminar: lo usa una receta, un producto o un empaque.'); break; }
+      S.supplies=S.supplies.filter(x=>x.id!==id); closeModal(); done(s.name+' eliminado'); break; }
+    case 'purchase-new': purchaseForm(); break;
+    case 'recipe-new': recipeForm(); break;
+    case 'recipe-edit': recipeForm(byId(S.recipes,id)); break;
+    case 'lot-new': lotForm(id); break;
+    case 'product-new': productForm(); break;
+    case 'pres-new': presForm(); break;
+    case 'pres-edit': presForm(byId(S.presentations,id)); break;
+    case 'order-new': orderForm(); break;
+    case 'order-send': sendForm(byId(S.orders,id)); break;
+    case 'order-deliver': { const o=byId(S.orders,id); o.status='entregado'; done('Pedido #'+o.n+' entregado'); break; }
+    case 'order-cancel': { const o=byId(S.orders,id); confirmBox('Cancelar pedido #'+o.n,'El pedido de <b>'+esc(o.customer)+'</b> sale de la producción.','Cancelar pedido',()=>{ o.status='cancelado'; return 'Pedido cancelado'; }); break; }
+    case 'prod-done': registerProduction(t.dataset.day); break;
+    case 'prod-check': { const d=t.dataset.day; S.seenProd[d]=S.seenProd[d]||{}; S.seenProd[d][t.dataset.k]=t.checked; t.closest('.check').classList.toggle('done',t.checked); save(); break; }
+    case 'edition-new': editionForm(); break;
+    case 'edition-del': { const ed=byId(S.editions,id); confirmBox('Eliminar edición','Se eliminará <b>'+esc(ed.name)+'</b>. Las presentaciones siguen existiendo.','Eliminar',()=>{ S.editions=S.editions.filter(x=>x.id!==id); return 'Edición eliminada'; }); break; }
+    case 'account-new': openModal({title:'Nueva cuenta',body:`<div class="fields"><label class="f">Banco<input id="ac-bank" name="bank" required placeholder="Ej. Davivienda"></label><label class="f">Tipo<input id="ac-type" name="type" placeholder="Ahorros"></label><label class="f">Número<input id="ac-num" name="number" required></label><label class="f">Titular<input id="ac-owner" name="owner" value="${esc(S.settings.name)}"></label></div>`,
+      onSubmit(f){ if(!val(f,'bank')||!val(f,'number')) return mErr('Escribe el banco y el número.'); S.settings.accounts.push({id:uid('a'),bank:val(f,'bank'),type:val(f,'type')||'Cuenta',number:val(f,'number'),owner:val(f,'owner')}); return 'Cuenta agregada'; }}); break;
+    case 'account-del': S.settings.accounts=S.settings.accounts.filter(x=>x.id!==id); done('Cuenta eliminada'); break;
+    case 'courier-new': openModal({title:'Nuevo repartidor',sub:'Queda al final de la lista. Puedes subirlo después.',body:`<div class="fields"><label class="f">Nombre<input id="co-name" name="name" required></label><label class="f">WhatsApp<input id="co-phone" name="phone" inputmode="tel" required></label></div>`,
+      onSubmit(f){ if(!val(f,'name')||!val(f,'phone')) return mErr('Escribe nombre y WhatsApp.'); S.settings.couriers.push({id:uid('r'),name:val(f,'name'),phone:val(f,'phone')}); return 'Repartidor agregado'; }}); break;
+    case 'courier-up': case 'courier-down': { const c=S.settings.couriers, i=+t.dataset.i, j=a==='courier-up'?i-1:i+1; if(j<0||j>=c.length) break; [c[i],c[j]]=[c[j],c[i]]; done(); break; }
+    case 'courier-del': S.settings.couriers.splice(+t.dataset.i,1); done('Repartidor eliminado'); break;
+    case 'reset-ask': confirmBox('Volver a los datos de ejemplo','Se borra todo lo que agregaste en este navegador y vuelven los datos de ejemplo.','Restablecer',()=>{ const keep=S.session; S=seed(); S.session=keep; UI.tab={}; UI.q={}; return 'Datos de ejemplo restablecidos'; }); break;
+  }
+});
+document.addEventListener('submit',e=>{
+  const f=e.target; e.preventDefault();
+  if(f.dataset.form==='login'){ S.session=true; save(); location.hash='hoy'; render(); return; }
+  if(f.dataset.form==='settings'){ const st=S.settings; st.name=val(f,'name')||st.name; st.whatsapp=val(f,'whatsapp'); st.cutoff=val(f,'cutoff')||st.cutoff; st.margin=Math.min(90,Math.max(5,Number(val(f,'margin'))||50)); st.closed=$$('input[name=closed]:checked',f).map(i=>+i.value); save(); render(); toast('Configuración guardada'); return; }
+  if(f.dataset.form==='modal' && MODAL){ mErr(''); const r=MODAL.onSubmit(f); if(r===undefined) return; closeModal(); save(); render(); if(r) toast(r); }
+});
+document.addEventListener('input',e=>{
+  const q=e.target.dataset?.q; if(q){ UI.q[q]=e.target.value; const pos=e.target.selectionStart; render(); const el=$('#q-'+q); el.focus(); el.setSelectionRange(pos,pos); return; }
+  const f=e.target.closest('form[data-form=modal]'); if(f) MODAL?.onInput?.(f);
+});
+document.addEventListener('change',e=>{ const f=e.target.closest('form[data-form=modal]'); if(f) MODAL?.onInput?.(f); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && MODAL) closeModal(); });
+
+function voiceAnswer(){
+  const pend=S.orders.filter(o=>o.prod===TODAY&&o.status==='pendiente'&&!o.produced);
+  const p=plan(pend.flatMap(o=>o.lines));
+  const parts=p.doughRows.map(d=>d.toMake>0?`${grams(d.toMake)} de ${d.recipe.name.toLowerCase()}`:`nada de ${d.recipe.name.toLowerCase()} (alcanza el lote)`);
+  return `<div class="row" style="gap:10px;flex-wrap:nowrap"><div class="avatar" style="background:var(--yellow)">${icon('mic','style="width:18px;height:18px"')}</div><div class="card c-banana" style="padding:14px 16px"><p><i>“¿Cuánto tengo que producir hoy?”</i></p></div></div>
+  <div class="card" style="padding:16px"><p>${pend.length?`Hoy tienes ${pend.length} pedidos. Debes hacer ${parts.join(', ')}. ${p.shortages.length?'Ojo: falta '+p.shortages.map(x=>x.s.name.toLowerCase()).join(' y ')+'.':'Tienes todos los insumos.'}`:'Hoy no tienes pedidos pendientes por producir.'}</p></div>
+  <p class="small muted">En la versión real se activa con la voz, sin tocar la pantalla.</p>`;
+}
+
+render();
+</script>
+</body>
+</html>
