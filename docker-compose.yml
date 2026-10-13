@@ -1,0 +1,60 @@
+name: destello
+
+# Puertos propios para no chocar con aggendarme (3000/3001/5432):
+# frontend 3100, backend 3101, postgres 5434.
+services:
+  postgres:
+    image: postgres:16
+    container_name: destello_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: destello
+      POSTGRES_PASSWORD: destello123
+      POSTGRES_DB: destello
+    ports:
+      - "5434:5432"
+    volumes:
+      - destello_postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: destello_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://destello:destello123@postgres:5432/destello?schema=public
+      PORT: 3101
+    depends_on:
+      - postgres
+    ports:
+      - "3101:3101"
+    volumes:
+      - ./backend:/app
+      - destello_backend_node_modules:/app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: destello_frontend
+    restart: unless-stopped
+    environment:
+      # Solo servidor: proxy.ts reenvía /api/* al backend por la red de Docker.
+      BACKEND_URL: http://backend:3101
+    depends_on:
+      - backend
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./frontend:/app
+      - destello_frontend_node_modules:/app/node_modules
+      - destello_frontend_next:/app/.next
+
+volumes:
+  destello_postgres_data:
+  destello_backend_node_modules:
+  destello_frontend_node_modules:
+  destello_frontend_next:

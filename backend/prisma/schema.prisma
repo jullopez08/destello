@@ -1,0 +1,511 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Plataforma
+// Organization = la pastelería / panadería / cocina oculta (el tenant).
+// User         = SUPER_ADMIN (sin empresa) o ADMIN = la dueña de una empresa.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Organization {
+  id      String  @id @default(cuid())
+  name    String
+  /// Identificador para URLs (p. ej. "cocina-destello")
+  slug    String  @unique
+  active  Boolean @default(true)
+  /// Logo subido a Cloudinary
+  logoUrl String?
+  /// Paleta del panel elegida por la dueña: vainilla | fresa | lavanda | menta | durazno | cielo
+  palette String  @default("vainilla")
+
+  // Datos de la cocina (Configuración)
+  whatsapp        String?
+  /// "HH:mm": los pedidos tomados después pasan al siguiente día de producción
+  orderCutoff     String  @default("12:00")
+  /// Días sin producción, 0 = domingo … 6 = sábado
+  closedDays      Int[]   @default([0])
+  /// Margen que busca la dueña (%), para el precio sugerido
+  targetMargin    Int     @default(50)
+  nextOrderNumber Int     @default(1001)
+
+  /// Cuándo se borran todos los datos de la empresa (6 meses después de quedar inactiva).
+  /// Lo fija y lo limpia DataRetentionCron cada día.
+  dataDeletionScheduledAt DateTime?
+  /// Avisos ya enviados para esa fecha: 0 ninguno, 1 al programarse, 2 un mes antes, 3 una semana antes.
+  dataDeletionNoticesSent Int       @default(0)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  users            User[]
+  subscription     Subscription?
+  bankAccounts     BankAccount[]
+  couriers         Courier[]
+  suppliers        Supplier[]
+  supplies         Supply[]
+  purchases        Purchase[]
+  recipes          Recipe[]
+  doughLots        DoughLot[]
+  products         Product[]
+  presentations    Presentation[]
+  orders           Order[]
+  editions         Edition[]
+  productionChecks ProductionCheck[]
+}
+
+enum Role {
+  SUPER_ADMIN
+  /// Dueña de la empresa
+  ADMIN
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  name           String
+  roles          Role[]   @default([])
+  active         Boolean  @default(true)
+  /// null solo para SUPER_ADMIN
+  organizationId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  passwordResetToken          String?   @unique
+  passwordResetTokenExpiresAt DateTime?
+
+  /// Se rechaza todo JWT emitido antes de esta fecha (cerrar sesión en todos lados)
+  sessionsInvalidatedAt DateTime?
+
+  /// POST /auth/accept-terms; null = la dueña aún no acepta los términos
+  termsAcceptedAt DateTime?
+  termsVersion    String?
+
+  organization      Organization?  @relation(fields: [organizationId], references: [id])
+  billingContactFor Subscription[]
+
+  @@index([organizationId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cobro (Wompi)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Plan {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  /// Precio en centavos COP, como lo espera Wompi
+  price        Int
+  durationDays Int
+  isTrial      Boolean  @default(false)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  subscriptions Subscription[]
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  planId               String
+  status               SubscriptionStatus @default(TRIALING)
+  wompiPaymentSourceId String?
+  wompiCustomerEmail   String?
+  currentPeriodEnd     DateTime
+  gracePeriodEndsAt    DateTime?
+  /// Descuento manual 0-100 que pone el SUPER_ADMIN
+  discountPercent      Int                @default(0)
+  discountExpiresAt    DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  billingContactUserId String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  plan           Plan         @relation(fields: [planId], references: [id])
+  billingContact User?        @relation(fields: [billingContactUserId], references: [id])
+  payments       Payment[]
+
+  @@index([billingContactUserId])
+}
+
+enum PaymentMethod {
+  WOMPI
+  CASH
+}
+
+model Payment {
+  id                 String        @id @default(cuid())
+  subscriptionId     String
+  wompiTransactionId String?       @unique
+  method             PaymentMethod @default(WOMPI)
+  /// Centavos COP
+  amount             Int
+  /// Estado de Wompi: PENDING | APPROVED | DECLINED | ERROR; efectivo = APPROVED
+  status             String
+  note               String?
+  periodStart        DateTime
+  periodEnd          DateTime
+  createdAt          DateTime      @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+}
+
+/// Idempotencia del webhook de Wompi
+model WompiWebhookEvent {
+  id          String   @id @default(cuid())
+  checksum    String   @unique
+  processedAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cocina
+// Cantidades: los insumos por peso van en gramos, por volumen en ml y por unidad
+// en unidades. Dinero en pesos COP (no centavos). Los días van como "AAAA-MM-DD"
+// (hora de Bogotá) para no depender de la zona horaria del servidor.
+// Colores de tarjeta: banana | strawberry | lilac | peach | sky | mint
+// ─────────────────────────────────────────────────────────────────────────────
+
+model BankAccount {
+  id             String   @id @default(cuid())
+  organizationId String
+  bank           String
+  type           String
+  number         String
+  owner          String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+}
+
+model Courier {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  phone          String
+  /// Orden en que se les pregunta (0 = principal)
+  position       Int
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  orders       Order[]
+
+  @@index([organizationId])
+}
+
+model Supplier {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  contact        String?
+  phone          String?
+  email          String?
+  address        String?
+  notes          String?
+  color          String   @default("banana")
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  supplies     Supply[]
+  purchases    Purchase[]
+
+  @@index([organizationId])
+}
+
+enum SupplyKind {
+  MASS
+  VOLUME
+  UNIT
+}
+
+enum SupplyCategory {
+  INGREDIENT
+  PACKAGING
+}
+
+model Supply {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String
+  kind           SupplyKind
+  category       SupplyCategory @default(INGREDIENT)
+  /// g, ml o unidades
+  stock          Float          @default(0)
+  min            Float          @default(0)
+  /// Costo promedio por g, ml o unidad (pesos)
+  cost           Float          @default(0)
+  supplierId     String?
+  createdAt      DateTime       @default(now())
+
+  organization  Organization       @relation(fields: [organizationId], references: [id])
+  supplier      Supplier?          @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  purchaseLines PurchaseLine[]
+  recipeItems   RecipeItem[]
+  productExtras ProductExtra[]
+  packItems     PresentationPack[]
+
+  @@index([organizationId])
+}
+
+model Purchase {
+  id             String   @id @default(cuid())
+  organizationId String
+  supplierId     String?
+  /// AAAA-MM-DD
+  date           String
+  createdAt      DateTime @default(now())
+
+  organization Organization   @relation(fields: [organizationId], references: [id])
+  supplier     Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  lines        PurchaseLine[]
+
+  @@index([organizationId])
+}
+
+model PurchaseLine {
+  id         String @id @default(cuid())
+  purchaseId String
+  supplyId   String
+  /// g, ml o unidades
+  qty        Float
+  /// Total pagado por esta línea (pesos)
+  total      Int
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  supply   Supply   @relation(fields: [supplyId], references: [id])
+}
+
+model Recipe {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  /// Gramos de masa que rinde una tanda
+  yieldGrams     Float
+  color          String   @default("banana")
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  items        RecipeItem[]
+  lots         DoughLot[]
+  products     Product[]
+
+  @@index([organizationId])
+}
+
+model RecipeItem {
+  id       String @id @default(cuid())
+  recipeId String
+  supplyId String
+  qty      Float
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  supply Supply @relation(fields: [supplyId], references: [id])
+}
+
+/// Masa ya preparada y guardada (solo productos "por lote")
+model DoughLot {
+  id             String   @id @default(cuid())
+  organizationId String
+  recipeId       String
+  grams          Float
+  left           Float
+  /// AAAA-MM-DD
+  madeOn         String
+  expiresOn      String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  recipe       Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+enum ProductionMode {
+  /// Se hace masa por lotes y se guarda
+  LOT
+  /// Se hace solo con pedido
+  ON_DEMAND
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String
+  mode           ProductionMode @default(LOT)
+  recipeId       String
+  /// Gramos de masa por unidad (dato interno: el cliente no lo ve)
+  grams          Float
+  /// Figura de la galleta dibujada: "" | choco | roll | bread | pump | star
+  look           String         @default("")
+  createdAt      DateTime       @default(now())
+
+  organization    Organization       @relation(fields: [organizationId], references: [id])
+  recipe          Recipe             @relation(fields: [recipeId], references: [id])
+  extras          ProductExtra[]
+  inPresentations PresentationItem[]
+
+  @@index([organizationId])
+}
+
+/// Insumo extra por unidad de producto (capacillo, queso crema del glaseado…)
+model ProductExtra {
+  id        String @id @default(cuid())
+  productId String
+  supplyId  String
+  qty       Float
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supply  Supply  @relation(fields: [supplyId], references: [id])
+}
+
+/// Lo que se vende: una caja o presentación con su precio
+model Presentation {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  price          Int
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization          @relation(fields: [organizationId], references: [id])
+  items        PresentationItem[]
+  pack         PresentationPack[]
+  orderLines   OrderLine[]
+  editions     EditionPresentation[]
+
+  @@index([organizationId])
+}
+
+model PresentationItem {
+  id             String @id @default(cuid())
+  presentationId String
+  productId      String
+  units          Int
+
+  presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id])
+}
+
+model PresentationPack {
+  id             String @id @default(cuid())
+  presentationId String
+  supplyId       String
+  qty            Float
+
+  presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  supply       Supply       @relation(fields: [supplyId], references: [id])
+}
+
+enum DeliveryMode {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderPayment {
+  TRANSFER
+  CASH
+}
+
+enum OrderStatus {
+  PENDING
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id             String       @id @default(cuid())
+  organizationId String
+  number         Int
+  customer       String
+  phone          String?
+  address        String?
+  /// AAAA-MM-DD en que se tomó el pedido
+  orderedOn      String
+  /// AAAA-MM-DD en que se produce
+  productionDate String
+  delivery       DeliveryMode @default(DELIVERY)
+  payment        OrderPayment @default(TRANSFER)
+  /// Domicilio cotizado (pesos)
+  fee            Int          @default(0)
+  status         OrderStatus  @default(PENDING)
+  produced       Boolean      @default(false)
+  courierId      String?
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  courier      Courier?     @relation(fields: [courierId], references: [id], onDelete: SetNull)
+  lines        OrderLine[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId, productionDate])
+}
+
+model OrderLine {
+  id             String @id @default(cuid())
+  orderId        String
+  presentationId String
+  qty            Int
+  /// Precio de la presentación al tomar el pedido (pesos)
+  unitPrice      Int
+
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  presentation Presentation @relation(fields: [presentationId], references: [id])
+}
+
+/// Edición de temporada: se vende hasta la fecha de cierre o hasta completar el cupo
+model Edition {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  /// AAAA-MM-DD
+  startDate      String
+  endDate        String
+  /// 0 = sin cupo
+  cap            Int      @default(0)
+  look           String   @default("star")
+  color          String   @default("strawberry")
+  createdAt      DateTime @default(now())
+
+  organization  Organization          @relation(fields: [organizationId], references: [id])
+  presentations EditionPresentation[]
+
+  @@index([organizationId])
+}
+
+model EditionPresentation {
+  editionId      String
+  presentationId String
+
+  edition      Edition      @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+
+  @@id([editionId, presentationId])
+}
+
+/// Casillas marcadas en "Lista para armar" de un día de producción
+model ProductionCheck {
+  organizationId String
+  /// AAAA-MM-DD
+  date           String
+  key            String
+  done           Boolean @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, date, key])
+}

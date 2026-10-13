@@ -1,0 +1,183 @@
+import { Type } from 'class-transformer';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsEmail,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
+
+// Todos los formularios de la cocina. Cantidades en g, ml o und; dinero en pesos.
+
+export const CARD_COLORS = ['banana', 'strawberry', 'lilac', 'peach', 'sky', 'mint'] as const;
+export const COOKIE_LOOKS = ['', 'choco', 'roll', 'bread', 'pump', 'star'] as const;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+// ── Configuración ──
+
+export class UpdateKitchenSettingsDto {
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(80)
+  name?: string;
+
+  @IsOptional() @IsString() @MaxLength(30)
+  whatsapp?: string;
+
+  @IsOptional() @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'La hora de corte debe tener el formato HH:mm.' })
+  orderCutoff?: string;
+
+  @IsOptional() @IsArray() @IsInt({ each: true }) @Min(0, { each: true }) @Max(6, { each: true })
+  closedDays?: number[];
+
+  @IsOptional() @IsInt() @Min(5) @Max(90)
+  targetMargin?: number;
+}
+
+export class CreateBankAccountDto {
+  @IsString() @IsNotEmpty() @MaxLength(60) bank!: string;
+  @IsString() @IsNotEmpty() @MaxLength(30) type!: string;
+  @IsString() @IsNotEmpty() @MaxLength(40) number!: string;
+  @IsString() @IsNotEmpty() @MaxLength(80) owner!: string;
+}
+
+export class CreateCourierDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsString() @IsNotEmpty() @MaxLength(30) phone!: string;
+}
+
+export class MoveCourierDto {
+  @IsIn(['up', 'down']) direction!: 'up' | 'down';
+}
+
+export class ProductionCheckDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) key!: string;
+  @IsBoolean() done!: boolean;
+}
+
+// ── Proveedores e insumos ──
+
+export class SupplierDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsOptional() @IsString() @MaxLength(80) contact?: string;
+  @IsOptional() @IsString() @MaxLength(30) phone?: string;
+  @IsOptional() @ValidateIf((_, v) => v !== '') @IsEmail() email?: string;
+  @IsOptional() @IsString() @MaxLength(160) address?: string;
+  @IsOptional() @IsString() @MaxLength(500) notes?: string;
+  @IsIn(CARD_COLORS) color!: string;
+  /** Insumos que se le compran a este proveedor */
+  @IsArray() @IsString({ each: true }) supplyIds!: string[];
+}
+
+export class SupplyDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsIn(['MASS', 'VOLUME', 'UNIT']) kind!: 'MASS' | 'VOLUME' | 'UNIT';
+  @IsIn(['INGREDIENT', 'PACKAGING']) category!: 'INGREDIENT' | 'PACKAGING';
+  @IsNumber() @Min(0) stock!: number;
+  @IsNumber() @Min(0) min!: number;
+  /** por g, ml o und */
+  @IsNumber() @Min(0) cost!: number;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() supplierId?: string | null;
+}
+
+export class PurchaseLineDto {
+  @IsString() @IsNotEmpty() supplyId!: string;
+  @IsNumber() @Min(0.0001) qty!: number;
+  @IsInt() @Min(0) total!: number;
+}
+
+export class CreatePurchaseDto {
+  @IsString() @IsNotEmpty() supplierId!: string;
+  @Matches(ISO_DATE) date!: string;
+  @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => PurchaseLineDto)
+  lines!: PurchaseLineDto[];
+}
+
+// ── Recetas, lotes y productos ──
+
+export class SupplyQtyDto {
+  @IsString() @IsNotEmpty() supplyId!: string;
+  @IsNumber() @Min(0.0001) qty!: number;
+}
+
+export class RecipeDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsNumber() @Min(1) yieldGrams!: number;
+  @IsIn(CARD_COLORS) color!: string;
+  @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => SupplyQtyDto)
+  items!: SupplyQtyDto[];
+}
+
+export class CreateLotDto {
+  @IsString() @IsNotEmpty() recipeId!: string;
+  @IsNumber() @Min(0.25) @Max(100) batches!: number;
+  @IsInt() @Min(1) @Max(60) days!: number;
+}
+
+export class ProductDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsIn(['LOT', 'ON_DEMAND']) mode!: 'LOT' | 'ON_DEMAND';
+  @IsString() @IsNotEmpty() recipeId!: string;
+  @IsNumber() @Min(1) grams!: number;
+  @IsIn(COOKIE_LOOKS) look!: string;
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => SupplyQtyDto)
+  extras?: SupplyQtyDto[];
+}
+
+export class PresentationItemDto {
+  @IsString() @IsNotEmpty() productId!: string;
+  @IsInt() @Min(1) units!: number;
+}
+
+export class PresentationDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsInt() @Min(1) price!: number;
+  @IsBoolean() active!: boolean;
+  @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => PresentationItemDto)
+  items!: PresentationItemDto[];
+  @IsArray() @ValidateNested({ each: true }) @Type(() => SupplyQtyDto)
+  pack!: SupplyQtyDto[];
+}
+
+// ── Pedidos y ediciones ──
+
+export class OrderLineDto {
+  @IsString() @IsNotEmpty() presentationId!: string;
+  @IsInt() @Min(1) qty!: number;
+}
+
+export class CreateOrderDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) customer!: string;
+  @IsOptional() @IsString() @MaxLength(30) phone?: string;
+  @IsIn(['DELIVERY', 'PICKUP']) delivery!: 'DELIVERY' | 'PICKUP';
+  @ValidateIf((o: CreateOrderDto) => o.delivery === 'DELIVERY') @IsString() @IsNotEmpty({ message: 'Escribe la dirección de entrega.' }) @MaxLength(160)
+  address?: string;
+  @IsIn(['TRANSFER', 'CASH']) payment!: 'TRANSFER' | 'CASH';
+  @IsInt() @Min(0) fee!: number;
+  @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => OrderLineDto)
+  lines!: OrderLineDto[];
+}
+
+export class SendOrderDto {
+  @IsString() @IsNotEmpty() courierId!: string;
+}
+
+export class CreateEditionDto {
+  @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
+  @IsOptional() @IsString() @MaxLength(500) description?: string;
+  @Matches(ISO_DATE) startDate!: string;
+  @Matches(ISO_DATE) endDate!: string;
+  @IsInt() @Min(0) cap!: number;
+  @IsIn(CARD_COLORS) color!: string;
+  @IsIn(COOKIE_LOOKS) look!: string;
+  @IsArray() @ArrayMinSize(1) @IsString({ each: true }) presentationIds!: string[];
+}

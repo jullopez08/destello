@@ -1,0 +1,154 @@
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Role, SubscriptionStatus } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../prisma/prisma.service';
+import { handleUniqueConstraint } from '../common/utils/prisma-errors.util';
+import type { CurrentUserData } from '../common/decorators/current-user.decorator';
+import { purgeOrganizationData } from '../data-retention/purge-organization-data';
+import { CreateOrganizationDto } from './dto/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { UpdateBrandingDto } from './dto/update-branding.dto';
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const OWNER_SELECT = { id: true, name: true, email: true, active: true, termsAcceptedAt: true } as const;
+const ORGANIZATION_INCLUDE = {
+  subscription: { include: { plan: true } },
+  users: { where: { roles: { has: Role.ADMIN } }, select: OWNER_SELECT },
+} as const;
+
+@Injectable()
+export class OrganizationsService {
+
+  constructor(private readonly prisma: PrismaService) {}
+
+  // Crea la empresa, su suscripción y la cuenta de la dueña en una sola
+  // transacción. La dueña queda como contacto de facturación.
+  async create(dto: CreateOrganizationDto) {
+    const plan = await this.prisma.plan.findUnique({ where: { id: dto.planId } });
+
+    if (!plan) {
+      throw new BadRequestException('El plan especificado no existe.');
+    }
+
+    const existingEmail = await this.prisma.user.findUnique({ where: { email: dto.ownerEmail } });
+    if (existingEmail) {
+      throw new BadRequestException('Ya existe una cuenta con ese correo.');
+    }
+
+    const password = await bcrypt.hash(dto.ownerPassword, 10);
+
+    return handleUniqueConstraint(async () => {
+      return this.prisma.$transaction(async (tx) => {
+        const organization = await tx.organization.create({
+          data: { name: dto.name, slug: dto.slug, palette: dto.palette ?? 'vainilla' },
+        });
+
+        const owner = await tx.user.create({
+          data: {
+            email: dto.ownerEmail,
+            name: dto.ownerName,
+            password,
+            roles: [Role.ADMIN],
+            organizationId: organization.id,
+          },
+        });
+
+        await tx.subscription.create({
+          data: {
+            organizationId: organization.id,
+            planId: plan.id,
+            status: plan.isTrial ? SubscriptionStatus.TRIALING : SubscriptionStatus.ACTIVE,
+            currentPeriodEnd: new Date(Date.now() + plan.durationDays * MS_PER_DAY),
+            billingContactUserId: owner.id,
+          },
+        });
+
+        return tx.organization.findUniqueOrThrow({ where: { id: organization.id }, include: ORGANIZATION_INCLUDE });
+      });
+    }, 'Ya existe una empresa con ese identificador.');
+  }
+
+  findAll() {
+    return this.prisma.organization.findMany({
+      include: ORGANIZATION_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
+    const organization = await this.prisma.organization.findUnique({
+      where: { id },
+      include: ORGANIZATION_INCLUDE,
+    });
+
+    if (!organization) {
+      throw new NotFoundException('Empresa no encontrada.');
+    }
+
+    return organization;
+  }
+
+  async update(id: string, dto: UpdateOrganizationDto) {
+    await this.findOne(id);
+
+    return handleUniqueConstraint(
+      () => this.prisma.organization.update({
+        where: { id },
+        data: dto,
+        include: ORGANIZATION_INCLUDE,
+      }),
+      'Ya existe una empresa con ese identificador.',
+    );
+  }
+
+  // DESTRUCTIVO: borra la empresa y todo lo que cuelga de ella, lo mismo que
+  // hace DataRetentionCron a los 6 meses de quedar inactiva. Si la suscripción
+  // ya no está en prueba, solo se permite con la empresa inactiva, para no
+  // borrar una pastelería real por error.
+  async remove(id: string) {
+    const organization = await this.findOne(id);
+    const { subscription } = organization;
+
+    if (organization.active && subscription && subscription.status !== SubscriptionStatus.TRIALING) {
+      throw new BadRequestException(
+        'Esta empresa está activa y su suscripción no está en prueba. Para borrar sus datos, primero cancele su suscripción y luego vuelva a intentarlo.',
+      );
+    }
+
+    return this.prisma.$transaction((tx) => purgeOrganizationData(tx, id));
+  }
+
+  async getOwnBranding(currentUser: CurrentUserData) {
+    const organization = await this.requireOwnOrganization(currentUser);
+    return { name: organization.name, palette: organization.palette, logoUrl: organization.logoUrl };
+  }
+
+  async updateOwnBranding(currentUser: CurrentUserData, dto: UpdateBrandingDto) {
+    const organization = await this.requireOwnOrganization(currentUser);
+
+    const updated = await this.prisma.organization.update({
+      where: { id: organization.id },
+      data: {
+        ...(dto.palette !== undefined ? { palette: dto.palette } : {}),
+        ...(dto.logoUrl !== undefined ? { logoUrl: dto.logoUrl } : {}),
+      },
+    });
+
+    return { name: updated.name, palette: updated.palette, logoUrl: updated.logoUrl };
+  }
+
+  private async requireOwnOrganization(currentUser: CurrentUserData) {
+    if (!currentUser.organizationId) {
+      throw new ForbiddenException('Esta cuenta no pertenece a ninguna empresa.');
+    }
+
+    const organization = await this.prisma.organization.findUnique({ where: { id: currentUser.organizationId } });
+
+    if (!organization) {
+      throw new NotFoundException('Empresa no encontrada.');
+    }
+
+    return organization;
+  }
+}

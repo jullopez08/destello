@@ -1,0 +1,130 @@
+import './timezone';
+import { NestFactory } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+
+async function bootstrap() {
+  // rawBody: true so WhatsappWebhookSignatureGuard can verify Meta's
+  // X-Hub-Signature-256 against the exact bytes Meta signed (request.rawBody)
+  // — normal parsed req.body is unaffected, this only adds the raw buffer.
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+
+  // Trust exactly two hops. Without this, Express's default
+  // (`trust proxy: false`) makes req.ip resolve to the raw TCP peer address
+  // instead of the real client, which is what let GET
+  // /appointment/patient-search's ThrottlerGuard (getTracker defaults to
+  // req.ip) undercount distinct requests as different "clients" and never
+  // actually hit its limit.
+  //
+  // Depth 2, not 1: the real path today is browser -> Railway edge ->
+  // frontend -> Railway edge again -> here, because the frontend's
+  // BACKEND_URL currently points at this service's PUBLIC Railway domain
+  // (confirmed directly in Railway's dashboard), not its private
+  // *.railway.internal one — so there are two real proxy hops, each
+  // appending its own entry to X-Forwarded-For, not one.
+  //
+  // IMPORTANT — this number is coupled to that BACKEND_URL choice, not a
+  // free-standing constant: if BACKEND_URL is ever switched to the private
+  // network (removing the second edge hop entirely), this MUST come back
+  // down to 1. Getting it wrong in that direction isn't just a functional
+  // bug — with only one real hop, depth 2 makes Express walk back two
+  // entries into X-Forwarded-For, landing on whatever an external client
+  // put there themselves instead of discarding it, i.e. a real IP-spoofing
+  // hole. See the trust-proxy investigation this session for the full
+  // reasoning and the proxy-addr-level test that verifies this depth
+  // against a given hop count before trusting it.
+  app.getHttpAdapter().getInstance().set('trust proxy', 2);
+
+  // First middleware registered, so these headers land on every response —
+  // including ones a later guard/filter rejects early. This backend is a
+  // JSON API (plus the WhatsApp media byte-stream and one plain-text "/"):
+  // it never serves an HTML page that itself loads a script, stylesheet,
+  // font, or image from anywhere, self included — so the directives below
+  // are deliberately tighter than helmet's own defaults (which allow
+  // 'unsafe-inline' for styles and https:/data: for fonts/images) rather
+  // than looser: there's nothing real to allow beyond 'self', and nothing
+  // here ever needs 'unsafe-inline'. frame-ancestors 'none' mirrors
+  // X-Frame-Options: DENY below — both must agree, since a modern browser
+  // prefers CSP's frame-ancestors over X-Frame-Options when both are present.
+  app.use(
+    helmet({
+      strictTransportSecurity: {
+        maxAge: 31536000, // 1 year, the conventional HSTS value
+        includeSubDomains: true,
+      },
+      xFrameOptions: { action: 'deny' },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          fontSrc: ["'self'"],
+          formAction: ["'self'"],
+          frameAncestors: ["'none'"],
+          imgSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          scriptSrc: ["'self'"],
+          scriptSrcAttr: ["'none'"],
+          styleSrc: ["'self'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+    }),
+  );
+
+  const configService = app.get(ConfigService);
+  // Same FRONTEND_URL already used to build WhatsApp booking/reschedule
+  // links (see password-reset.service.ts, whatsapp-button-action.service.ts,
+  // whatsapp-welcome-button-action.service.ts) — one variable for "where the
+  // frontend lives" instead of a second one that could drift out of sync
+  // with it. Comma-separated so a local ngrok tunnel (needed to let Meta
+  // reach the WhatsApp webhook during testing) can be added alongside
+  // localhost without touching code, e.g.
+  // FRONTEND_URL=http://localhost:3000,https://abc123.ngrok-free.app —
+  // a single value works exactly as before.
+  //
+  // Local dev (.env): FRONTEND_URL=http://localhost:3000 (already set).
+  // Production (Railway): set FRONTEND_URL=https://aggendarme.com — no
+  // localhost, no ngrok, just the real domain.
+  const allowedOrigins = (configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000')
+    .split(',')
+    // Same trailing-slash normalization already applied to this same
+    // FRONTEND_URL value in password-reset.service.ts and
+    // whatsapp-webhook.util.ts — the Origin header a browser sends never
+    // has a trailing slash, so a stray one here (easy to add by copying a
+    // URL from the address bar) would otherwise silently fail to match and
+    // CORS would reject the request with no visible error.
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+
+  app.use(cookieParser());
+
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true
+    })
+  )
+  // Explicit '0.0.0.0': without a host, Node binds only the IPv6 wildcard
+  // (::) and relies on the OS's dual-stack fallback (IPV6_V6ONLY=0) to also
+  // accept IPv4 — confirmed via /proc/net/tcp (no IPv4 listener) vs
+  // /proc/net/tcp6 (:: on the port) inside the real container. That
+  // fallback isn't guaranteed across container runtimes, and Railway's edge
+  // was reaching the app's port (confirmed in its network logs) without the
+  // request ever showing up in this app's logs — consistent with the IPv4
+  // path having nothing listening on it. Binding IPv4 explicitly removes
+  // the dependency on that implicit kernel behavior entirely.
+  await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
+}
+bootstrap();
