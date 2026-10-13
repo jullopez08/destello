@@ -43,10 +43,13 @@ export class UpdateKitchenSettingsDto {
   targetMargin?: number;
 }
 
+// Cuenta bancaria o llave Bre-B (type "Llave Bre-B", la llave en number y el
+// banco opcional). Las llaves no se validan por tipo: celular, correo, cédula o
+// el código alfanumérico del banco, cualquiera sirve para transferir.
 export class CreateBankAccountDto {
-  @IsString() @IsNotEmpty() @MaxLength(60) bank!: string;
+  @IsString() @MaxLength(60) bank!: string;
   @IsString() @IsNotEmpty() @MaxLength(30) type!: string;
-  @IsString() @IsNotEmpty() @MaxLength(40) number!: string;
+  @IsString() @IsNotEmpty() @MaxLength(120) number!: string;
   @IsString() @IsNotEmpty() @MaxLength(80) owner!: string;
 }
 

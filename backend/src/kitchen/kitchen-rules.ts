@@ -225,7 +225,7 @@ export function weekdayOf(isoDate: string): number {
 }
 
 // Día en que se produce un pedido tomado en `now`: después de la hora de corte
-// pasa al día siguiente, y se salta los días sin producción.
+// pasa al día siguiente, y se salta los días en que el negocio está cerrado.
 export function productionDateFor(now: Date, cutoff: string, closedDays: number[]): string {
   const [h, m] = cutoff.split(':').map(Number);
   let day = toIsoDate(now);

@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { CreateBankAccountDto, CreateCourierDto, UpdateKitchenSettingsDto } from './dto/kitchen.dto';
+
+// Mismo valor que BREB_TYPE en frontend/components/kitchen/forms/settings-forms.tsx
+export const BREB_TYPE = 'Llave Bre-B';
 
 @Injectable()
 export class KitchenSettingsService {
@@ -24,7 +27,13 @@ export class KitchenSettingsService {
   }
 
   async addAccount(organizationId: string, dto: CreateBankAccountDto) {
-    await this.prisma.bankAccount.create({ data: { organizationId, ...dto } });
+    // Una cuenta bancaria necesita el banco; una llave Bre-B no (la llave basta)
+    if (dto.type !== BREB_TYPE && !dto.bank.trim()) {
+      throw new BadRequestException('Escribe el banco de la cuenta.');
+    }
+    await this.prisma.bankAccount.create({
+      data: { organizationId, ...dto, bank: dto.bank.trim(), number: dto.number.trim() },
+    });
     return this.snapshot.load(organizationId);
   }
 

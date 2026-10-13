@@ -28,7 +28,7 @@ model Organization {
   whatsapp        String?
   /// "HH:mm": los pedidos tomados después pasan al siguiente día de producción
   orderCutoff     String  @default("12:00")
-  /// Días sin producción, 0 = domingo … 6 = sábado
+  /// Días en que el negocio está cerrado (no produce ni entrega), 0 = domingo … 6 = sábado
   closedDays      Int[]   @default([0])
   /// Margen que busca la dueña (%), para el precio sugerido
   targetMargin    Int     @default(50)

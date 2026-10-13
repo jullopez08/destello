@@ -110,7 +110,7 @@ describe('kitchen rules — día de producción', () => {
     expect(productionDateFor(new Date('2026-10-13T12:00:00'), '12:00', [0])).toBe('2026-10-14');
   });
 
-  it('se salta los días sin producción', () => {
+  it('se salta los días en que el negocio está cerrado', () => {
     // sábado 17 después del corte → domingo cerrado → lunes 19
     expect(productionDateFor(new Date('2026-10-17T15:00:00'), '12:00', [0])).toBe('2026-10-19');
   });

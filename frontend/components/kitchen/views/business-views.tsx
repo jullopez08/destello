@@ -12,7 +12,7 @@ import { addDays, presentationCost, presentationHealth } from "@/lib/kitchen/rul
 import { dateLabel, DAYS, fmtN, initials, money } from "@/lib/kitchen/format"
 import { Empty, Eyebrow, Field, Kpi, PageHead, useModal } from "../shared"
 import { EditionForm } from "../forms/order-forms"
-import { AccountForm, CourierForm } from "../forms/settings-forms"
+import { AccountForm, BREB_TYPE, CourierForm } from "../forms/settings-forms"
 import { ConfirmForm } from "../forms/confirm-form"
 import { ChangePasswordForm } from "../forms/password-form"
 
@@ -285,7 +285,7 @@ export function SettingsView() {
             <Field label="Margen que buscas (%)"><input type="number" min="5" max="90" value={f.targetMargin} onChange={(e) => setF({ ...f, targetMargin: e.target.value })} required /></Field>
           </div>
           <div>
-            <Eyebrow>Días sin producción</Eyebrow>
+            <Eyebrow>Días cerrados</Eyebrow>
             <div className="seg">
               {DAYS.map((d, i) => (
                 <label key={d}>
@@ -343,19 +343,19 @@ export function SettingsView() {
 
         <div className="card">
           <div className="row between">
-            <h2 style={{ margin: 0 }}>Cuentas para transferencia</h2>
+            <h2 style={{ margin: 0 }}>Cuentas y llaves Bre-B</h2>
             <button className="btn soft sm" onClick={() => open(<AccountForm />)}>
               <Icon name="plus" />
               Agregar
             </button>
           </div>
-          <p className="small muted" style={{ margin: "6px 0 10px" }}>Las que les compartes a tus clientes cuando pagan por transferencia.</p>
+          <p className="small muted" style={{ margin: "6px 0 10px" }}>Las que les compartes a tus clientes cuando pagan por transferencia: cuentas bancarias o llaves Bre-B (celular, correo, cédula o la que te dio tu banco).</p>
           {data.accounts.length ? (
             <div className="list">
               {data.accounts.map((a) => (
                 <div className="it" key={a.id}>
                   <div>
-                    <b>{a.bank} · {a.type}</b>
+                    <b>{a.type === BREB_TYPE ? `Llave Bre-B${a.bank ? ` · ${a.bank}` : ""}` : `${a.bank} · ${a.type}`}</b>
                     <div className="small num">{a.number} · {a.owner}</div>
                   </div>
                   <button className="iconbtn" aria-label="Eliminar cuenta" onClick={() => act(`/accounts/${a.id}`, "DELETE", undefined, "Cuenta eliminada")}>
@@ -365,7 +365,7 @@ export function SettingsView() {
               ))}
             </div>
           ) : (
-            <Empty>Sin cuentas.</Empty>
+            <Empty>Sin cuentas ni llaves.</Empty>
           )}
         </div>
 
