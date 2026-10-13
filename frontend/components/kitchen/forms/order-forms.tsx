@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { Icon } from "@/components/ui/icon"
-import { byId, orderSubtotal, orderTotal, pendingFor, planFor, useKitchen } from "@/lib/kitchen/store"
+import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/kitchen/store"
 import { productionPlan } from "@/lib/kitchen/rules"
 import { addDays } from "@/lib/kitchen/rules"
-import { dateLabel, grams, longDate, money } from "@/lib/kitchen/format"
+import { dateLabel, longDate, money } from "@/lib/kitchen/format"
 import type { CookieLook, Order } from "@/lib/kitchen/types"
+import { createRecognition, productionAnswer, speak, stopSpeaking, wantsTomorrow } from "@/lib/kitchen/voice"
 import { ColorSeg, Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
@@ -249,35 +250,85 @@ export function EditionForm() {
 }
 
 // ── "¿Cuánto produzco hoy?" ──
+// Escucha la pregunta con el micrófono (reconocimiento de voz del navegador),
+// responde con el plan de producción y lo lee en voz alta. Sin IA ni servidor.
+// Si el navegador no reconoce voz, igual muestra y lee la respuesta.
 
 export function VoiceAnswer() {
   const { data, rules } = useKitchen()
   const { close } = useModal()
-  const pend = pendingFor(data, data.today)
-  const plan = planFor(rules, pend)
-  const parts = plan.doughRows.map((d) => {
-    const name = byId(data.recipes, d.recipeId)?.name.toLowerCase() ?? ""
-    return d.toMake > 0 ? `${grams(d.toMake)} de ${name}` : `nada de ${name} (alcanza el lote)`
-  })
-  const short = plan.shortages.map((x) => byId(data.supplies, x.supplyId)?.name.toLowerCase())
+  const [question, setQuestion] = useState("¿Cuánto tengo que producir hoy?")
+  const [answer, setAnswer] = useState(() => productionAnswer(data, rules))
+  const [listening, setListening] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const recognitionRef = useRef<ReturnType<typeof createRecognition>>(null)
+  const supported = typeof window !== "undefined" && createRecognition() !== null
+
+  useEffect(() => {
+    // Al abrir, lee la respuesta de hoy (las voces cargan con un poco de retraso)
+    const t = setTimeout(() => speak(answer), 300)
+    return () => {
+      clearTimeout(t)
+      stopSpeaking()
+      recognitionRef.current?.stop()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function listen() {
+    const r = createRecognition()
+    if (!r) return
+    recognitionRef.current = r
+    stopSpeaking()
+    setError(null)
+    setListening(true)
+    r.onresult = (e) => {
+      const text = e.results[0]?.[0]?.transcript ?? ""
+      const reply = productionAnswer(data, rules, wantsTomorrow(text))
+      setQuestion(text ? `“${text}”` : "¿Cuánto tengo que producir hoy?")
+      setAnswer(reply)
+      speak(reply)
+    }
+    r.onerror = (e) => {
+      setError(e.error === "not-allowed" ? "Permite el micrófono en el navegador para preguntarme en voz alta." : "No te escuché bien. Intenta de nuevo.")
+    }
+    r.onend = () => setListening(false)
+    r.start()
+  }
 
   return (
-    <Modal title="¿Cuánto produzco hoy?" sub="Lo que necesitas hacer con los pedidos de hoy." submit="Entendido" hideCancel onClose={close} onSubmit={close}>
+    <Modal title="¿Cuánto produzco hoy?" sub="Pregúntame en voz alta, por ejemplo: «¿cuánto produzco mañana?»." submit="Entendido" hideCancel onClose={close} onSubmit={close}>
       <div className="row nowrap" style={{ gap: 10 }}>
-        <div className="avatar" style={{ background: "var(--accent)" }}>
+        <button
+          type="button"
+          className="avatar"
+          style={{ background: listening ? "var(--strawberry, var(--accent))" : "var(--accent)", border: 0, cursor: supported ? "pointer" : "default" }}
+          onClick={listen}
+          disabled={!supported || listening}
+          aria-label={listening ? "Escuchando" : "Preguntar en voz alta"}
+        >
           <Icon name="mic" size={18} />
-        </div>
+        </button>
         <div className="card c-banana" style={{ padding: "14px 16px" }}>
-          <p><i>“¿Cuánto tengo que producir hoy?”</i></p>
+          <p><i>{listening ? "Te escucho…" : question}</i></p>
         </div>
       </div>
       <div className="card" style={{ padding: 16 }}>
-        <p>
-          {pend.length
-            ? `Hoy tienes ${pend.length} pedidos. Debes hacer ${parts.join(", ")}. ${short.length ? "Ojo: falta " + short.join(" y ") + "." : "Tienes todos los insumos."}`
-            : "Hoy no tienes pedidos pendientes por producir."}
-        </p>
+        <p>{answer}</p>
       </div>
+      <div className="row" style={{ gap: 8 }}>
+        {supported ? (
+          <button type="button" className="btn soft sm" onClick={listen} disabled={listening}>
+            <Icon name="mic" />
+            {listening ? "Escuchando…" : "Preguntar en voz alta"}
+          </button>
+        ) : null}
+        <button type="button" className="btn ghost sm" onClick={() => speak(answer)}>
+          Escuchar de nuevo
+        </button>
+      </div>
+      {!supported ? <p className="small muted">Tu navegador no reconoce voz; usa Chrome o Edge para preguntarme en voz alta.</p> : null}
+      {error ? <p className="small" style={{ color: "var(--cherry, inherit)" }}>{error}</p> : null}
     </Modal>
   )
 }
