@@ -10,6 +10,7 @@ import { KitchenProvider, useKitchen } from "@/lib/kitchen/store"
 import { initials, longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
 import { Empty, ModalHost } from "./shared"
+import { VoiceListener } from "./voice-listener"
 import { OrdersView, ProductionView, TodayView, type OrderTab } from "./views/operations-views"
 import { ProductsView, PurchasesView, RecipesView, SuppliersView, SuppliesView, type SupplyTab } from "./views/inventory-views"
 import { AnalyticsView, EditionsView, SettingsView } from "./views/business-views"
@@ -107,13 +108,13 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
   }[page]
 
   return (
-    <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today}>
+    <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceListener />}>
       {view}
     </Shell>
   )
 }
 
-function Shell({ page, locked, cutoff, today, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; children: React.ReactNode }) {
+function Shell({ page, locked, cutoff, today, voice, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; voice?: React.ReactNode; children: React.ReactNode }) {
   const { user, logout } = useSession()
 
   useEffect(() => {
@@ -158,6 +159,7 @@ function Shell({ page, locked, cutoff, today, children }: { page: string; locked
               </span>
             ) : null}
             {today ? <span className="pill num">{longDate(today)}</span> : null}
+            {voice}
           </div>
           <div className="who">
             <div style={{ textAlign: "right" }}>

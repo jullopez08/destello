@@ -8,7 +8,7 @@ import { productionPlan } from "@/lib/kitchen/rules"
 import { addDays } from "@/lib/kitchen/rules"
 import { dateLabel, longDate, money } from "@/lib/kitchen/format"
 import type { CookieLook, Order } from "@/lib/kitchen/types"
-import { createRecognition, productionAnswer, speak, stopSpeaking, wantsTomorrow } from "@/lib/kitchen/voice"
+import { answerQuestion, createRecognition, productionAnswer, speak, stopSpeaking } from "@/lib/kitchen/voice"
 import { ColorSeg, Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
@@ -284,7 +284,7 @@ export function VoiceAnswer() {
     setListening(true)
     r.onresult = (e) => {
       const text = e.results[0]?.[0]?.transcript ?? ""
-      const reply = productionAnswer(data, rules, wantsTomorrow(text))
+      const reply = answerQuestion(text, data, rules)
       setQuestion(text ? `“${text}”` : "¿Cuánto tengo que producir hoy?")
       setAnswer(reply)
       speak(reply)
@@ -297,7 +297,7 @@ export function VoiceAnswer() {
   }
 
   return (
-    <Modal title="¿Cuánto produzco hoy?" sub="Pregúntame en voz alta, por ejemplo: «¿cuánto produzco mañana?»." submit="Entendido" hideCancel onClose={close} onSubmit={close}>
+    <Modal title="¿Cuánto produzco hoy?" sub="Pregúntame como quieras: «¿cuántas galletas de chocolate hago?», «¿qué me falta?», «¿qué hay mañana?». Con la escucha activa basta decir «Oye Destello»." submit="Entendido" hideCancel onClose={close} onSubmit={close}>
       <div className="row nowrap" style={{ gap: 10 }}>
         <button
           type="button"
