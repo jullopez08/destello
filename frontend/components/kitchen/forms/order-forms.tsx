@@ -1,14 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
-import { Icon } from "@/components/ui/icon"
 import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/kitchen/store"
 import { productionPlan } from "@/lib/kitchen/rules"
 import { addDays } from "@/lib/kitchen/rules"
 import { dateLabel, longDate, money } from "@/lib/kitchen/format"
 import type { CookieLook, Order } from "@/lib/kitchen/types"
-import { answerQuestion, createRecognition, productionAnswer, speak, stopSpeaking } from "@/lib/kitchen/voice"
 import { ColorSeg, Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
@@ -245,90 +243,6 @@ export function EditionForm() {
         <Eyebrow>Color</Eyebrow>
         <ColorSeg name="color" value={color} onChange={setColor} />
       </div>
-    </Modal>
-  )
-}
-
-// ── "¿Cuánto produzco hoy?" ──
-// Escucha la pregunta con el micrófono (reconocimiento de voz del navegador),
-// responde con el plan de producción y lo lee en voz alta. Sin IA ni servidor.
-// Si el navegador no reconoce voz, igual muestra y lee la respuesta.
-
-export function VoiceAnswer() {
-  const { data, rules } = useKitchen()
-  const { close } = useModal()
-  const [question, setQuestion] = useState("¿Cuánto tengo que producir hoy?")
-  const [answer, setAnswer] = useState(() => productionAnswer(data, rules))
-  const [listening, setListening] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const recognitionRef = useRef<ReturnType<typeof createRecognition>>(null)
-  const supported = typeof window !== "undefined" && createRecognition() !== null
-
-  useEffect(() => {
-    // Al abrir, lee la respuesta de hoy (las voces cargan con un poco de retraso)
-    const t = setTimeout(() => speak(answer), 300)
-    return () => {
-      clearTimeout(t)
-      stopSpeaking()
-      recognitionRef.current?.stop()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function listen() {
-    const r = createRecognition()
-    if (!r) return
-    recognitionRef.current = r
-    stopSpeaking()
-    setError(null)
-    setListening(true)
-    r.onresult = (e) => {
-      const text = e.results[0]?.[0]?.transcript ?? ""
-      const reply = answerQuestion(text, data, rules)
-      setQuestion(text ? `“${text}”` : "¿Cuánto tengo que producir hoy?")
-      setAnswer(reply)
-      speak(reply)
-    }
-    r.onerror = (e) => {
-      setError(e.error === "not-allowed" ? "Permite el micrófono en el navegador para preguntarme en voz alta." : "No te escuché bien. Intenta de nuevo.")
-    }
-    r.onend = () => setListening(false)
-    r.start()
-  }
-
-  return (
-    <Modal title="¿Cuánto produzco hoy?" sub="Pregúntame como quieras: «¿cuántas galletas de chocolate hago?», «¿qué me falta?», «¿qué hay mañana?». Con la escucha activa basta decir «Oye Destello»." submit="Entendido" hideCancel onClose={close} onSubmit={close}>
-      <div className="row nowrap" style={{ gap: 10 }}>
-        <button
-          type="button"
-          className="avatar"
-          style={{ background: listening ? "var(--strawberry, var(--accent))" : "var(--accent)", border: 0, cursor: supported ? "pointer" : "default" }}
-          onClick={listen}
-          disabled={!supported || listening}
-          aria-label={listening ? "Escuchando" : "Preguntar en voz alta"}
-        >
-          <Icon name="mic" size={18} />
-        </button>
-        <div className="card c-banana" style={{ padding: "14px 16px" }}>
-          <p><i>{listening ? "Te escucho…" : question}</i></p>
-        </div>
-      </div>
-      <div className="card" style={{ padding: 16 }}>
-        <p>{answer}</p>
-      </div>
-      <div className="row" style={{ gap: 8 }}>
-        {supported ? (
-          <button type="button" className="btn soft sm" onClick={listen} disabled={listening}>
-            <Icon name="mic" />
-            {listening ? "Escuchando…" : "Preguntar en voz alta"}
-          </button>
-        ) : null}
-        <button type="button" className="btn ghost sm" onClick={() => speak(answer)}>
-          Escuchar de nuevo
-        </button>
-      </div>
-      {!supported ? <p className="small muted">Tu navegador no reconoce voz; usa Chrome o Edge para preguntarme en voz alta.</p> : null}
-      {error ? <p className="small" style={{ color: "var(--cherry, inherit)" }}>{error}</p> : null}
     </Modal>
   )
 }

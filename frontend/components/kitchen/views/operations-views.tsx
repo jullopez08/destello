@@ -7,7 +7,8 @@ import { addDays } from "@/lib/kitchen/rules"
 import { dateLabel, fmtN, grams, longDate, money, qty } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
 import { Empty, Kpi, PageHead, Tabs, useModal } from "../shared"
-import { OrderForm, SendForm, VoiceAnswer } from "../forms/order-forms"
+import { OrderForm, SendForm } from "../forms/order-forms"
+import { VoiceToggle } from "../voice-listener"
 import { ConfirmForm } from "../forms/confirm-form"
 
 function greeting() {
@@ -33,10 +34,7 @@ export function TodayView() {
   return (
     <>
       <PageHead title={greeting()} sub={`Así va la cocina hoy, ${longDate(today)}.`}>
-        <button className="btn soft" onClick={() => open(<VoiceAnswer />)}>
-          <Icon name="mic" />
-          Preguntar cuánto producir
-        </button>
+        <VoiceToggle />
         <button className="btn primary" onClick={() => open(<OrderForm />)}>
           <Icon name="plus" />
           Nuevo pedido
