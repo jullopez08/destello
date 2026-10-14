@@ -1,6 +1,6 @@
-import { byId, pendingFor, planFor } from "./store"
-import { addDays } from "./rules"
-import { grams } from "./format"
+import { byId, orderSubtotal, pendingFor, planFor } from "./store"
+import { addDays, presentationHealth } from "./rules"
+import { fmtN, grams } from "./format"
 import type { KitchenSnapshot } from "./types"
 import type { KitchenRuleData } from "./rules"
 
@@ -88,6 +88,86 @@ export function productsMentioned(question: string, products: { id: string; name
   return best > 0 ? scored.filter((x) => x.score === best).map((x) => x.id) : []
 }
 
+/** Dinero para leer en voz alta: "12.000 pesos" (con "$" la voz dice "dólares"). */
+const pesos = (n: number) => `${fmtN(Math.round(n))} pesos`
+
+const ANALYTICS_WEEKS = 8
+
+/** Repartidores en su orden (el primero es el principal) con sus envíos de las últimas 8 semanas. */
+function couriersAnswer(data: KitchenSnapshot): string {
+  if (!data.couriers.length) return "No tienes repartidores. Agrégalos en Configuración."
+  const since = addDays(data.today, -7 * ANALYTICS_WEEKS)
+  const trips: Record<string, number> = {}
+  for (const o of data.orders) {
+    if (o.courierId && o.orderedOn > since && (o.status === "ON_THE_WAY" || o.status === "DELIVERED")) trips[o.courierId] = (trips[o.courierId] ?? 0) + 1
+  }
+  const ordered = [...data.couriers].sort((a, b) => a.position - b.position)
+  const [main, ...rest] = ordered
+  const sentences = [`Tu repartidor principal es ${main.name}.`]
+  if (rest.length) sentences.push(`Después siguen ${joinList(rest.map((c) => c.name))}.`)
+  const busiest = ordered.map((c) => ({ c, n: trips[c.id] ?? 0 })).filter((x) => x.n > 0).sort((a, b) => b.n - a.n)
+  sentences.push(
+    busiest.length
+      ? `En las últimas ${ANALYTICS_WEEKS} semanas: ${joinList(busiest.map(({ c, n }) => `${c.name} llevó ${n} ${n === 1 ? "pedido" : "pedidos"}`))}.`
+      : `En las últimas ${ANALYTICS_WEEKS} semanas no han llevado pedidos.`,
+  )
+  return sentences.join(" ")
+}
+
+/** Unidades vendidas por presentación en las últimas 8 semanas, de más a menos. */
+function salesRanking(data: KitchenSnapshot) {
+  const since = addDays(data.today, -7 * ANALYTICS_WEEKS)
+  const units: Record<string, number> = {}
+  for (const o of data.orders) {
+    if (o.status === "CANCELLED" || o.orderedOn <= since) continue
+    for (const l of o.lines) units[l.presentationId] = (units[l.presentationId] ?? 0) + l.qty
+  }
+  return data.presentations
+    .filter((p) => p.active || units[p.id])
+    .map((p) => ({ name: p.name.toLowerCase(), n: units[p.id] ?? 0 }))
+    .sort((a, b) => b.n - a.n)
+}
+
+const sold = (x: { name: string; n: number }) => `${x.name} (${x.n === 0 ? "ninguna venta" : `${x.n} ${x.n === 1 ? "venta" : "ventas"}`})`
+
+/** Los que menos se venden y los que no dejan ganancia (lo mismo que muestra Analítica). */
+function weakProductsAnswer(data: KitchenSnapshot, rules: KitchenRuleData, onlyMargin = false): string {
+  const ranking = salesRanking(data)
+  if (!ranking.length) return "Todavía no tienes productos a la venta."
+  const least = ranking.slice(-3).reverse()
+  const flagged = data.presentations
+    .filter((p) => p.active)
+    .map((p) => ({ p, h: presentationHealth(p, rules, data.settings.targetMargin) }))
+    .filter((x) => x.h.kind !== "ok")
+  const sentences = onlyMargin ? [] : [`En las últimas ${ANALYTICS_WEEKS} semanas, los que menos se venden son: ${joinList(least.map(sold))}.`]
+  const losing = flagged.filter((x) => x.h.kind === "bad").map((x) => x.p.name.toLowerCase())
+  const low = flagged.filter((x) => x.h.kind === "warn").map((x) => x.p.name.toLowerCase())
+  if (losing.length) sentences.push(`Pierden dinero: ${joinList(losing)}.`)
+  if (low.length) sentences.push(`Tienen margen bajo: ${joinList(low)}.`)
+  if (flagged.length) sentences.push("En Analítica ves el precio sugerido para cada uno.")
+  else sentences.push("Todos dejan buena ganancia.")
+  return sentences.join(" ")
+}
+
+function bestProductsAnswer(data: KitchenSnapshot): string {
+  const top = salesRanking(data).filter((x) => x.n > 0).slice(0, 3)
+  if (!top.length) return `No hay ventas en las últimas ${ANALYTICS_WEEKS} semanas.`
+  return `En las últimas ${ANALYTICS_WEEKS} semanas, lo que más se vende es: ${joinList(top.map(sold))}.`
+}
+
+/** Ventas sin domicilios: esta semana (7 días) y las últimas 4 semanas. */
+function salesAnswer(data: KitchenSnapshot): string {
+  const live = data.orders.filter((o) => o.status !== "CANCELLED")
+  const total = (days: number) => live.filter((o) => o.orderedOn > addDays(data.today, -days)).reduce((a, o) => a + orderSubtotal(o), 0)
+  const today = live.filter((o) => o.orderedOn === data.today).reduce((a, o) => a + orderSubtotal(o), 0)
+  return `Hoy llevas ${pesos(today)} en ventas. En los últimos 7 días, ${pesos(total(7))}, y en las últimas 4 semanas, ${pesos(total(28))}, sin contar domicilios.`
+}
+
+const HELP =
+  "No te entendí. Puedo decirte qué hornear hoy o mañana, cuántas galletas de un sabor, qué insumos faltan, " +
+  "cuántos pedidos tienes, qué hay por entregar, quiénes son tus repartidores, cuánto has vendido, " +
+  "qué se vende más y qué productos rinden menos."
+
 export function answerQuestion(question: string, data: KitchenSnapshot, rules: KitchenRuleData): string {
   const q = normalizeSpeech(question)
   const tomorrow = wantsTomorrow(q)
@@ -95,6 +175,17 @@ export function answerQuestion(question: string, data: KitchenSnapshot, rules: K
   const when = tomorrow ? "Mañana" : "Hoy"
   const pend = pendingFor(data, day)
   const plan = planFor(rules, pend)
+
+  // Antes que "entregas": "domiciliario" también empieza por "domicili"
+  if (/(repartidor|domiciliari|mensajer|motorizad)/.test(q)) return couriersAnswer(data)
+
+  // "Ganancia" o "margen" solo pregunta por la plata; "rendimiento" o "peores", también por lo que menos se vende
+  const aboutMargin = /(perdida|pierd|ganancia|margen)/.test(q)
+  if (aboutMargin || /(rendimiento|rinde|rinden|menos se vend|menos vend|vendo menos|se venden menos|menos salida|no se vende|peor)/.test(q)) {
+    return weakProductsAnswer(data, rules, aboutMargin && !/(rendimiento|rinde|rinden|menos|peor)/.test(q))
+  }
+  if (/(mas se vend|mas vend|vendo mas|mejor|mas salida|favorito|mas pedid|mas piden)/.test(q)) return bestProductsAnswer(data)
+  if (/\b(vendi|vendido|vendimos|ventas|venta|facture|facturado|plata|dinero|ingres)/.test(q)) return salesAnswer(data)
 
   if (/\b(falta|faltan|comprar|compro|insumo|insumos)\b/.test(q)) {
     const short = plan.shortages.map((x) => byId(data.supplies, x.supplyId)?.name.toLowerCase()).filter(Boolean) as string[]
@@ -132,7 +223,12 @@ export function answerQuestion(question: string, data: KitchenSnapshot, rules: K
     return `${when} toca hornear ${joinList(pieces.map(({ product, count }) => `${count} ${pluralName(product.name, count)} de ${grams(product.grams)}`))}.`
   }
 
-  return productionAnswer(data, rules, tomorrow)
+  // El plan completo solo si la pregunta es de producción; si no, se dice qué se puede preguntar
+  // (antes, cualquier pregunta desconocida recibía el plan y parecía que respondía otra cosa)
+  if (/\b(hacer|hago|hornear|horneo|produc\w*|preparar|preparo|plan|toca|cocina|masa|hoy|manana|recuerdame|pendiente\w*)\b/.test(q) || !q) {
+    return productionAnswer(data, rules, tomorrow)
+  }
+  return HELP
 }
 
 // ── Palabra clave "Oye Destello" ──
