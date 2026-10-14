@@ -282,6 +282,30 @@ label.f span.h { font-weight: 400; color: var(--ink-2); font-size: 12px; }
 .legal ul { padding-left: 20px; }
 .legal table { min-width: 0; font-size: 14px; }
 
+/* ---------- Tablas en el celular: cada fila es una tarjeta ----------
+   En pantallas angostas una tabla obliga a deslizar de lado y la gente no lo
+   descubre: se pierden columnas (Costo, Valor, Estado). Con .tbl.cardify cada
+   fila se vuelve una tarjeta y cada dato lleva su nombre encima (data-label).
+   Clases de celda: c-title (nombre, ancho completo), c-full (dato a ancho
+   completo), c-num (número del pedido), c-actions (botones al pie). Las demás
+   van de a dos por fila. El encabezado sigue en el HTML para lectores de pantalla. */
+@media (max-width: 640px) {
+  .tbl.cardify { overflow: visible; border: 0; background: transparent; border-radius: 0; }
+  .tbl.cardify table, .tbl.cardify tbody { display: block; min-width: 0; }
+  .tbl.cardify thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tbl.cardify tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px; margin-bottom: 12px; }
+  .tbl.cardify td { display: block; padding: 0; border: 0; text-align: left; min-width: 0; overflow-wrap: anywhere; }
+  .tbl.cardify tr.click:hover td { background: transparent; }
+  .tbl.cardify td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
+  .tbl.cardify td.c-title, .tbl.cardify td.c-full, .tbl.cardify td.c-actions, .tbl.cardify td.c-num { grid-column: 1 / -1; }
+  .tbl.cardify td.c-title b { font-size: 17px; }
+  .tbl.cardify td.c-num { font-size: 12px; margin-bottom: -8px; }
+  .tbl.cardify td.c-num::before { content: "Pedido #"; }
+  .tbl.cardify td.c-actions { padding-top: 10px; border-top: 1px dashed var(--line); }
+  .tbl.cardify td.c-actions:empty { display: none; }
+  .tbl.cardify td .bar { min-width: 0; }
+}
+
 /* ---------- Celular: barra de abajo y "Más" ---------- */
 .tabbar { display: none; }
 .more-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }

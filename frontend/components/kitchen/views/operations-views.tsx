@@ -241,7 +241,7 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
       </PageHead>
       <Tabs value={tab} onChange={setTab} options={tabs.map(([k, t]) => [k, `${t} · ${count(k)}`] as [OrderTab, string])} />
       {rows.length ? (
-        <div className="tbl">
+        <div className="tbl cardify">
           <table>
             <thead>
               <tr><th>#</th><th>Cliente</th><th>Productos</th><th>Entrega</th><th>Pago</th><th className="r">Total</th><th>Estado</th><th></th></tr>
@@ -249,17 +249,17 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
             <tbody>
               {rows.map((o) => (
                 <tr key={o.id}>
-                  <td className="num muted">{o.number}</td>
-                  <td>
+                  <td className="num muted c-num">{o.number}</td>
+                  <td className="c-title">
                     <b>{o.customer}</b>
                     <div className="small muted">{o.phone}</div>
                   </td>
-                  <td className="small">
+                  <td className="small c-full" data-label="Productos">
                     {o.lines.map((l, i) => (
                       <div key={i}>{l.qty} × {byId(data.presentations, l.presentationId)?.name}</div>
                     ))}
                   </td>
-                  <td className="small">
+                  <td className="small c-full" data-label="Entrega">
                     {o.delivery === "DELIVERY" ? (
                       <>Domicilio<div className="muted">{o.address}</div></>
                     ) : (
@@ -267,13 +267,13 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
                     )}
                     <div className="muted">Se produce: {dateLabel(o.productionDate, data.today)}</div>
                   </td>
-                  <td><span className={`chip ${o.payment === "CASH" ? "banana" : "lilac"}`}>{o.payment === "CASH" ? "Efectivo" : "Transferencia"}</span></td>
-                  <td className="r num">
+                  <td data-label="Pago"><span className={`chip ${o.payment === "CASH" ? "banana" : "lilac"}`}>{o.payment === "CASH" ? "Efectivo" : "Transferencia"}</span></td>
+                  <td className="r num" data-label="Total">
                     <b>{money(orderTotal(o))}</b>
                     {o.fee ? <div className="small muted">incluye {money(o.fee)} domicilio</div> : null}
                   </td>
-                  <td>{statusChip(o)}</td>
-                  <td>{actions(o)}</td>
+                  <td className="c-full" data-label="Estado">{statusChip(o)}</td>
+                  <td className="c-actions">{actions(o)}</td>
                 </tr>
               ))}
             </tbody>
