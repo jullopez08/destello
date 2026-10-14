@@ -8,10 +8,15 @@ const body = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "sw
 export const metadata: Metadata = {
   title: "Destello · Panel de la cocina",
   description: "Pedidos del día, producción, inventario por peso y proveedores para pastelerías, panaderías y cocinas ocultas.",
+  applicationName: "Destello",
+  appleWebApp: { capable: true, title: "Destello", statusBarStyle: "default" },
+  icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
 }
 
 export const viewport: Viewport = {
   themeColor: "#fff7e6",
+  // Ocupa toda la pantalla del celular; la barra de abajo respeta la zona segura (env(safe-area-inset-*)).
+  viewportFit: "cover",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

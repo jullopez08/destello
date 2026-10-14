@@ -254,6 +254,24 @@ export function VoiceToggle() {
   )
 }
 
+/** Micrófono grande en el centro de la barra de abajo del celular. */
+export function VoiceMicButton() {
+  const { supported, on, toggle } = useContext(VoiceContext)
+  return (
+    <button
+      type="button"
+      className={on ? "tab-mic on" : "tab-mic"}
+      onClick={() => toggle(!on)}
+      aria-pressed={on}
+      aria-label={on ? "Dejar de escuchar" : "Activar «Oye Destello»"}
+      disabled={!supported}
+      title={supported ? undefined : "Para hablarle a Destello usa Chrome o Edge."}
+    >
+      <Icon name="mic" size={26} />
+    </button>
+  )
+}
+
 /** En la barra superior, solo mientras escucha: así se sabe en cualquier sección. */
 export function VoiceIndicator() {
   const { on, toggle } = useContext(VoiceContext)

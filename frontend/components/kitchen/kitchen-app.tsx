@@ -1,34 +1,21 @@
 "use client"
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
-import { Icon, type IconName } from "@/components/ui/icon"
+import { Icon } from "@/components/ui/icon"
 import { Cookie } from "@/components/ui/cookie"
 import { api } from "@/lib/api"
 import type { MySubscription } from "@/lib/billing"
 import { useSession } from "@/lib/session"
 import { KitchenProvider, useKitchen } from "@/lib/kitchen/store"
+import { PAGES, TAB_PAGES } from "@/lib/kitchen/pages"
 import { initials, longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
 import { Empty, ModalHost } from "./shared"
-import { VoiceIndicator, VoiceProvider } from "./voice-listener"
+import { VoiceIndicator, VoiceMicButton, VoiceProvider } from "./voice-listener"
+import { MoreView } from "./views/more-view"
 import { OrdersView, ProductionView, TodayView, type OrderTab } from "./views/operations-views"
 import { ProductsView, PurchasesView, RecipesView, SuppliersView, SuppliesView, type SupplyTab } from "./views/inventory-views"
 import { AnalyticsView, EditionsView, SettingsView } from "./views/business-views"
-
-const PAGES: [string, string, IconName][] = [
-  ["hoy", "Hoy", "hoy"],
-  ["pedidos", "Pedidos", "pedidos"],
-  ["produccion", "Producción", "produccion"],
-  ["proveedores", "Proveedores", "proveedores"],
-  ["insumos", "Insumos", "insumos"],
-  ["compras", "Compras", "compras"],
-  ["recetas", "Recetas y masas", "recetas"],
-  ["productos", "Productos y cajas", "productos"],
-  ["ediciones", "Ediciones especiales", "ediciones"],
-  ["analitica", "Analítica", "analitica"],
-  ["configuracion", "Configuración", "configuracion"],
-  ["suscripcion", "Suscripción", "suscripcion"],
-]
 
 // Navegación por #hash, como el diseño: cada sección tiene su enlace.
 function subscribeHash(cb: () => void) {
@@ -80,7 +67,7 @@ export function KitchenApp() {
 
 function KitchenPages({ subscription }: { subscription: MySubscription }) {
   const { data } = useKitchen()
-  const page = useHashPage(PAGES.map((p) => p[0]), "hoy")
+  const page = useHashPage([...PAGES.map((p) => p[0]), "mas"], "hoy")
   // Estado de pestañas y búsquedas por sección, como el diseño.
   const [orderTab, setOrderTab] = useState<OrderTab>("pendiente")
   const [prodDay, setProdDay] = useState<string | null>(null)
@@ -105,18 +92,19 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
     analitica: <AnalyticsView />,
     configuracion: <SettingsView />,
     suscripcion: <SubscriptionView subscription={subscription} />,
+    mas: <MoreView />,
   }[page]
 
   return (
     <VoiceProvider>
-      <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceIndicator />}>
+      <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceIndicator />} mic={<VoiceMicButton />}>
         {view}
       </Shell>
     </VoiceProvider>
   )
 }
 
-function Shell({ page, locked, cutoff, today, voice, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; voice?: React.ReactNode; children: React.ReactNode }) {
+function Shell({ page, locked, cutoff, today, voice, mic, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; voice?: React.ReactNode; mic?: React.ReactNode; children: React.ReactNode }) {
   const { user, logout } = useSession()
 
   useEffect(() => {
@@ -174,6 +162,37 @@ function Shell({ page, locked, cutoff, today, voice, children }: { page: string;
         </div>
         {children}
       </main>
+      {locked ? null : <TabBar page={page} mic={mic} />}
     </div>
+  )
+}
+
+/** Barra fija de abajo en el celular (en el computador se oculta y queda el menú lateral). */
+function TabBar({ page, mic }: { page: string; mic?: React.ReactNode }) {
+  const tab = (k: string, title: string) => (
+    <a href={`#${k}`} className={k === page ? "on" : ""} aria-current={k === page ? "page" : undefined}>
+      <span className="ico"><Icon name={k as "hoy"} /></span>
+      {title}
+    </a>
+  )
+  const moreOn = !TAB_PAGES.includes(page)
+  return (
+    <nav className="tabbar" aria-label="Secciones principales">
+      {tab("hoy", "Hoy")}
+      {tab("pedidos", "Pedidos")}
+      <div className="mic-slot">{mic}</div>
+      {tab("produccion", "Producción")}
+      <a href="#mas" className={moreOn ? "on" : ""} aria-current={page === "mas" ? "page" : undefined}>
+        <span className="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
+            <rect x="4" y="4" width="6" height="6" rx="1.5" />
+            <rect x="14" y="4" width="6" height="6" rx="1.5" />
+            <rect x="4" y="14" width="6" height="6" rx="1.5" />
+            <rect x="14" y="14" width="6" height="6" rx="1.5" />
+          </svg>
+        </span>
+        Más
+      </a>
+    </nav>
   )
 }
