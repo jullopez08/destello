@@ -2,6 +2,9 @@
 const nextConfig = {
   // No anunciar "X-Powered-By: Next.js".
   poweredByHeader: false,
+  // Solo en desarrollo: abrir el panel desde un celular de la misma red wifi
+  // (http://<IP del computador>:3100). Sin esto, Next bloquea sus archivos de desarrollo.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*"],
   images: {
     unoptimized: true,
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
