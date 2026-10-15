@@ -6,9 +6,31 @@ import { byId, useKitchen } from "@/lib/kitchen/store"
 import { presentationCost, presentationHealth, presentationMargin, productCost } from "@/lib/kitchen/rules"
 import { fmtN, grams, money } from "@/lib/kitchen/format"
 import { Empty, PageHead, useModal } from "../shared"
-import { PresentationForm, ProductForm } from "../forms/product-forms"
+import { ProductForm } from "../forms/product-forms"
+import { PresentationForm } from "../forms/presentation-form"
+import type { KitchenSnapshot, Presentation } from "@/lib/kitchen/types"
 
-// ── Productos y cajas ──
+// ── Productos y lo que se vende ──
+
+const KIND_LABEL = { BOX: "Caja armada", UNIT: "Por unidad", SIZES: "Sabor y tamaño" } as const
+
+const lower = (s: string | undefined) => s?.toLowerCase() ?? ""
+const supplyName = (data: KitchenSnapshot, id: string | null) => lower(byId(data.supplies, id)?.name)
+
+// Qué lleva y en qué empaque va, según cómo se vende.
+function contents(data: KitchenSnapshot, pr: Presentation): [string, string] {
+  const product = (id: string) => byId(data.products, id)?.name ?? ""
+  const pack = pr.pack.map((k) => `${k.qty} ${supplyName(data, k.supplyId)}`).join(", ")
+  if (pr.kind === "UNIT") return [`Sabores: ${pr.items.map((i) => product(i.productId)).join(", ")}`, pack ? `Empaque de siempre: ${pack}` : "Sin empaque"]
+  if (pr.kind === "SIZES") {
+    const flavors = pr.items.map((i) => `${product(i.productId)}${i.surcharge ? ` (+ ${money(i.surcharge)})` : ""}`).join(", ")
+    const sizes = pr.sizes.map((s) => `${s.name} ${money(s.price)}${s.packSupplyId ? ` en ${supplyName(data, s.packSupplyId)}` : ""}`).join(" · ")
+    return [`Sabores: ${flavors}`, sizes]
+  }
+  return [pr.items.map((i) => `${i.units} ${lower(product(i.productId))}`).join(" + "), pack]
+}
+
+const priceLabel = (pr: Presentation) => (pr.kind === "UNIT" ? `${money(pr.price)} c/u` : pr.kind === "SIZES" ? `Desde ${money(pr.price)}` : money(pr.price))
 
 export function ProductsView() {
   const { data, rules } = useKitchen()
@@ -16,11 +38,11 @@ export function ProductsView() {
 
   return (
     <>
-      <PageHead title="Productos y cajas" sub="El producto dice cuántos gramos de masa lleva cada unidad. La caja es lo que se vende y descuenta su empaque.">
+      <PageHead title="Productos y lo que vendes" sub="El producto es lo que horneas, con sus gramos. Lo que vendes puede ser una caja armada, por unidad o por sabor y tamaño; su precio ya incluye el empaque.">
         <button className="btn soft" onClick={() => open(<ProductForm />)} disabled={!data.recipes.length}>Nuevo producto</button>
         <button className="btn primary" onClick={() => open(<PresentationForm />)} disabled={!data.products.length}>
           <Icon name="plus" />
-          Nueva caja o presentación
+          Nuevo: lo que vendes
         </button>
       </PageHead>
       {data.products.length ? (
@@ -52,23 +74,24 @@ export function ProductsView() {
         <div className="tbl cardify">
           <table>
             <thead>
-              <tr><th>Presentación</th><th>Contenido</th><th className="r">Precio</th><th className="r">Costo</th><th className="r">Margen</th><th>Estado</th></tr>
+              <tr><th>Lo que vendes</th><th>Qué lleva</th><th className="r">Precio</th><th className="r">Costo</th><th className="r">Margen</th><th>Estado</th></tr>
             </thead>
             <tbody>
               {data.presentations.map((pr) => {
                 const c = presentationCost(pr, rules)
                 const h = presentationHealth(pr, rules, data.settings.targetMargin)
+                const [main, sub] = contents(data, pr)
                 return (
                   <tr className="click" key={pr.id} onClick={() => open(<PresentationForm presentation={pr} />)} tabIndex={0} onKeyDown={(e) => e.key === "Enter" && open(<PresentationForm presentation={pr} />)}>
                     <td className="c-title">
                       <b>{pr.name}</b>
-                      {pr.active ? null : <div className="small muted">Pausada</div>}
+                      <div className="small muted">{KIND_LABEL[pr.kind]}{pr.active ? "" : " · Pausada"}</div>
                     </td>
-                    <td className="small c-full" data-label="Contenido">
-                      {pr.items.map((i) => `${i.units} ${byId(data.products, i.productId)?.name.toLowerCase() ?? ""}`).join(" + ")}
-                      <div className="muted">{pr.pack.map((k) => `${k.qty} ${byId(data.supplies, k.supplyId)?.name.toLowerCase() ?? ""}`).join(", ")}</div>
+                    <td className="small c-full" data-label="Qué lleva">
+                      {main}
+                      <div className="muted">{sub}</div>
                     </td>
-                    <td className="r num" data-label="Precio"><b>{money(pr.price)}</b></td>
+                    <td className="r num" data-label="Precio"><b>{priceLabel(pr)}</b></td>
                     <td className="r num" data-label="Costo">{money(c)}</td>
                     <td className="r num" data-label="Margen">{fmtN(presentationMargin(pr, rules) * 100)} %</td>
                     <td data-label="Estado">
@@ -82,7 +105,7 @@ export function ProductsView() {
           </table>
         </div>
       ) : (
-        <Empty>Aún no tienes cajas ni presentaciones para vender.</Empty>
+        <Empty>Aún no tienes nada para vender.</Empty>
       )}
     </>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
-import { byId, orderTotal, useKitchen } from "@/lib/kitchen/store"
+import { byId, lineLabel, orderTotal, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel, money } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
 import { Empty, PageHead, Tabs, useModal } from "../shared"
@@ -97,7 +97,7 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
                   </td>
                   <td className="small c-full" data-label="Productos">
                     {o.lines.map((l, i) => (
-                      <div key={i}>{l.qty} × {byId(data.presentations, l.presentationId)?.name}</div>
+                      <div key={i}>{lineLabel(data, l)}</div>
                     ))}
                   </td>
                   <td className="small c-full" data-label="Entrega">

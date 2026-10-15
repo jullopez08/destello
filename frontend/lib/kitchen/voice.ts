@@ -27,6 +27,10 @@ export function wantsTomorrow(question: string): boolean {
   return /ma[ñn]ana/i.test(question)
 }
 
+// Peso de cada pieza: en sabor y tamaño depende del molde, así que sale del plan.
+const pieceGrams = (plan: { units: Record<string, number>; unitGrams: Record<string, number> }, id: string, fallback: number) =>
+  plan.units[id] ? Math.round((plan.unitGrams[id] ?? 0) / plan.units[id]) || fallback : fallback
+
 export function productionAnswer(data: KitchenSnapshot, rules: KitchenRuleData, tomorrow = false): string {
   const day = tomorrow ? addDays(data.today, 1) : data.today
   const when = tomorrow ? "Mañana" : "Hoy"
@@ -37,7 +41,7 @@ export function productionAnswer(data: KitchenSnapshot, rules: KitchenRuleData, 
   const pieces = Object.entries(plan.units)
     .map(([productId, count]) => ({ product: byId(data.products, productId), count }))
     .filter((x) => x.product && x.count > 0)
-    .map(({ product, count }) => `${count} ${pluralName(product!.name, count)} de ${grams(product!.grams)}`)
+    .map(({ product, count }) => `${count} ${pluralName(product!.name, count)} de ${grams(pieceGrams(plan, product!.id, product!.grams))}`)
 
   const dough = plan.doughRows
     .filter((d) => d.toMake > 0)
@@ -220,7 +224,7 @@ export function answerQuestion(question: string, data: KitchenSnapshot, rules: K
       const names = mentioned.map((id) => byId(data.products, id)!.name.toLowerCase())
       return `${when} no tienes pedidos de ${joinList(names)}.`
     }
-    return `${when} toca hornear ${joinList(pieces.map(({ product, count }) => `${count} ${pluralName(product.name, count)} de ${grams(product.grams)}`))}.`
+    return `${when} toca hornear ${joinList(pieces.map(({ product, count }) => `${count} ${pluralName(product.name, count)} de ${grams(pieceGrams(plan, product.id, product.grams))}`))}.`
   }
 
   // El plan completo solo si la pregunta es de producción; si no, se dice qué se puede preguntar

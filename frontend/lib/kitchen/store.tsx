@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { api, errorMessage } from "@/lib/api"
 import { useToast } from "@/components/ui/toast"
-import type { KitchenSnapshot, Order } from "./types"
+import type { KitchenSnapshot, Order, OrderLine } from "./types"
 import { KitchenRuleData, productionPlan } from "./rules"
 
 interface KitchenValue {
@@ -84,6 +84,14 @@ export function useKitchen(): KitchenValue {
 // ── Ayudas de lectura ──
 
 export const byId = <T extends { id: string }>(list: T[], id: string | null | undefined) => (id ? list.find((x) => x.id === id) : undefined)
+
+// "3 × Galleta rellena · Macadamia", "1 × Cheesecake Mediano · Pistacho"
+export function lineLabel(data: KitchenSnapshot, l: Pick<OrderLine, "presentationId" | "qty" | "productId" | "sizeId">) {
+  const p = byId(data.presentations, l.presentationId)
+  const size = byId(p?.sizes ?? [], l.sizeId)?.name
+  const flavor = byId(data.products, l.productId)?.name
+  return `${l.qty} × ${p?.name ?? ""}${size ? ` ${size}` : ""}${flavor ? ` · ${flavor}` : ""}`
+}
 
 export const orderSubtotal = (o: Order) => o.lines.reduce((sum, l) => sum + l.qty * l.unitPrice, 0)
 export const orderTotal = (o: Order) => orderSubtotal(o) + (o.fee || 0)

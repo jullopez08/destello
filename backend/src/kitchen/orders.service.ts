@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { consumedAmount, productionDateFor, productionPlan, toIsoDate } from './kitchen-rules';
 import { CreateEditionDto, CreateOrderDto } from './dto/kitchen.dto';
+import { buildOrderLines } from './order-lines';
 
 @Injectable()
 export class OrdersService {
@@ -14,7 +15,7 @@ export class OrdersService {
   ) {}
 
   // El pedido se produce el día que toca según la hora de corte y los días sin
-  // producción. Guarda el precio de cada caja tal como estaba al pedirla.
+  // producción. Guarda el precio de cada línea tal como estaba al pedirla.
   async createOrder(organizationId: string, dto: CreateOrderDto) {
     const now = new Date();
     const today = toIsoDate(now);
@@ -23,7 +24,7 @@ export class OrdersService {
       const ids = [...new Set(dto.lines.map((l) => l.presentationId))];
       const presentations = await tx.presentation.findMany({
         where: { organizationId, id: { in: ids } },
-        include: { editions: { include: { edition: true } } },
+        include: { items: true, sizes: true, editions: { include: { edition: true } } },
       });
       if (presentations.length !== ids.length) throw new BadRequestException('Algún producto no existe.');
 
@@ -31,6 +32,9 @@ export class OrdersService {
         if (!p.active) throw new BadRequestException(`"${p.name}" está pausada y no se puede vender.`);
         await this.assertEditionOpen(tx, organizationId, p, dto.lines, today);
       }
+
+      const packaging = await tx.supply.findMany({ where: { organizationId, category: 'PACKAGING' }, select: { id: true } });
+      const lines = buildOrderLines(dto.lines, presentations, new Set(packaging.map((x) => x.id)));
 
       const organization = await tx.organization.update({
         where: { id: organizationId },
@@ -49,13 +53,7 @@ export class OrdersService {
           delivery: dto.delivery,
           payment: dto.payment,
           fee: dto.delivery === 'DELIVERY' ? dto.fee : 0,
-          lines: {
-            create: dto.lines.map((l) => ({
-              presentationId: l.presentationId,
-              qty: l.qty,
-              unitPrice: presentations.find((p) => p.id === l.presentationId)!.price,
-            })),
-          },
+          lines: { create: lines },
         },
       });
     });

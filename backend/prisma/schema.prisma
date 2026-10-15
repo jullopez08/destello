@@ -256,6 +256,8 @@ model Supply {
   recipeItems   RecipeItem[]
   productExtras ProductExtra[]
   packItems     PresentationPack[]
+  sizePacks     PresentationSize[]
+  linePacks     OrderLine[]
 
   @@index([organizationId])
 }
@@ -356,6 +358,7 @@ model Product {
   recipe          Recipe             @relation(fields: [recipeId], references: [id])
   extras          ProductExtra[]
   inPresentations PresentationItem[]
+  orderLines      OrderLine[]
 
   @@index([organizationId])
 }
@@ -372,10 +375,20 @@ model ProductExtra {
 }
 
 /// Lo que se vende: una caja o presentación con su precio
+/// Cómo se vende: caja armada (siempre lo mismo), por unidad (la clienta elige
+/// sabores y cuántas) o por sabor y tamaño (tortas).
+enum SaleKind {
+  BOX
+  UNIT
+  SIZES
+}
+
 model Presentation {
   id             String   @id @default(cuid())
   organizationId String
   name           String
+  kind           SaleKind @default(BOX)
+  /// BOX: precio de la caja · UNIT: precio por unidad · SIZES: el del tamaño más barato
   price          Int
   active         Boolean  @default(true)
   createdAt      DateTime @default(now())
@@ -383,22 +396,48 @@ model Presentation {
   organization Organization          @relation(fields: [organizationId], references: [id])
   items        PresentationItem[]
   pack         PresentationPack[]
+  sizes        PresentationSize[]
   orderLines   OrderLine[]
   editions     EditionPresentation[]
 
   @@index([organizationId])
 }
 
+/// BOX: lo que lleva la caja · UNIT y SIZES: los sabores que se pueden elegir (units = 1)
 model PresentationItem {
   id             String @id @default(cuid())
   presentationId String
   productId      String
   units          Int
+  /// SIZES: lo que se cobra de más por este sabor (pesos)
+  surcharge      Int    @default(0)
 
   presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
   product      Product      @relation(fields: [productId], references: [id])
 }
 
+/// Tamaños de una presentación por sabor y tamaño (Pequeño, Mediano, Grande).
+model PresentationSize {
+  id             String  @id @default(cuid())
+  presentationId String
+  name           String
+  /// "2 a 4 porciones"
+  portions       String  @default("")
+  /// Molde o referencia para la cocina: "20 cm"
+  mold           String  @default("")
+  price          Int
+  /// Gramos de masa por molde; 0 = los del producto
+  grams          Float   @default(0)
+  /// Empaque que se descuenta por cada uno (caja de torta, base)
+  packSupplyId   String?
+  position       Int     @default(0)
+
+  presentation Presentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  packSupply   Supply?      @relation(fields: [packSupplyId], references: [id], onDelete: SetNull)
+  orderLines   OrderLine[]
+}
+
+/// BOX: empaque por caja · UNIT: empaque de siempre, uno por pedido
 model PresentationPack {
   id             String @id @default(cuid())
   presentationId String
@@ -461,9 +500,18 @@ model OrderLine {
   qty            Int
   /// Precio de la presentación al tomar el pedido (pesos)
   unitPrice      Int
+  /// UNIT y SIZES: el sabor elegido
+  productId      String?
+  /// SIZES: el tamaño elegido
+  sizeId         String?
+  /// UNIT: otro empaque para este pedido (si no, el de siempre)
+  packSupplyId   String?
 
-  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  presentation Presentation @relation(fields: [presentationId], references: [id])
+  order        Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  presentation Presentation      @relation(fields: [presentationId], references: [id])
+  product      Product?          @relation(fields: [productId], references: [id])
+  size         PresentationSize? @relation(fields: [sizeId], references: [id])
+  packSupply   Supply?           @relation(fields: [packSupplyId], references: [id])
 }
 
 /// Edición de temporada: se vende hasta la fecha de cierre o hasta completar el cupo

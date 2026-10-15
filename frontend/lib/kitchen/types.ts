@@ -55,13 +55,42 @@ export interface Product {
   extras: { supplyId: string; qty: number }[]
 }
 
+/** BOX: caja armada · UNIT: por unidad · SIZES: sabor y tamaño */
+export type SaleKind = "BOX" | "UNIT" | "SIZES"
+
+export interface PresentationSize {
+  id: string
+  name: string
+  portions: string
+  mold: string
+  price: number
+  /** gramos de masa por molde; 0 = los del producto */
+  grams: number
+  packSupplyId: string | null
+}
+
 export interface Presentation {
   id: string
   name: string
+  kind: SaleKind
+  /** BOX: la caja · UNIT: por unidad · SIZES: el tamaño más barato */
   price: number
   active: boolean
-  items: { productId: string; units: number }[]
+  /** BOX: lo que lleva · UNIT y SIZES: los sabores (con recargo en SIZES) */
+  items: { productId: string; units: number; surcharge: number }[]
+  /** BOX: por caja · UNIT: el de siempre, uno por pedido */
   pack: { supplyId: string; qty: number }[]
+  sizes: PresentationSize[]
+}
+
+export interface OrderLine {
+  orderId: string
+  presentationId: string
+  qty: number
+  unitPrice: number
+  productId: string | null
+  sizeId: string | null
+  packSupplyId: string | null
 }
 
 export type OrderStatus = "PENDING" | "ON_THE_WAY" | "DELIVERED" | "CANCELLED"
@@ -80,7 +109,7 @@ export interface Order {
   status: OrderStatus
   produced: boolean
   courierId: string | null
-  lines: { presentationId: string; qty: number; unitPrice: number }[]
+  lines: OrderLine[]
 }
 
 export interface Edition {

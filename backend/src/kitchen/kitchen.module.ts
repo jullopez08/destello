@@ -5,11 +5,12 @@ import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { KitchenSettingsService } from './kitchen-settings.service';
 import { InventoryService } from './inventory.service';
 import { RecipeBookService } from './recipe-book.service';
+import { PresentationsService } from './presentations.service';
 import { OrdersService } from './orders.service';
 
 @Module({
   imports: [PrismaModule],
   controllers: [KitchenController],
-  providers: [KitchenSnapshotService, KitchenSettingsService, InventoryService, RecipeBookService, OrdersService],
+  providers: [KitchenSnapshotService, KitchenSettingsService, InventoryService, RecipeBookService, PresentationsService, OrdersService],
 })
 export class KitchenModule {}

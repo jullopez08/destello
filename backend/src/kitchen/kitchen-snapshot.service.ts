@@ -6,6 +6,8 @@ import { addDays, KitchenRuleData, productionDateFor, toIsoDate } from './kitche
 
 type Db = PrismaService | Prisma.TransactionClient;
 
+const PRESENTATION_INCLUDE = { items: true, pack: true, sizes: { orderBy: { position: 'asc' } } } satisfies Prisma.PresentationInclude;
+
 export function requireOrganization(currentUser: CurrentUserData): string {
   if (!currentUser.organizationId) {
     throw new ForbiddenException('Esta cuenta no pertenece a ninguna empresa.');
@@ -40,7 +42,7 @@ export class KitchenSnapshotService {
         db.recipe.findMany({ where: { organizationId }, include: { items: true }, orderBy: { createdAt: 'asc' } }),
         db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 } }, orderBy: { expiresOn: 'asc' } }),
         db.product.findMany({ where: { organizationId }, include: { extras: true }, orderBy: { createdAt: 'asc' } }),
-        db.presentation.findMany({ where: { organizationId }, include: { items: true, pack: true }, orderBy: { createdAt: 'asc' } }),
+        db.presentation.findMany({ where: { organizationId }, include: PRESENTATION_INCLUDE, orderBy: { createdAt: 'asc' } }),
         db.order.findMany({
           where: { organizationId, OR: [{ orderedOn: { gte: since } }, { status: { in: ['PENDING', 'ON_THE_WAY'] } }] },
           include: { lines: true },
@@ -102,10 +104,12 @@ export class KitchenSnapshotService {
       presentations: presentations.map((p) => ({
         id: p.id,
         name: p.name,
+        kind: p.kind,
         price: p.price,
         active: p.active,
-        items: p.items.map(({ productId, units }) => ({ productId, units })),
+        items: p.items.map(({ productId, units, surcharge }) => ({ productId, units, surcharge })),
         pack: p.pack.map(({ supplyId, qty }) => ({ supplyId, qty })),
+        sizes: p.sizes.map(({ id, name, portions, mold, price, grams, packSupplyId }) => ({ id, name, portions, mold, price, grams, packSupplyId })),
       })),
       orders: orders.map((o) => ({
         id: o.id,
@@ -121,7 +125,15 @@ export class KitchenSnapshotService {
         status: o.status,
         produced: o.produced,
         courierId: o.courierId,
-        lines: o.lines.map(({ presentationId, qty, unitPrice }) => ({ presentationId, qty, unitPrice })),
+        lines: o.lines.map(({ orderId, presentationId, qty, unitPrice, productId, sizeId, packSupplyId }) => ({
+          orderId,
+          presentationId,
+          qty,
+          unitPrice,
+          productId,
+          sizeId,
+          packSupplyId,
+        })),
       })),
       editions: editions.map((e) => ({
         id: e.id,
@@ -146,7 +158,7 @@ export class KitchenSnapshotService {
       db.recipe.findMany({ where: { organizationId }, include: { items: true } }),
       db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 } }, orderBy: { expiresOn: 'asc' } }),
       db.product.findMany({ where: { organizationId }, include: { extras: true } }),
-      db.presentation.findMany({ where: { organizationId }, include: { items: true, pack: true } }),
+      db.presentation.findMany({ where: { organizationId }, include: PRESENTATION_INCLUDE }),
     ]);
 
     return {
@@ -154,7 +166,7 @@ export class KitchenSnapshotService {
       recipes: recipes.map((r) => ({ id: r.id, name: r.name, yieldGrams: r.yieldGrams, items: r.items })),
       lots: lots.map(({ id, recipeId, left, expiresOn }) => ({ id, recipeId, left, expiresOn })),
       products: products.map((p) => ({ id: p.id, mode: p.mode, recipeId: p.recipeId, grams: p.grams, extras: p.extras })),
-      presentations: presentations.map((p) => ({ id: p.id, price: p.price, items: p.items, pack: p.pack })),
+      presentations: presentations.map((p) => ({ id: p.id, kind: p.kind, price: p.price, items: p.items, pack: p.pack, sizes: p.sizes })),
     };
   }
 }

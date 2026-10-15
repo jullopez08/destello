@@ -4,9 +4,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { assertSupplies, own } from './ownership';
 import { addDays, consumedAmount, toIsoDate } from './kitchen-rules';
-import { CreateLotDto, PresentationDto, ProductDto, RecipeDto } from './dto/kitchen.dto';
+import { CreateLotDto, ProductDto, RecipeDto } from './dto/kitchen.dto';
 
-// Recetas, lotes de masa, productos y cajas de la empresa de la sesión.
+// Recetas, lotes de masa y productos de la empresa de la sesión
+// (lo que se vende está en PresentationsService).
 @Injectable()
 export class RecipeBookService {
 
@@ -117,46 +118,10 @@ export class RecipeBookService {
     return this.snapshot.load(organizationId);
   }
 
-  // ── Cajas y presentaciones (lo que se vende) ──
-
-  async createPresentation(organizationId: string, dto: PresentationDto) {
-    await this.assertPresentation(organizationId, dto);
-    await this.prisma.presentation.create({ data: { organizationId, ...this.presentationData(dto) } });
-    return this.snapshot.load(organizationId);
-  }
-
-  async updatePresentation(organizationId: string, id: string, dto: PresentationDto) {
-    await own(this.prisma.presentation.findUnique({ where: { id } }), organizationId, 'Presentación no encontrada.');
-    await this.assertPresentation(organizationId, dto);
-    await this.prisma.$transaction([
-      this.prisma.presentationItem.deleteMany({ where: { presentationId: id } }),
-      this.prisma.presentationPack.deleteMany({ where: { presentationId: id } }),
-      this.prisma.presentation.update({ where: { id }, data: this.presentationData(dto) }),
-    ]);
-    return this.snapshot.load(organizationId);
-  }
-
   // ── Ayudas ──
-
-  private presentationData(dto: PresentationDto) {
-    return {
-      name: dto.name,
-      price: dto.price,
-      active: dto.active,
-      items: { create: dto.items.map(({ productId, units }) => ({ productId, units })) },
-      pack: { create: dto.pack.map(({ supplyId, qty }) => ({ supplyId, qty })) },
-    };
-  }
 
   private async assertProduct(organizationId: string, dto: ProductDto) {
     await own(this.prisma.recipe.findUnique({ where: { id: dto.recipeId } }), organizationId, 'Receta no encontrada.');
     await assertSupplies(this.prisma, organizationId, (dto.extras ?? []).map((e) => e.supplyId));
-  }
-
-  private async assertPresentation(organizationId: string, dto: PresentationDto) {
-    const productIds = [...new Set(dto.items.map((i) => i.productId))];
-    const found = await this.prisma.product.count({ where: { organizationId, id: { in: productIds } } });
-    if (found !== productIds.length) throw new BadRequestException('Algún producto no existe.');
-    await assertSupplies(this.prisma, organizationId, dto.pack.map((p) => p.supplyId));
   }
 }

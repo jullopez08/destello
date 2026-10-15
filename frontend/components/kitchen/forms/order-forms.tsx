@@ -3,15 +3,13 @@
 import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/kitchen/store"
-import { productionPlan } from "@/lib/kitchen/rules"
-import { addDays } from "@/lib/kitchen/rules"
+import { linePrice, productionPlan } from "@/lib/kitchen/rules"
 import { dateLabel, longDate, money } from "@/lib/kitchen/format"
-import type { CookieLook, Order } from "@/lib/kitchen/types"
-import { ColorSeg, Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
+import type { Order } from "@/lib/kitchen/types"
+import { Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
+import { blankOrderRow, OrderRowPicker, type OrderRow } from "./order-row"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
-
-type Row = { presentationId: string; qty: string }
 
 export function OrderForm() {
   const { data, rules, mutate } = useKitchen()
@@ -19,17 +17,22 @@ export function OrderForm() {
   const pd = data.nextProductionDate
   const [customer, setCustomer] = useState("")
   const [phone, setPhone] = useState("")
-  const [rows, setRows] = useState<Row[]>([{ presentationId: "", qty: "1" }])
+  const [rows, setRows] = useState<OrderRow[]>([blankOrderRow()])
   const [delivery, setDelivery] = useState<Order["delivery"]>("DELIVERY")
   const [payment, setPayment] = useState<Order["payment"]>("TRANSFER")
   const [address, setAddress] = useState("")
   const [fee, setFee] = useState("5000")
 
-  const lines = rows.filter((r) => r.presentationId && toNumber(r.qty) > 0).map((r) => ({ presentationId: r.presentationId, qty: toNumber(r.qty) }))
+  const lines = rows
+    .filter((r) => r.presentationId && toNumber(r.qty) > 0)
+    .map((r) => ({ orderId: "nuevo", presentationId: r.presentationId, qty: toNumber(r.qty), productId: r.productId || null, sizeId: r.sizeId || null, packSupplyId: r.packSupplyId || null }))
   const committed = pendingFor(data, pd).flatMap((o) => o.lines)
   const plan = productionPlan([...committed, ...lines], rules)
   const dom = delivery === "DELIVERY"
-  const sub = lines.reduce((sum, l) => sum + l.qty * (byId(data.presentations, l.presentationId)?.price ?? 0), 0)
+  const sub = lines.reduce((sum, l) => {
+    const p = byId(data.presentations, l.presentationId)
+    return sum + (p ? l.qty * linePrice(p, l) : 0)
+  }, 0)
   const feeN = dom ? toNumber(fee) || 0 : 0
 
   return (
@@ -42,6 +45,11 @@ export function OrderForm() {
         if (!customer.trim()) throw new FormError("Escribe el nombre del cliente.")
         const chosen = rows.filter((r) => r.presentationId)
         if (!chosen.length || chosen.some((r) => !(toNumber(r.qty) >= 1))) throw new FormError("Agrega al menos un producto con su cantidad.")
+        for (const r of chosen) {
+          const p = byId(data.presentations, r.presentationId)
+          if (p && p.kind !== "BOX" && !r.productId) throw new FormError(`Elige el sabor de "${p.name}".`)
+          if (p?.kind === "SIZES" && !r.sizeId) throw new FormError(`Elige el tamaño de "${p.name}".`)
+        }
         if (dom && !address.trim()) throw new FormError("Escribe la dirección de entrega.")
         await mutate(
           "/orders",
@@ -53,7 +61,13 @@ export function OrderForm() {
             address: dom ? address.trim() : undefined,
             payment,
             fee: Math.round(feeN),
-            lines: chosen.map((r) => ({ presentationId: r.presentationId, qty: Math.round(toNumber(r.qty)) })),
+            lines: chosen.map((r) => ({
+              presentationId: r.presentationId,
+              qty: Math.round(toNumber(r.qty)),
+              productId: r.productId || undefined,
+              sizeId: r.sizeId || undefined,
+              packSupplyId: r.packSupplyId || undefined,
+            })),
           },
           "Pedido agregado",
         )
@@ -68,22 +82,10 @@ export function OrderForm() {
       <LinesEditor
         rows={rows}
         setRows={setRows}
-        blank={() => ({ presentationId: "", qty: "1" })}
+        blank={blankOrderRow}
         addLabel="Agregar producto"
         className="k-order"
-        render={(r, update) => (
-          <>
-            <select aria-label="Presentación" value={r.presentationId} onChange={(e) => update({ presentationId: e.target.value })}>
-              <option value="">Elige qué pidió</option>
-              {data.presentations.filter((p) => p.active).map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} · {money(p.price)}
-                </option>
-              ))}
-            </select>
-            <input aria-label="Cantidad" type="number" min="1" step="1" value={r.qty} onChange={(e) => update({ qty: e.target.value })} />
-          </>
-        )}
+        render={(r, update) => <OrderRowPicker row={r} update={update} rows={rows} setRows={setRows} />}
       />
       <div className="fields">
         <div>
@@ -171,77 +173,6 @@ export function SendForm({ order }: { order: Order }) {
         ) : (
           "Pagado por transferencia: el repartidor no cobra nada."
         )}
-      </div>
-    </Modal>
-  )
-}
-
-// ── Edición especial ──
-
-export function EditionForm() {
-  const { data, mutate } = useKitchen()
-  const { close } = useModal()
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [startDate, setStart] = useState(data.today)
-  const [endDate, setEnd] = useState(addDays(data.today, 14))
-  const [cap, setCap] = useState("")
-  const [color, setColor] = useState("strawberry")
-  const [look, setLook] = useState<CookieLook>("star")
-  const [pres, setPres] = useState<Set<string>>(new Set())
-
-  return (
-    <Modal
-      title="Nueva edición especial"
-      sub="Se vende hasta la fecha de cierre o hasta completar el cupo, lo que pase primero."
-      onClose={close}
-      onSubmit={async () => {
-        if (!name.trim()) throw new FormError("Escribe el nombre.")
-        if (endDate < startDate) throw new FormError("La fecha de cierre debe ser después del inicio.")
-        if (!pres.size) throw new FormError("Elige al menos una presentación.")
-        await mutate(
-          "/editions",
-          "POST",
-          { name: name.trim(), description: description.trim() || undefined, startDate, endDate, cap: Math.max(0, Math.round(toNumber(cap) || 0)), color, look, presentationIds: [...pres] },
-          "Edición creada",
-        )
-        close()
-      }}
-    >
-      <Field label="Nombre"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Día de la madre" required /></Field>
-      <Field label="Descripción"><textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Qué trae y por qué es especial" /></Field>
-      <div className="fields">
-        <Field label="Desde"><input type="date" value={startDate} onChange={(e) => setStart(e.target.value)} required /></Field>
-        <Field label="Hasta"><input type="date" value={endDate} onChange={(e) => setEnd(e.target.value)} required /></Field>
-        <Field label="Cupo (opcional)"><input type="number" min="1" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="Sin límite" /></Field>
-      </div>
-      <div>
-        <Eyebrow>Qué se vende</Eyebrow>
-        <div className="seg">
-          {data.presentations.map((p) => (
-            <label key={p.id}>
-              <input
-                type="checkbox"
-                checked={pres.has(p.id)}
-                onChange={(e) => {
-                  const next = new Set(pres)
-                  if (e.target.checked) next.add(p.id)
-                  else next.delete(p.id)
-                  setPres(next)
-                }}
-              />
-              <span>{p.name}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-      <div>
-        <Eyebrow>Figura</Eyebrow>
-        <Seg name="look" value={look} onChange={setLook} options={[["star", "Dorada"], ["pump", "Calabaza"], ["", "Clásica"], ["choco", "Chocolate"]]} />
-      </div>
-      <div>
-        <Eyebrow>Color</Eyebrow>
-        <ColorSeg name="color" value={color} onChange={setColor} />
       </div>
     </Modal>
   )

@@ -22,6 +22,7 @@ import {
 
 export const CARD_COLORS = ['banana', 'strawberry', 'lilac', 'peach', 'sky', 'mint'] as const;
 export const COOKIE_LOOKS = ['', 'choco', 'roll', 'bread', 'pump', 'star'] as const;
+export const SALE_KINDS = ['BOX', 'UNIT', 'SIZES'] as const;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 // ── Configuración ──
@@ -139,16 +140,36 @@ export class ProductDto {
 export class PresentationItemDto {
   @IsString() @IsNotEmpty() productId!: string;
   @IsInt() @Min(1) units!: number;
+  /** Sabor y tamaño: lo que se cobra de más por este sabor */
+  @IsOptional() @IsInt() @Min(0) surcharge?: number;
 }
 
+export class PresentationSizeDto {
+  /** Si viene, se actualiza ese tamaño (los pedidos lo siguen viendo) */
+  @IsOptional() @IsString() id?: string;
+  @IsString() @IsNotEmpty() @MaxLength(40) name!: string;
+  @IsOptional() @IsString() @MaxLength(40) portions?: string;
+  @IsOptional() @IsString() @MaxLength(40) mold?: string;
+  @IsInt() @Min(1) price!: number;
+  /** Gramos de masa por molde; 0 = los del producto */
+  @IsNumber() @Min(0) grams!: number;
+  @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() packSupplyId?: string | null;
+}
+
+// Caja armada: `items` es lo que lleva y `pack` su empaque.
+// Por unidad: `price` es por unidad, `items` los sabores (units 1) y `pack` el empaque de siempre.
+// Sabor y tamaño: `items` los sabores con su recargo y `sizes` los tamaños; `price` se calcula.
 export class PresentationDto {
   @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
-  @IsInt() @Min(1) price!: number;
+  @IsOptional() @IsIn(SALE_KINDS) kind?: (typeof SALE_KINDS)[number];
+  @ValidateIf((o: PresentationDto) => o.kind !== 'SIZES') @IsInt() @Min(1) price!: number;
   @IsBoolean() active!: boolean;
   @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => PresentationItemDto)
   items!: PresentationItemDto[];
   @IsArray() @ValidateNested({ each: true }) @Type(() => SupplyQtyDto)
   pack!: SupplyQtyDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => PresentationSizeDto)
+  sizes?: PresentationSizeDto[];
 }
 
 // ── Pedidos y ediciones ──
@@ -156,6 +177,12 @@ export class PresentationDto {
 export class OrderLineDto {
   @IsString() @IsNotEmpty() presentationId!: string;
   @IsInt() @Min(1) qty!: number;
+  /** Por unidad y sabor y tamaño: el sabor elegido */
+  @IsOptional() @IsString() productId?: string;
+  /** Sabor y tamaño: el tamaño elegido */
+  @IsOptional() @IsString() sizeId?: string;
+  /** Por unidad: otro empaque para este pedido */
+  @IsOptional() @IsString() packSupplyId?: string;
 }
 
 export class CreateOrderDto {

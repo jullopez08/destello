@@ -9,7 +9,7 @@ export const PAGES: [string, string, IconName][] = [
   ["insumos", "Insumos", "insumos"],
   ["compras", "Compras", "compras"],
   ["recetas", "Recetas y masas", "recetas"],
-  ["productos", "Productos y cajas", "productos"],
+  ["productos", "Productos y lo que vendes", "productos"],
   ["ediciones", "Ediciones especiales", "ediciones"],
   ["analitica", "Analítica", "analitica"],
   ["configuracion", "Configuración", "configuracion"],

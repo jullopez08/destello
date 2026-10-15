@@ -2,7 +2,7 @@
 
 import { Icon } from "@/components/ui/icon"
 import { Cookie } from "@/components/ui/cookie"
-import { byId, editionSold, orderSubtotal, orderTotal, planFor, useKitchen } from "@/lib/kitchen/store"
+import { byId, editionSold, lineLabel, orderSubtotal, orderTotal, planFor, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel, grams, longDate, money, qty } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
 import { Empty, Kpi, PageHead, useModal } from "../shared"
@@ -174,5 +174,5 @@ export function TodayView() {
 }
 
 function orderSummary(data: ReturnType<typeof useKitchen>["data"], o: Order, sep: string) {
-  return o.lines.map((l) => `${l.qty} × ${byId(data.presentations, l.presentationId)?.name ?? ""}`).join(sep)
+  return o.lines.map((l) => lineLabel(data, l)).join(sep)
 }

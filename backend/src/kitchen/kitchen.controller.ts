@@ -9,6 +9,7 @@ import { KitchenSnapshotService, requireOrganization } from './kitchen-snapshot.
 import { KitchenSettingsService } from './kitchen-settings.service';
 import { InventoryService } from './inventory.service';
 import { RecipeBookService } from './recipe-book.service';
+import { PresentationsService } from './presentations.service';
 import { OrdersService } from './orders.service';
 import {
   CreateBankAccountDto,
@@ -46,6 +47,7 @@ export class KitchenController {
     private readonly settings: KitchenSettingsService,
     private readonly inventory: InventoryService,
     private readonly recipeBook: RecipeBookService,
+    private readonly presentations: PresentationsService,
     private readonly orders: OrdersService,
   ) {}
 
@@ -153,12 +155,12 @@ export class KitchenController {
 
   @Post('presentations')
   createPresentation(@CurrentUser() user: CurrentUserData, @Body() dto: PresentationDto) {
-    return this.recipeBook.createPresentation(requireOrganization(user), dto);
+    return this.presentations.create(requireOrganization(user), dto);
   }
 
   @Put('presentations/:id')
   updatePresentation(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: PresentationDto) {
-    return this.recipeBook.updatePresentation(requireOrganization(user), id, dto);
+    return this.presentations.update(requireOrganization(user), id, dto);
   }
 
   // ── Pedidos y producción ──

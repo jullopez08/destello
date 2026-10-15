@@ -5,7 +5,7 @@ import { Cookie } from "@/components/ui/cookie"
 import { byId, editionSold, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel } from "@/lib/kitchen/format"
 import { Empty, PageHead, useModal } from "../shared"
-import { EditionForm } from "../forms/order-forms"
+import { EditionForm } from "../forms/edition-form"
 import { ConfirmForm } from "../forms/confirm-form"
 
 // ── Ediciones especiales ──

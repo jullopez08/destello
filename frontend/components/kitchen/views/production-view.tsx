@@ -95,7 +95,7 @@ export function ProductionView({ day, setDay }: { day: string | null; setDay: (d
                         <b>{p.name}</b>
                       </div>
                       <span className="num">
-                        <b>{n}</b> und · {grams(n * p.grams)}
+                        <b>{n}</b> und · {grams(plan.unitGrams[id] ?? n * p.grams)}
                       </span>
                     </div>
                   )
