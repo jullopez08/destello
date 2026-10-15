@@ -20,10 +20,32 @@ export interface Ui {
 }
 
 export const ERRORS: Record<string, string> = {
-  "not-allowed": "Permite el micrófono en el navegador para usar la escucha activa.",
+  "not-allowed": "El micrófono está bloqueado. Toca el candado junto a la dirección → Permisos → Micrófono → Permitir.",
   "service-not-allowed": "Este navegador no deja usar el reconocimiento de voz. Usa Chrome o Edge.",
   "audio-capture": "No encuentro el micrófono. Revisa que esté conectado y elegido en el navegador.",
   network: "El reconocimiento de voz necesita internet. Revisa la conexión.",
+}
+
+// El navegador solo deja usar el micrófono en páginas seguras (https o
+// localhost). Abierto desde la red local (http://192.168…) el permiso falla
+// sin mostrar la ventanita, así que se avisa claro.
+export const INSECURE = "El micrófono solo funciona con conexión segura (https). Desde la dirección de prueba de la red local no se puede; con el dominio de Destello sí."
+
+// Pide el permiso con la ventanita del navegador (en Android la escucha sola
+// a veces no la muestra). Devuelve el error para mostrar, o null si hay permiso.
+async function askMicrophone(): Promise<string | null> {
+  if (!window.isSecureContext) return INSECURE
+  if (!navigator.mediaDevices?.getUserMedia) return null
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    stream.getTracks().forEach((t) => t.stop())
+    return null
+  } catch (err) {
+    const name = (err as DOMException).name
+    if (name === "NotAllowedError" || name === "SecurityError") return ERRORS["not-allowed"]
+    if (name === "NotFoundError") return ERRORS["audio-capture"]
+    return null
+  }
 }
 
 export function createController(ask: (question: string) => string, ui: Ui): Controller {
@@ -109,8 +131,15 @@ export function createController(ask: (question: string) => string, ui: Ui): Con
     } catch {
       // Sin almacenamiento: solo dura esta visita
     }
-    if (value) start()
-    else {
+    if (value) {
+      void askMicrophone().then((problem) => {
+        if (!on) return
+        if (problem) {
+          toggle(false)
+          ui.setError(problem)
+        } else start()
+      })
+    } else {
       recognition?.stop()
       stopSpeaking()
       ui.setBubble(null)
