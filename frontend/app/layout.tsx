@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next"
 import { Bagel_Fat_One, DM_Sans } from "next/font/google"
 import "./globals.css"
+import "./styles/pieces.css"
+import "./styles/pages.css"
+import "./styles/mobile.css"
 
 const display = Bagel_Fat_One({ subsets: ["latin"], weight: "400", variable: "--font-display", display: "swap" })
 const body = DM_Sans({ subsets: ["latin"], variable: "--font-body", display: "swap" })

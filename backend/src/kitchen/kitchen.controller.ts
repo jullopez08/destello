@@ -8,6 +8,7 @@ import { CurrentUser, type CurrentUserData } from '../common/decorators/current-
 import { KitchenSnapshotService, requireOrganization } from './kitchen-snapshot.service';
 import { KitchenSettingsService } from './kitchen-settings.service';
 import { InventoryService } from './inventory.service';
+import { RecipeBookService } from './recipe-book.service';
 import { OrdersService } from './orders.service';
 import {
   CreateBankAccountDto,
@@ -44,6 +45,7 @@ export class KitchenController {
     private readonly snapshot: KitchenSnapshotService,
     private readonly settings: KitchenSettingsService,
     private readonly inventory: InventoryService,
+    private readonly recipeBook: RecipeBookService,
     private readonly orders: OrdersService,
   ) {}
 
@@ -126,37 +128,37 @@ export class KitchenController {
 
   @Post('recipes')
   createRecipe(@CurrentUser() user: CurrentUserData, @Body() dto: RecipeDto) {
-    return this.inventory.createRecipe(requireOrganization(user), dto);
+    return this.recipeBook.createRecipe(requireOrganization(user), dto);
   }
 
   @Put('recipes/:id')
   updateRecipe(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: RecipeDto) {
-    return this.inventory.updateRecipe(requireOrganization(user), id, dto);
+    return this.recipeBook.updateRecipe(requireOrganization(user), id, dto);
   }
 
   @Post('lots')
   createLot(@CurrentUser() user: CurrentUserData, @Body() dto: CreateLotDto) {
-    return this.inventory.createLot(requireOrganization(user), dto);
+    return this.recipeBook.createLot(requireOrganization(user), dto);
   }
 
   @Post('products')
   createProduct(@CurrentUser() user: CurrentUserData, @Body() dto: ProductDto) {
-    return this.inventory.createProduct(requireOrganization(user), dto);
+    return this.recipeBook.createProduct(requireOrganization(user), dto);
   }
 
   @Put('products/:id')
   updateProduct(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: ProductDto) {
-    return this.inventory.updateProduct(requireOrganization(user), id, dto);
+    return this.recipeBook.updateProduct(requireOrganization(user), id, dto);
   }
 
   @Post('presentations')
   createPresentation(@CurrentUser() user: CurrentUserData, @Body() dto: PresentationDto) {
-    return this.inventory.createPresentation(requireOrganization(user), dto);
+    return this.recipeBook.createPresentation(requireOrganization(user), dto);
   }
 
   @Put('presentations/:id')
   updatePresentation(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: PresentationDto) {
-    return this.inventory.updatePresentation(requireOrganization(user), id, dto);
+    return this.recipeBook.updatePresentation(requireOrganization(user), id, dto);
   }
 
   // ── Pedidos y producción ──

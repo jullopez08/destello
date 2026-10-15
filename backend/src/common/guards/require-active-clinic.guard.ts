@@ -5,7 +5,7 @@ import type { CurrentUserData } from '../decorators/current-user.decorator';
 
 // Blocks DOCTOR/MEMBER access to a route once their organization has been
 // deactivated (Organization.active: false) — either immediately via the manual
-// SubscriptionsService.updateStatus path, or after the grace period expires
+// SubscriptionControlsService.updateStatus path, or after the grace period expires
 // via SubscriptionBillingCron.blockOrganizationsWithExpiredGracePeriod. Must run
 // after JwtAuthGuard so request.user is populated. Never apply this to
 // auth endpoints, GET /subscriptions/me, or the subscription management

@@ -66,7 +66,7 @@ export class SubscriptionBillingCron {
   // false once a subscription's grace period runs out — billSubscription
   // only sets status: PAST_DUE + gracePeriodEndsAt (now + 1 day), leaving the
   // organization usable during the grace window. Subscriptions blocked manually via
-  // SubscriptionsService.updateStatus never set gracePeriodEndsAt, so they
+  // SubscriptionControlsService.updateStatus never set gracePeriodEndsAt, so they
   // never match here (already blocked immediately, on purpose).
   async blockOrganizationsWithExpiredGracePeriod() {
     const expired = await this.prisma.subscription.findMany({
@@ -117,7 +117,7 @@ export class SubscriptionBillingCron {
   // Wompi has no stored card to charge (each payment is a checkout the organization
   // starts from its Subscription view), so there's nothing to attempt here. A
   // subscription reaching its period end without an approved payment — Wompi
-  // or cash (SubscriptionsService.recordCashPayment) — has currentPeriodEnd in
+  // or cash (SubscriptionControlsService.recordCashPayment) — has currentPeriodEnd in
   // the past, since both extend it; it's marked PAST_DUE with a 1-day grace
   // period, after which the organization is blocked and sees the payment wall.
   private async billSubscription(subscription: any) {
@@ -131,7 +131,7 @@ export class SubscriptionBillingCron {
   // Paso aparte (y probado): un plan de prueba no tiene nada que pagar, así
   // que una empresa que se queda en él al vencer quedaría bloqueada sin botón
   // de Wompi. Se le asigna el plan mensual sin tocar currentPeriodEnd (a
-  // diferencia de SubscriptionsService.changePlan), así el cron la sigue
+  // diferencia de SubscriptionControlsService.changePlan), así el cron la sigue
   // viendo vencida y el primer pago con Wompi inicia su primer período pagado.
   // Si el plan no existe, se queda en prueba y el super admin le asigna uno.
   async assignPaidPlanAfterTrial(subscription: { id: string; organizationId: string }) {

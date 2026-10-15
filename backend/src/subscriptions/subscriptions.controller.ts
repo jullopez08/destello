@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
+import { SubscriptionControlsService } from './subscription-controls.service';
 import { ChangePlanDto } from './dto/change-plan.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ExtendPeriodDto } from './dto/extend-period.dto';
@@ -19,7 +20,10 @@ import { CurrentUser, type CurrentUserData } from '../common/decorators/current-
 @Roles(Role.SUPER_ADMIN)
 export class SubscriptionsController {
 
-  constructor(private readonly subscriptionsService: SubscriptionsService) {}
+  constructor(
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly controls: SubscriptionControlsService,
+  ) {}
 
   @Get()
   findAll() {
@@ -43,17 +47,17 @@ export class SubscriptionsController {
 
   @Patch(':organizationId/plan')
   changePlan(@Param('organizationId') organizationId: string, @Body() dto: ChangePlanDto) {
-    return this.subscriptionsService.changePlan(organizationId, dto.planId);
+    return this.controls.changePlan(organizationId, dto.planId);
   }
 
   @Patch(':organizationId/status')
   updateStatus(@Param('organizationId') organizationId: string, @Body() dto: UpdateStatusDto) {
-    return this.subscriptionsService.updateStatus(organizationId, dto.status);
+    return this.controls.updateStatus(organizationId, dto.status);
   }
 
   @Patch(':organizationId/extend')
   extendPeriod(@Param('organizationId') organizationId: string, @Body() dto: ExtendPeriodDto) {
-    return this.subscriptionsService.extendPeriod(organizationId, dto.days);
+    return this.controls.extendPeriod(organizationId, dto.days);
   }
 
   @Patch(':organizationId/billing-contact')
@@ -63,12 +67,12 @@ export class SubscriptionsController {
 
   @Patch(':organizationId/discount')
   setDiscount(@Param('organizationId') organizationId: string, @Body() dto: SetDiscountDto) {
-    return this.subscriptionsService.setDiscount(organizationId, dto.discountPercent, dto.discountExpiresAt);
+    return this.controls.setDiscount(organizationId, dto.discountPercent, dto.discountExpiresAt);
   }
 
-  // Off-system payment collected in person — see SubscriptionsService.recordCashPayment.
+  // Off-system payment collected in person — see SubscriptionControlsService.recordCashPayment.
   @Post(':organizationId/cash-payment')
   recordCashPayment(@Param('organizationId') organizationId: string, @Body() dto: RecordCashPaymentDto) {
-    return this.subscriptionsService.recordCashPayment(organizationId, dto.amount, dto.note);
+    return this.controls.recordCashPayment(organizationId, dto.amount, dto.note);
   }
 }
