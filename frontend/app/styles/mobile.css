@@ -78,3 +78,20 @@
   .tab-mic.on { background: var(--strawberry); }
   .tab-mic:disabled { opacity: 0.5; cursor: not-allowed; }
 }
+
+/* ---------- Producción en el celular: lista para marcar con el dedo ---------- */
+.btn.block { display: flex; width: 100%; min-height: 52px; }
+.prod-progress { display: flex; flex-direction: column; gap: 6px; }
+.prod-progress .bar { height: 10px; min-width: 0; }
+.prod-group { display: flex; flex-direction: column; gap: 8px; }
+.prod-group h2 { font-family: var(--body); font-weight: 700; font-size: 15px; }
+.prod-check { width: 100%; min-height: 60px; display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; cursor: pointer; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); color: var(--ink); }
+.prod-check.on { background: var(--mint); border-color: var(--mint); }
+.prod-check.on .prod-text b { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.prod-box { width: 30px; height: 30px; flex: none; border-radius: 10px; display: grid; place-items: center; background: var(--surface); border: 1.5px solid var(--ink-2); }
+.prod-check.on .prod-box { background: var(--accent); border-color: var(--ink); }
+.prod-box svg { width: 18px; height: 18px; }
+.prod-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.prod-text b { font-size: 15px; overflow-wrap: anywhere; }
+.prod-text span { font-size: 12px; color: var(--ink-2); }
