@@ -8,7 +8,8 @@ import { dateLabel, fmtN, grams, longDate, money, qty } from "@/lib/kitchen/form
 import type { Order } from "@/lib/kitchen/types"
 import { Empty, Kpi, PageHead, Tabs, useModal } from "../shared"
 import { OrderForm, SendForm } from "../forms/order-forms"
-import { VoiceToggle } from "../voice-listener"
+import { VoiceCard, VoiceToggle } from "../voice-listener"
+import { useSession } from "@/lib/session"
 import { ConfirmForm } from "../forms/confirm-form"
 
 function greeting() {
@@ -21,6 +22,8 @@ function greeting() {
 export function TodayView() {
   const { data, rules, act } = useKitchen()
   const { open } = useModal()
+  const { user } = useSession()
+  const firstName = user?.name?.trim().split(/\s+/)[0]
   const today = data.today
   const todays = data.orders.filter((o) => o.productionDate === today && o.status !== "CANCELLED")
   const pend = todays.filter((o) => o.status === "PENDING" && !o.produced)
@@ -33,13 +36,18 @@ export function TodayView() {
 
   return (
     <>
-      <PageHead title={greeting()} sub={`Así va la cocina hoy, ${longDate(today)}.`}>
-        <VoiceToggle />
-        <button className="btn primary" onClick={() => open(<OrderForm />)}>
-          <Icon name="plus" />
-          Nuevo pedido
-        </button>
+      <PageHead title={firstName ? `${greeting()}, ${firstName}` : greeting()} sub={`Así va la cocina hoy, ${longDate(today)}.`}>
+        <div className="row only-desktop">
+          <VoiceToggle />
+          <button className="btn primary" onClick={() => open(<OrderForm />)}>
+            <Icon name="plus" />
+            Nuevo pedido
+          </button>
+        </div>
       </PageHead>
+      <div className="only-mobile" style={{ marginBottom: 14 }}>
+        <VoiceCard />
+      </div>
       <div className="grid g4">
         <Kpi v={todays.length} l="Pedidos para hoy" s={`${pend.length} por producir`} c="c-accent" />
         <Kpi v={money(sales)} l="Ventas de hoy" s="Sin contar domicilios" c="c-strawberry" />
@@ -234,11 +242,15 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
   return (
     <>
       <PageHead title="Pedidos" sub="Los pedidos llegan por WhatsApp a tu celular. Aquí los registras y sigues su entrega.">
-        <button className="btn primary" onClick={() => open(<OrderForm />)}>
+        <button className="btn primary only-desktop" onClick={() => open(<OrderForm />)}>
           <Icon name="plus" />
           Nuevo pedido
         </button>
       </PageHead>
+      <button className="fab only-mobile" onClick={() => open(<OrderForm />)}>
+        <Icon name="plus" />
+        Pedido a mano
+      </button>
       <Tabs value={tab} onChange={setTab} options={tabs.map(([k, t]) => [k, `${t} · ${count(k)}`] as [OrderTab, string])} />
       {rows.length ? (
         <div className="tbl cardify">

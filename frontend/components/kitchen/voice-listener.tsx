@@ -254,6 +254,30 @@ export function VoiceToggle() {
   )
 }
 
+/** Tarjeta grande de Hoy en el celular: enciende o apaga "Oye Destello". */
+export function VoiceCard() {
+  const { supported, on, heard, error, toggle } = useContext(VoiceContext)
+  return (
+    <button type="button" className={on ? "voice-card on" : "voice-card"} onClick={() => toggle(!on)} aria-pressed={on} disabled={!supported}>
+      <span className="voice-card-mic"><Icon name="mic" size={24} /></span>
+      <span className="voice-card-text">
+        <b>{on ? "Escuchando: di «Oye Destello»" : "Di «Oye Destello»"}</b>
+        <span>
+          {!supported
+            ? "Para hablarle a Destello usa Chrome o Edge."
+            : error
+              ? error
+              : on
+                ? heard
+                  ? `Oí: «${heard}»`
+                  : "Pregunta: «Oye Destello, ¿cuánto produzco hoy?» Toca para apagar."
+                : "Toca para encenderlo y pregúntale qué hornear, quién reparte o qué se vende menos."}
+        </span>
+      </span>
+    </button>
+  )
+}
+
 /** Micrófono grande en el centro de la barra de abajo del celular. */
 export function VoiceMicButton() {
   const { supported, on, toggle } = useContext(VoiceContext)

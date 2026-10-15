@@ -122,10 +122,12 @@ function Shell({ page, locked, cutoff, today, voice, mic, children }: { page: st
           ) : (
             <Cookie size={38} />
           )}
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <b>{user?.organizationName ?? "Destello"}</b>
-            <small>con Destello</small>
+            <small className="only-desktop">con Destello</small>
+            <small className="only-mobile">{cutoff ? `Pedidos para hoy hasta las ${cutoff}` : "con Destello"}</small>
           </div>
+          <div className="avatar only-mobile" aria-hidden="true">{initials(user?.name ?? "")}</div>
         </div>
         <nav className="nav" aria-label="Secciones">
           {PAGES.map(([k, t, icon]) => (
