@@ -1,21 +1,28 @@
 "use client"
 
-import { createContext, useCallback, useContext, useState } from "react"
+import { createContext, Fragment, useCallback, useContext, useState } from "react"
 import { Icon } from "@/components/ui/icon"
 import { COLOR_NAMES } from "@/lib/kitchen/format"
 
 // ── Ventanas abiertas desde cualquier vista ──
 
-const ModalContext = createContext<{ open: (node: React.ReactNode) => void; close: () => void }>({ open: () => {}, close: () => {} })
+// open reemplaza lo que esté abierto; push abre una encima (crear la masa
+// desde el producto) y close cierra solo la de arriba, volviendo a la anterior
+// con lo que ya se había escrito.
+type ModalApi = { open: (node: React.ReactNode) => void; push: (node: React.ReactNode) => void; close: () => void }
+const ModalContext = createContext<ModalApi>({ open: () => {}, push: () => {}, close: () => {} })
 
 export function ModalHost({ children }: { children: React.ReactNode }) {
-  const [node, setNode] = useState<React.ReactNode>(null)
-  const open = useCallback((n: React.ReactNode) => setNode(n), [])
-  const close = useCallback(() => setNode(null), [])
+  const [stack, setStack] = useState<React.ReactNode[]>([])
+  const open = useCallback((n: React.ReactNode) => setStack([n]), [])
+  const push = useCallback((n: React.ReactNode) => setStack((s) => [...s, n]), [])
+  const close = useCallback(() => setStack((s) => s.slice(0, -1)), [])
   return (
-    <ModalContext.Provider value={{ open, close }}>
+    <ModalContext.Provider value={{ open, push, close }}>
       {children}
-      {node}
+      {stack.map((node, i) => (
+        <Fragment key={i}>{node}</Fragment>
+      ))}
     </ModalContext.Provider>
   )
 }

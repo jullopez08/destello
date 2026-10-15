@@ -12,10 +12,12 @@ import { blankQty, SupplySelect, qtyRows } from "./supply-rows"
 
 // ── Receta: ingredientes de una tanda y cuántos gramos de masa rinde ──
 
-export function RecipeForm({ recipe }: { recipe?: Recipe }) {
+// Desde el producto se abre encima con el nombre ya escrito; al guardar,
+// onCreated recibe la receta nueva para dejarla elegida.
+export function RecipeForm({ recipe, initialName = "", title, onCreated }: { recipe?: Recipe; initialName?: string; title?: string; onCreated?: (recipe: Recipe) => void }) {
   const { data, mutate } = useKitchen()
   const { close } = useModal()
-  const [name, setName] = useState(recipe?.name ?? "")
+  const [name, setName] = useState(recipe?.name ?? initialName)
   const [yieldGrams, setYield] = useState(recipe ? String(recipe.yieldGrams) : "")
   const [color, setColor] = useState<string>(recipe?.color ?? "banana")
   const [rows, setRows] = useState<QtyRow[]>(recipe?.items.map((i) => ({ supplyId: i.supplyId, qty: String(i.qty) })) ?? [blankQty()])
@@ -25,7 +27,7 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
 
   return (
     <Modal
-      title={recipe ? "Editar receta" : "Nueva receta"}
+      title={recipe ? "Editar receta" : (title ?? "Nueva receta")}
       sub="Ingredientes de una tanda y cuántos gramos de masa rinde."
       wide
       onClose={close}
@@ -36,7 +38,12 @@ export function RecipeForm({ recipe }: { recipe?: Recipe }) {
         if (!all.length || all.some((i) => !(i.qty > 0))) throw new FormError("Agrega los ingredientes con su cantidad.")
         const body = { name: name.trim(), yieldGrams: y, color, items: all }
         if (recipe) await mutate(`/recipes/${recipe.id}`, "PUT", body, "Receta actualizada")
-        else await mutate("/recipes", "POST", body, "Receta agregada")
+        else {
+          const before = new Set(data.recipes.map((x) => x.id))
+          const next = await mutate("/recipes", "POST", body, "Receta agregada")
+          const added = next.recipes.find((x) => !before.has(x.id))
+          if (added) onCreated?.(added)
+        }
         close()
       }}
     >

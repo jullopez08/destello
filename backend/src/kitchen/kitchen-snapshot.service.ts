@@ -99,7 +99,7 @@ export class KitchenSnapshotService {
         recipeId: p.recipeId,
         grams: p.grams,
         look: p.look,
-        extras: p.extras.map(({ supplyId, qty }) => ({ supplyId, qty })),
+        extras: p.extras.map(({ supplyId, recipeId, qty }) => ({ supplyId, recipeId, qty })),
       })),
       presentations: presentations.map((p) => ({
         id: p.id,

@@ -16,7 +16,7 @@ export function RecipesView() {
 
   return (
     <>
-      <PageHead title="Recetas y masas" sub="Cada receta rinde una tanda de masa en gramos. Las galletas se hacen por lote y se guardan; los rollos y panes se hacen solo con pedido.">
+      <PageHead title="Recetas y masas" sub="Masas y rellenos que preparas: cada receta rinde una tanda en gramos. Las galletas se hacen por lote y se guardan; los rollos y panes, solo con pedido.">
         <button className="btn soft" onClick={() => open(<LotForm />)} disabled={!data.recipes.length}>Producir lote de masa</button>
         <button className="btn primary only-desktop" onClick={() => open(<RecipeForm />)}>
           <Icon name="plus" />
@@ -60,6 +60,7 @@ export function RecipesView() {
         <div className="grid g3">
           {data.recipes.map((r) => {
             const lot = data.products.some((p) => p.recipeId === r.id && p.mode === "LOT")
+            const filling = !data.products.some((p) => p.recipeId === r.id) && data.products.some((p) => p.extras.some((e) => e.recipeId === r.id))
             return (
               <article className={`card c-${r.color}`} key={r.id}>
                 <div className="row between">
@@ -71,7 +72,7 @@ export function RecipesView() {
                 <div className="row" style={{ margin: "10px 0 12px", gap: 6 }}>
                   <span className="chip white">Rinde {grams(r.yieldGrams)}</span>
                   <span className="chip white">{money(recipeCostPerGram(r, data.supplies) * 1000)} / kg</span>
-                  <span className="chip accent">{lot ? "Por lote" : "Sobre pedido"}</span>
+                  <span className="chip accent">{filling ? "Relleno" : lot ? "Por lote" : "Sobre pedido"}</span>
                 </div>
                 <div className="list small">
                   {r.items.map((i) => {

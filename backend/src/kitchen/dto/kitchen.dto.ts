@@ -108,6 +108,13 @@ export class CreatePurchaseDto {
 
 // ── Recetas, lotes y productos ──
 
+/** Un insumo o una receta (relleno hecho, en gramos), no los dos. */
+export class ProductExtraDto {
+  @IsOptional() @IsString() @IsNotEmpty() supplyId?: string;
+  @IsOptional() @IsString() @IsNotEmpty() recipeId?: string;
+  @IsNumber() @Min(0.0001) qty!: number;
+}
+
 export class SupplyQtyDto {
   @IsString() @IsNotEmpty() supplyId!: string;
   @IsNumber() @Min(0.0001) qty!: number;
@@ -133,8 +140,8 @@ export class ProductDto {
   @IsString() @IsNotEmpty() recipeId!: string;
   @IsNumber() @Min(1) grams!: number;
   @IsIn(COOKIE_LOOKS) look!: string;
-  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => SupplyQtyDto)
-  extras?: SupplyQtyDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => ProductExtraDto)
+  extras?: ProductExtraDto[];
 }
 
 export class PresentationItemDto {
