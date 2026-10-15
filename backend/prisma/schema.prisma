@@ -364,7 +364,6 @@ model Product {
   @@index([organizationId])
 }
 
-/// Insumo extra por unidad de producto (capacillo, queso crema del glaseado…)
 /// Extra por unidad: un insumo (relleno comprado, capacillo) o una receta
 /// propia (relleno hecho: arequipe, ganache), una sola de las dos.
 /// qty: en la medida del insumo, o en gramos si es receta.
