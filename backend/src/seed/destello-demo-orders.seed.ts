@@ -79,7 +79,7 @@ export async function seedOrdersAndEditions(
   await order({ number: 1039, customer: 'Mariana Peña', phone: '314 090 3366', address: 'Calle 53 # 24-08', orderedOn: addDays(today, -1), lines: [['x9doble', 1]], payment: 'CASH', status: 'ON_THE_WAY', courierId: couriers[0].id });
   await order({ number: 1038, customer: 'Sebastián Duarte', phone: '305 600 1245', address: 'Cra 50 # 98-21', orderedOn: addDays(today, -1), lines: [['x9chips', 1], ['rollo1', 2]], fee: 6000, courierId: couriers[1].id });
 
-  const edition = (name: string, description: string, startDate: string, endDate: string, cap: number, look: string, color: string, keys: string[]) =>
+  const edition = (name: string, description: string, startDate: string, endDate: string, look: string, color: string, keys: string[]) =>
     prisma.edition.create({
       data: {
         organizationId,
@@ -87,13 +87,12 @@ export async function seedOrdersAndEditions(
         description,
         startDate,
         endDate,
-        cap,
         look,
         color,
         presentations: { create: keys.map((k) => ({ presentationId: P[k].id })) },
       },
     });
   const year = Number(today.slice(0, 4));
-  await edition('Halloween de Destello', 'Galletas con calabaza y doble chocolate en caja naranja.', addDays(today, -5), `${year}-10-31`, 80, 'pump', 'peach', ['halloween']);
-  await edition('Navidad dulce', 'Caja de regalo con galletas surtidas y rollos.', `${year}-12-01`, `${year}-12-22`, 150, 'star', 'lilac', ['surtida', 'x6rollos']);
+  await edition('Halloween de Destello', 'Galletas con calabaza y doble chocolate en caja naranja.', addDays(today, -5), `${year}-10-31`, 'pump', 'peach', ['halloween']);
+  await edition('Navidad dulce', 'Caja de regalo con galletas surtidas y rollos.', `${year}-12-01`, `${year}-12-22`, 'star', 'lilac', ['surtida', 'x6rollos']);
 }

@@ -2,10 +2,10 @@
 
 import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
-import { useKitchen } from "@/lib/kitchen/store"
+import { byId, useKitchen } from "@/lib/kitchen/store"
 import { addDays } from "@/lib/kitchen/rules"
-import type { CookieLook } from "@/lib/kitchen/types"
-import { ColorSeg, Eyebrow, Field, Seg, toNumber, useModal } from "../shared"
+import type { CookieLook, Edition } from "@/lib/kitchen/types"
+import { ColorSeg, Eyebrow, Field, Seg, useModal } from "../shared"
 
 // ── Edición especial ──
 
@@ -16,7 +16,6 @@ export function EditionForm() {
   const [description, setDescription] = useState("")
   const [startDate, setStart] = useState(data.today)
   const [endDate, setEnd] = useState(addDays(data.today, 14))
-  const [cap, setCap] = useState("")
   const [color, setColor] = useState("strawberry")
   const [look, setLook] = useState<CookieLook>("star")
   const [pres, setPres] = useState<Set<string>>(new Set())
@@ -24,7 +23,7 @@ export function EditionForm() {
   return (
     <Modal
       title="Nueva edición especial"
-      sub="Se vende hasta la fecha de cierre o hasta completar el cupo, lo que pase primero."
+      sub="Se vende entre estas fechas. Cuánto se vende lo decide lo que produzcas."
       onClose={close}
       onSubmit={async () => {
         if (!name.trim()) throw new FormError("Escribe el nombre.")
@@ -33,7 +32,7 @@ export function EditionForm() {
         await mutate(
           "/editions",
           "POST",
-          { name: name.trim(), description: description.trim() || undefined, startDate, endDate, cap: Math.max(0, Math.round(toNumber(cap) || 0)), color, look, presentationIds: [...pres] },
+          { name: name.trim(), description: description.trim() || undefined, startDate, endDate, color, look, presentationIds: [...pres] },
           "Edición creada",
         )
         close()
@@ -44,7 +43,6 @@ export function EditionForm() {
       <div className="fields">
         <Field label="Desde"><input type="date" value={startDate} onChange={(e) => setStart(e.target.value)} required /></Field>
         <Field label="Hasta"><input type="date" value={endDate} onChange={(e) => setEnd(e.target.value)} required /></Field>
-        <Field label="Cupo (opcional)"><input type="number" min="1" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="Sin límite" /></Field>
       </div>
       <div>
         <Eyebrow>Qué se vende</Eyebrow>
@@ -74,6 +72,40 @@ export function EditionForm() {
         <Eyebrow>Color</Eyebrow>
         <ColorSeg name="color" value={color} onChange={setColor} />
       </div>
+    </Modal>
+  )
+}
+
+// Al borrar una edición se puede desactivar lo que se vendía solo en ella
+// (deja de salir en pedidos nuevos; los pedidos anteriores no cambian).
+export function EditionRemoveForm({ edition }: { edition: Edition }) {
+  const { data, mutate } = useKitchen()
+  const { close } = useModal()
+  const only = edition.presentationIds.filter(
+    (id) => byId(data.presentations, id)?.active && !data.editions.some((e) => e.id !== edition.id && e.presentationIds.includes(id)),
+  )
+  const [hide, setHide] = useState(true)
+  return (
+    <Modal
+      title="Eliminar edición"
+      submit="Eliminar"
+      danger
+      onClose={close}
+      onSubmit={async () => {
+        await mutate(`/editions/${edition.id}${hide && only.length ? "?hide=1" : ""}`, "DELETE", undefined, "Edición eliminada")
+        close()
+      }}
+    >
+      <p>Se eliminará <b>{edition.name}</b>.</p>
+      {only.length ? (
+        <label className="row nowrap" style={{ gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+          <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} style={{ width: 22, height: 22, flex: "none" }} />
+          <span>
+            También desactivar lo que se hizo para esta edición: <b>{only.map((id) => byId(data.presentations, id)?.name).join(", ")}</b>.
+            <span className="small muted" style={{ display: "block" }}>Deja de salir al tomar pedidos. Los pedidos anteriores no cambian y lo puedes volver a activar en Productos.</span>
+          </span>
+        </label>
+      ) : null}
     </Modal>
   )
 }

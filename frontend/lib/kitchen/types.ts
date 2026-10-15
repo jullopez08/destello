@@ -119,7 +119,6 @@ export interface Edition {
   description: string | null
   startDate: string
   endDate: string
-  cap: number
   look: CookieLook
   color: CardColor
   presentationIds: string[]

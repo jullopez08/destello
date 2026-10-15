@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -207,7 +207,7 @@ export class KitchenController {
   }
 
   @Delete('editions/:id')
-  removeEdition(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
-    return this.orders.removeEdition(requireOrganization(user), id);
+  removeEdition(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Query('hide') hide?: string) {
+    return this.orders.removeEdition(requireOrganization(user), id, hide === '1');
   }
 }

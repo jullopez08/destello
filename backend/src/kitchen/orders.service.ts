@@ -30,7 +30,7 @@ export class OrdersService {
 
       for (const p of presentations) {
         if (!p.active) throw new BadRequestException(`"${p.name}" está pausada y no se puede vender.`);
-        await this.assertEditionOpen(tx, organizationId, p, dto.lines, today);
+        assertEditionOpen(p, today);
       }
 
       const packaging = await tx.supply.findMany({ where: { organizationId, category: 'PACKAGING' }, select: { id: true } });
@@ -151,7 +151,6 @@ export class OrdersService {
         description: dto.description?.trim() || null,
         startDate: dto.startDate,
         endDate: dto.endDate,
-        cap: dto.cap,
         look: dto.look,
         color: dto.color,
         presentations: { create: ids.map((presentationId) => ({ presentationId })) },
@@ -160,49 +159,19 @@ export class OrdersService {
     return this.snapshot.load(organizationId);
   }
 
-  // Las presentaciones siguen existiendo.
-  async removeEdition(organizationId: string, id: string) {
-    const { count } = await this.prisma.edition.deleteMany({ where: { id, organizationId } });
-    if (!count) throw new NotFoundException('Edición no encontrada.');
+  // Lo que se vendía queda como está, o con `hide` se desactiva lo que solo
+  // se vendía en esta edición (deja de salir en pedidos; los anteriores no cambian).
+  async removeEdition(organizationId: string, id: string, hide = false) {
+    const edition = await this.prisma.edition.findFirst({ where: { id, organizationId }, include: { presentations: true } });
+    if (!edition) throw new NotFoundException('Edición no encontrada.');
+    const ids = edition.presentations.map((p) => p.presentationId);
+    const shared = await this.prisma.editionPresentation.findMany({ where: { presentationId: { in: ids }, editionId: { not: id } } });
+    const only = ids.filter((pid) => !shared.some((s) => s.presentationId === pid));
+    await this.prisma.$transaction([
+      ...(hide && only.length ? [this.prisma.presentation.updateMany({ where: { organizationId, id: { in: only } }, data: { active: false } })] : []),
+      this.prisma.edition.delete({ where: { id } }),
+    ]);
     return this.snapshot.load(organizationId);
-  }
-
-  // Una caja que pertenece a ediciones solo se vende mientras alguna esté
-  // abierta: entre sus fechas y sin completar el cupo.
-  private async assertEditionOpen(
-    tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
-    organizationId: string,
-    presentation: { id: string; name: string; editions: { edition: { id: string; name: string; startDate: string; endDate: string; cap: number } }[] },
-    lines: CreateOrderDto['lines'],
-    today: string,
-  ) {
-    if (!presentation.editions.length) return;
-
-    for (const { edition } of presentation.editions) {
-      if (today < edition.startDate || today > edition.endDate) continue;
-      if (!edition.cap) return;
-      const sold = await this.editionSold(tx, organizationId, edition);
-      const adding = lines.filter((l) => l.presentationId === presentation.id).reduce((s, l) => s + l.qty, 0);
-      if (sold + adding <= edition.cap) return;
-    }
-
-    throw new BadRequestException(`"${presentation.name}" es de una edición especial que está cerrada o sin cupo.`);
-  }
-
-  private async editionSold(
-    tx: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
-    organizationId: string,
-    edition: { id: string; startDate: string; endDate: string },
-  ) {
-    const links = await tx.editionPresentation.findMany({ where: { editionId: edition.id } });
-    const result = await tx.orderLine.aggregate({
-      _sum: { qty: true },
-      where: {
-        presentationId: { in: links.map((l) => l.presentationId) },
-        order: { organizationId, status: { not: OrderStatus.CANCELLED }, orderedOn: { gte: edition.startDate, lte: edition.endDate } },
-      },
-    });
-    return result._sum.qty ?? 0;
   }
 
   private async ownOrder(id: string, organizationId: string) {
@@ -210,4 +179,12 @@ export class OrdersService {
     if (!order || order.organizationId !== organizationId) throw new NotFoundException('Pedido no encontrado.');
     return order;
   }
+}
+
+// Lo de una edición especial solo se vende mientras alguna de sus ediciones
+// esté entre sus fechas. Ya no hay cupo: la cantidad la decide lo que se produzca.
+function assertEditionOpen(presentation: { name: string; editions: { edition: { startDate: string; endDate: string } }[] }, today: string) {
+  if (!presentation.editions.length) return;
+  if (presentation.editions.some(({ edition }) => today >= edition.startDate && today <= edition.endDate)) return;
+  throw new BadRequestException(`"${presentation.name}" es de una edición especial que está cerrada.`);
 }

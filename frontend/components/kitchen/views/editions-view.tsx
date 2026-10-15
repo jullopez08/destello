@@ -5,8 +5,7 @@ import { Cookie } from "@/components/ui/cookie"
 import { byId, editionSold, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel } from "@/lib/kitchen/format"
 import { Empty, PageHead, useModal } from "../shared"
-import { EditionForm } from "../forms/edition-form"
-import { ConfirmForm } from "../forms/confirm-form"
+import { EditionForm, EditionRemoveForm } from "../forms/edition-form"
 
 // ── Ediciones especiales ──
 
@@ -17,17 +16,23 @@ export function EditionsView() {
 
   return (
     <>
-      <PageHead title="Ediciones especiales" sub="Productos de temporada que se venden hasta una fecha o hasta completar un cupo.">
-        <button className="btn primary" onClick={() => open(<EditionForm />)} disabled={!data.presentations.length}>
+      <PageHead title="Ediciones especiales" sub="Productos de temporada que se venden entre dos fechas.">
+        <button className="btn primary only-desktop" onClick={() => open(<EditionForm />)} disabled={!data.presentations.length}>
           <Icon name="plus" />
           Nueva edición
         </button>
       </PageHead>
+      {data.presentations.length ? (
+        <button className="fab only-mobile" onClick={() => open(<EditionForm />)}>
+          <Icon name="plus" />
+          Nueva edición
+        </button>
+      ) : null}
       {data.editions.length ? (
         <div className="grid g2">
           {data.editions.map((e) => {
             const sold = editionSold(data, e)
-            const [tone, label] = e.endDate < today || (e.cap && sold >= e.cap) ? ["bad", "Cerrada"] : e.startDate > today ? ["lilac", "Próxima"] : ["good", "Activa"]
+            const [tone, label] = e.endDate < today ? ["bad", "Cerrada"] : e.startDate > today ? ["lilac", "Próxima"] : ["good", "Activa"]
             return (
               <article className={`card c-${e.color}`} key={e.id}>
                 <div className="row between nowrap">
@@ -42,16 +47,7 @@ export function EditionsView() {
                     className="iconbtn"
                     aria-label={`Eliminar ${e.name}`}
                     onClick={() =>
-                      open(
-                        <ConfirmForm
-                          title="Eliminar edición"
-                          text={<>Se eliminará <b>{e.name}</b>. Las presentaciones siguen existiendo.</>}
-                          label="Eliminar"
-                          path={`/editions/${e.id}`}
-                          method="DELETE"
-                          done="Edición eliminada"
-                        />,
-                      )
+                      open(<EditionRemoveForm edition={e} />)
                     }
                   >
                     <Icon name="trash" />
@@ -62,15 +58,10 @@ export function EditionsView() {
                   {e.presentationIds.map((id) => <span className="chip white" key={id}>{byId(data.presentations, id)?.name}</span>)}
                 </div>
                 <div className="grid g4" style={{ marginTop: 14, gap: 10 }}>
-                  <div className="kpi"><span className="l">Vendidas</span><span className="v" style={{ fontSize: 24 }}>{sold}{e.cap ? " / " + e.cap : ""}</span></div>
+                  <div className="kpi"><span className="l">Vendidas</span><span className="v" style={{ fontSize: 24 }}>{sold}</span></div>
                   <div className="kpi"><span className="l">Desde</span><span className="v" style={{ fontSize: 18 }}>{dateLabel(e.startDate, today)}</span></div>
                   <div className="kpi"><span className="l">Hasta</span><span className="v" style={{ fontSize: 18 }}>{dateLabel(e.endDate, today)}</span></div>
                 </div>
-                {e.cap ? (
-                  <div className="bar" style={{ marginTop: 12, height: 10, background: "rgba(255,255,255,.6)" }}>
-                    <span style={{ width: `${Math.min(100, (sold / e.cap) * 100)}%` }} />
-                  </div>
-                ) : null}
               </article>
             )
           })}

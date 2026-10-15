@@ -136,13 +136,8 @@ export function TodayView() {
                 </div>
               </div>
               <p style={{ marginTop: 12 }}>
-                {editionSold(data, edition)} de {edition.cap || "∞"} vendidas · cierra el {dateLabel(edition.endDate, today)}
+                {editionSold(data, edition)} vendidas · cierra el {dateLabel(edition.endDate, today)}
               </p>
-              {edition.cap ? (
-                <div className="bar" style={{ marginTop: 8, background: "rgba(255,255,255,.55)" }}>
-                  <span style={{ width: `${Math.min(100, (editionSold(data, edition) / edition.cap) * 100)}%` }} />
-                </div>
-              ) : null}
             </div>
           ) : null}
           <div className="card">
