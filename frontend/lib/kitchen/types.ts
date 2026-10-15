@@ -52,7 +52,8 @@ export interface Product {
   recipeId: string
   grams: number
   look: CookieLook
-  extras: { supplyId: string; qty: number }[]
+  /** por unidad: un insumo, o una receta propia (relleno hecho) en gramos */
+  extras: { supplyId?: string | null; recipeId?: string | null; qty: number }[]
 }
 
 /** BOX: caja armada · UNIT: por unidad · SIZES: sabor y tamaño */

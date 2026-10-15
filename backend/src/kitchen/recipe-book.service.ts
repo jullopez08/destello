@@ -92,7 +92,7 @@ export class RecipeBookService {
         recipeId: dto.recipeId,
         grams: dto.grams,
         look: dto.look,
-        extras: { create: (dto.extras ?? []).map(({ supplyId, qty }) => ({ supplyId, qty })) },
+        extras: { create: extraRows(dto) },
       },
     });
     return this.snapshot.load(organizationId);
@@ -111,7 +111,7 @@ export class RecipeBookService {
           recipeId: dto.recipeId,
           grams: dto.grams,
           look: dto.look,
-          extras: { create: (dto.extras ?? []).map(({ supplyId, qty }) => ({ supplyId, qty })) },
+          extras: { create: extraRows(dto) },
         },
       }),
     ]);
@@ -122,6 +122,17 @@ export class RecipeBookService {
 
   private async assertProduct(organizationId: string, dto: ProductDto) {
     await own(this.prisma.recipe.findUnique({ where: { id: dto.recipeId } }), organizationId, 'Receta no encontrada.');
-    await assertSupplies(this.prisma, organizationId, (dto.extras ?? []).map((e) => e.supplyId));
+    const extras = dto.extras ?? [];
+    if (extras.some((e) => !e.supplyId === !e.recipeId)) throw new BadRequestException('Cada extra es un insumo o una receta.');
+    await assertSupplies(this.prisma, organizationId, extras.flatMap((e) => (e.supplyId ? [e.supplyId] : [])));
+    const recipeIds = [...new Set(extras.flatMap((e) => (e.recipeId ? [e.recipeId] : [])))];
+    if (recipeIds.includes(dto.recipeId)) throw new BadRequestException('El relleno no puede ser la misma masa del producto.');
+    const found = await this.prisma.recipe.count({ where: { organizationId, id: { in: recipeIds } } });
+    if (found !== recipeIds.length) throw new BadRequestException('Alguna receta no existe.');
   }
+}
+
+// Extras como se guardan: insumo o receta, uno de los dos.
+function extraRows(dto: ProductDto) {
+  return (dto.extras ?? []).map(({ supplyId, recipeId, qty }) => ({ supplyId: supplyId || null, recipeId: supplyId ? null : recipeId || null, qty }));
 }

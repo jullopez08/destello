@@ -42,7 +42,12 @@ export function Modal({
   }, [])
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
+    // Con una ventana encima de otra, Escape cierra solo la de arriba.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      const veils = document.querySelectorAll(".veil")
+      if (formRef.current?.parentElement === veils[veils.length - 1]) onClose()
+    }
     window.addEventListener("keydown", onKey)
     const first = formRef.current?.querySelector<HTMLElement>(
       "input:not([type=hidden]):not([type=radio]):not([type=checkbox]),select,textarea",

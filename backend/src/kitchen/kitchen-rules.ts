@@ -36,7 +36,8 @@ export interface RuleProduct {
   mode: 'LOT' | 'ON_DEMAND';
   recipeId: string;
   grams: number;
-  extras: { supplyId: string; qty: number }[];
+  /** por unidad: un insumo, o una receta propia (relleno hecho) en gramos */
+  extras: { supplyId?: string | null; recipeId?: string | null; qty: number }[];
 }
 
 /** BOX: caja armada · UNIT: por unidad, la clienta elige sabores · SIZES: sabor y tamaño */
@@ -117,7 +118,11 @@ export function requirements(lines: OrderLineInput[], data: KitchenRuleData): Re
     units[product.id] = (units[product.id] ?? 0) + count;
     unitGrams[product.id] = (unitGrams[product.id] ?? 0) + total;
     dough[product.recipeId] = (dough[product.recipeId] ?? 0) + total;
-    for (const e of product.extras) addDirect(e.supplyId, e.qty * count);
+    for (const e of product.extras) {
+      // El relleno hecho en casa se suma como masa de su receta.
+      if (e.recipeId) dough[e.recipeId] = (dough[e.recipeId] ?? 0) + e.qty * count;
+      else if (e.supplyId) addDirect(e.supplyId, e.qty * count);
+    }
   };
 
   for (const line of lines) {

@@ -303,6 +303,7 @@ model Recipe {
   items        RecipeItem[]
   lots         DoughLot[]
   products     Product[]
+  extras       ProductExtra[]
 
   @@index([organizationId])
 }
@@ -364,14 +365,19 @@ model Product {
 }
 
 /// Insumo extra por unidad de producto (capacillo, queso crema del glaseado…)
+/// Extra por unidad: un insumo (relleno comprado, capacillo) o una receta
+/// propia (relleno hecho: arequipe, ganache), una sola de las dos.
+/// qty: en la medida del insumo, o en gramos si es receta.
 model ProductExtra {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   productId String
-  supplyId  String
+  supplyId  String?
+  recipeId  String?
   qty       Float
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  supply  Supply  @relation(fields: [supplyId], references: [id])
+  supply  Supply? @relation(fields: [supplyId], references: [id])
+  recipe  Recipe? @relation(fields: [recipeId], references: [id])
 }
 
 /// Lo que se vende: una caja o presentación con su precio

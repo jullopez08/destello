@@ -16,7 +16,10 @@ export function recipeCostPerGram(recipe: Pick<RuleRecipe, 'items' | 'yieldGrams
 export function productCost(product: Pick<RuleProduct, 'recipeId' | 'grams' | 'extras'>, data: KitchenRuleData): number {
   const recipe = byId(data.recipes, product.recipeId);
   const dough = recipe ? product.grams * recipeCostPerGram(recipe, data.supplies) : 0;
-  const extras = product.extras.reduce((sum, e) => sum + e.qty * (byId(data.supplies, e.supplyId)?.cost ?? 0), 0);
+  const extras = product.extras.reduce((sum, e) => {
+    const filling = byId(data.recipes, e.recipeId);
+    return sum + e.qty * (filling ? recipeCostPerGram(filling, data.supplies) : (byId(data.supplies, e.supplyId)?.cost ?? 0));
+  }, 0);
   return dough + extras;
 }
 
