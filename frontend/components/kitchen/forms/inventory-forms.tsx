@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { Icon } from "@/components/ui/icon"
 import { useKitchen } from "@/lib/kitchen/store"
-import { bigUnitOf, factorOf, phoneInput } from "@/lib/kitchen/format"
+import { bigUnitOf, factorOf, money, phoneInput } from "@/lib/kitchen/format"
 import type { SupplyKind } from "@/lib/kitchen/rules"
 import type { Supplier, Supply } from "@/lib/kitchen/types"
 import { ColorSeg, Eyebrow, Field, Seg, toNumber, useModal } from "../shared"
@@ -76,11 +76,18 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
     category: supply?.category ?? "INGREDIENT",
     stock: show(supply?.stock, kind0),
     min: show(supply?.min, kind0),
-    cost: supply ? String(Math.round(supply.cost * factorOf(kind0) * 100) / 100) : "",
+    // El precio se escribe como se compró (pagaste $ por tanto); el costo por
+    // gramo, mililitro o unidad lo calcula Destello.
+    paid: supply ? String(Math.round(supply.cost * factorOf(kind0))) : "",
+    paidQty: supply ? "1" : "",
     supplierId: supply?.supplierId ?? "",
   })
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }))
   const u = bigUnitOf(f.kind)
+  const paid = toNumber(f.paid), paidQty = toNumber(f.paidQty)
+  const perBig = paid >= 0 && paidQty > 0 ? paid / paidQty : null
+  // Un empaque siempre se cuenta por unidad.
+  const pickCategory = (category: "INGREDIENT" | "PACKAGING") => set(category === "PACKAGING" ? { category, kind: "UNIT" } : { category })
 
   return (
     <Modal
@@ -88,11 +95,14 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
       sub="La existencia y el mínimo se escriben en kilos, litros o unidades."
       onClose={close}
       onSubmit={async () => {
-        const stock = toNumber(f.stock), min = toNumber(f.min), cost = toNumber(f.cost)
+        const stock = toNumber(f.stock), min = toNumber(f.min)
         if (!f.name.trim()) throw new FormError("Escribe el nombre del insumo.")
-        if (![stock, min, cost].every((n) => n >= 0)) throw new FormError("Completa existencia, mínimo y costo con números positivos.")
+        if (![stock, min].every((n) => n >= 0)) throw new FormError("Completa existencia y mínimo con números positivos.")
+        const noPrice = !f.paid.trim() && !f.paidQty.trim()
+        if (!noPrice && perBig === null) throw new FormError(`Escribe cuánto pagaste y por cuántos ${u}.`)
         const m = factorOf(f.kind)
-        const body = { name: f.name.trim(), kind: f.kind, category: f.category, stock: stock * m, min: min * m, cost: cost / m, supplierId: f.supplierId || null }
+        const cost = noPrice ? 0 : perBig! / m
+        const body = { name: f.name.trim(), kind: f.kind, category: f.category, stock: stock * m, min: min * m, cost, supplierId: f.supplierId || null }
         if (supply) await mutate(`/supplies/${supply.id}`, "PUT", body, "Insumo actualizado")
         else await mutate("/supplies", "POST", body, "Insumo agregado")
         close()
@@ -100,23 +110,36 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
     >
       <Field label="Nombre"><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Nueces picadas" required /></Field>
       <div>
-        <Eyebrow>Cómo se mide</Eyebrow>
-        <Seg name="kind" value={f.kind} onChange={(kind) => set({ kind })} options={[["MASS", "Por peso"], ["VOLUME", "Por volumen"], ["UNIT", "Por unidad"]]} />
-      </div>
-      <div>
         <Eyebrow>Tipo</Eyebrow>
-        <Seg name="category" value={f.category} onChange={(category) => set({ category })} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
+        <Seg name="category" value={f.category} onChange={pickCategory} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
       </div>
+      {f.category === "PACKAGING" ? (
+        <p className="small muted">Los empaques se cuentan por unidad.</p>
+      ) : (
+        <div>
+          <Eyebrow>Cómo se mide</Eyebrow>
+          <Seg name="kind" value={f.kind} onChange={(kind) => set({ kind })} options={[["MASS", "Por peso"], ["VOLUME", "Por volumen"], ["UNIT", "Por unidad"]]} />
+        </div>
+      )}
       <div className="fields">
         <Field label={`Existencia actual (${u})`}><input type="number" min="0" step="any" value={f.stock} onChange={(e) => set({ stock: e.target.value })} required /></Field>
         <Field label={`Mínimo para alertar (${u})`}><input type="number" min="0" step="any" value={f.min} onChange={(e) => set({ min: e.target.value })} required /></Field>
-        <Field label={`Costo por ${PER[f.kind]} ($)`}><input type="number" min="0" step="any" value={f.cost} onChange={(e) => set({ cost: e.target.value })} required /></Field>
         <Field label="Proveedor">
           <select value={f.supplierId} onChange={(e) => set({ supplierId: e.target.value })}>
             <option value="">Sin proveedor</option>
             {data.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </Field>
+      </div>
+      <div>
+        <Eyebrow>Precio de compra</Eyebrow>
+        <div className="fields">
+          <Field label="Pagaste ($)"><input type="number" min="0" step="100" value={f.paid} onChange={(e) => set({ paid: e.target.value })} placeholder="Ej. 12000" /></Field>
+          <Field label={`Por cuántos ${u}`}><input type="number" min="0" step="any" value={f.paidQty} onChange={(e) => set({ paidQty: e.target.value })} placeholder={f.kind === "UNIT" ? "Ej. 50" : "Ej. 3"} /></Field>
+        </div>
+        <p className="small muted" style={{ marginTop: 6 }}>
+          {perBig !== null ? `Sale a ${money(perBig)} por ${PER[f.kind]}. Las compras lo van ajustando solas.` : "Si no lo sabes, déjalo vacío: la primera compra lo llena."}
+        </p>
       </div>
       {supply ? (
         <div>

@@ -7,6 +7,13 @@ import { averageCostAfterPurchase, toIsoDate } from './kitchen-rules';
 import { CreatePurchaseDto, SupplierDto, SupplyDto } from './dto/kitchen.dto';
 
 // Proveedores, insumos y compras de la empresa de la sesión.
+// Un empaque (caja, bolsa, sticker) siempre se cuenta por unidad.
+function assertPackagingByUnit(dto: SupplyDto) {
+  if (dto.category === 'PACKAGING' && dto.kind !== 'UNIT') {
+    throw new BadRequestException('Un empaque se cuenta por unidad.');
+  }
+}
+
 @Injectable()
 export class InventoryService {
 
@@ -50,6 +57,7 @@ export class InventoryService {
   // ── Insumos ──
 
   async createSupply(organizationId: string, dto: SupplyDto) {
+    assertPackagingByUnit(dto);
     if (dto.supplierId) await assertSupplier(this.prisma, organizationId, dto.supplierId);
     await this.prisma.supply.create({ data: { organizationId, ...dto, supplierId: dto.supplierId || null } });
     return this.snapshot.load(organizationId);
@@ -57,6 +65,7 @@ export class InventoryService {
 
   async updateSupply(organizationId: string, id: string, dto: SupplyDto) {
     const supply = await own(this.prisma.supply.findUnique({ where: { id } }), organizationId, 'Insumo no encontrado.');
+    assertPackagingByUnit(dto);
     if (dto.supplierId) await assertSupplier(this.prisma, organizationId, dto.supplierId);
     if (dto.kind !== supply.kind && (await this.supplyInUse(id))) {
       throw new BadRequestException('No se puede cambiar cómo se mide: este insumo ya está en recetas, productos, empaques o compras.');
