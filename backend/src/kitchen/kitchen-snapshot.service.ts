@@ -141,7 +141,6 @@ export class KitchenSnapshotService {
         description: e.description,
         startDate: e.startDate,
         endDate: e.endDate,
-        cap: e.cap,
         look: e.look,
         color: e.color,
         presentationIds: e.presentations.map((p) => p.presentationId),

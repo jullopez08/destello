@@ -206,7 +206,6 @@ export class CreateEditionDto {
   @IsOptional() @IsString() @MaxLength(500) description?: string;
   @Matches(ISO_DATE) startDate!: string;
   @Matches(ISO_DATE) endDate!: string;
-  @IsInt() @Min(0) cap!: number;
   @IsIn(CARD_COLORS) color!: string;
   @IsIn(COOKIE_LOOKS) look!: string;
   @IsArray() @ArrayMinSize(1) @IsString({ each: true }) presentationIds!: string[];

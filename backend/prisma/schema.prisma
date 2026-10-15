@@ -523,8 +523,6 @@ model Edition {
   /// AAAA-MM-DD
   startDate      String
   endDate        String
-  /// 0 = sin cupo
-  cap            Int      @default(0)
   look           String   @default("star")
   color          String   @default("strawberry")
   createdAt      DateTime @default(now())
