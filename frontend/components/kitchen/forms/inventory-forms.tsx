@@ -95,7 +95,8 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
       sub="La existencia y el mínimo se escriben en kilos, litros o unidades."
       onClose={close}
       onSubmit={async () => {
-        const stock = toNumber(f.stock), min = toNumber(f.min)
+        // Vacío = 0: un insumo nuevo puede empezar sin existencia ni mínimo.
+        const stock = f.stock.trim() ? toNumber(f.stock) : 0, min = f.min.trim() ? toNumber(f.min) : 0
         if (!f.name.trim()) throw new FormError("Escribe el nombre del insumo.")
         if (![stock, min].every((n) => n >= 0)) throw new FormError("Completa existencia y mínimo con números positivos.")
         const noPrice = !f.paid.trim() && !f.paidQty.trim()
@@ -122,8 +123,12 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
         </div>
       )}
       <div className="fields">
-        <Field label={`Existencia actual (${u})`}><input type="number" min="0" step="any" value={f.stock} onChange={(e) => set({ stock: e.target.value })} required /></Field>
-        <Field label={`Mínimo para alertar (${u})`}><input type="number" min="0" step="any" value={f.min} onChange={(e) => set({ min: e.target.value })} required /></Field>
+        <Field label={`Lo que tienes ahora (${u})`} hint="Antes de esta compra. Si no tienes nada, déjalo en 0.">
+          <input type="number" min="0" step="any" value={f.stock} onChange={(e) => set({ stock: e.target.value })} placeholder={`0 ${u}`} />
+        </Field>
+        <Field label={`Mínimo para alertar (${u})`} hint="Cuando baje de aquí, Destello te avisa.">
+          <input type="number" min="0" step="any" value={f.min} onChange={(e) => set({ min: e.target.value })} placeholder={`0 ${u}`} />
+        </Field>
         <Field label="Proveedor">
           <select value={f.supplierId} onChange={(e) => set({ supplierId: e.target.value })}>
             <option value="">Sin proveedor</option>
@@ -134,8 +139,8 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
       <div>
         <Eyebrow>Precio de compra</Eyebrow>
         <div className="fields">
-          <Field label="Pagaste ($)"><input type="number" min="0" step="100" value={f.paid} onChange={(e) => set({ paid: e.target.value })} placeholder="Ej. 12000" /></Field>
-          <Field label={`Por cuántos ${u}`}><input type="number" min="0" step="any" value={f.paidQty} onChange={(e) => set({ paidQty: e.target.value })} placeholder={f.kind === "UNIT" ? "Ej. 50" : "Ej. 3"} /></Field>
+          <Field label="Cuánto pagaste en total ($)"><input type="number" min="0" step="100" value={f.paid} onChange={(e) => set({ paid: e.target.value })} placeholder="Ej. 12000" /></Field>
+          <Field label={`Cantidad total que compraste (${u})`}><input type="number" min="0" step="any" value={f.paidQty} onChange={(e) => set({ paidQty: e.target.value })} placeholder={f.kind === "UNIT" ? "Ej. 50" : "Ej. 3"} /></Field>
         </div>
         <p className="small muted" style={{ marginTop: 6 }}>
           {perBig !== null ? `Sale a ${money(perBig)} por ${PER[f.kind]}. Las compras lo van ajustando solas.` : "Si no lo sabes, déjalo vacío: la primera compra lo llena."}

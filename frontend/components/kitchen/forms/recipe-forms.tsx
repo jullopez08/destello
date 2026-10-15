@@ -108,7 +108,9 @@ export function LotForm({ recipeId }: { recipeId?: string }) {
             {list.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </Field>
-        <Field label="Tandas"><input type="number" min="0.25" step="0.25" value={batches} onChange={(e) => setBatches(e.target.value)} /></Field>
+        <Field label="Tandas" hint={recipe ? `1 tanda = la receta completa una vez = ${grams(recipe.yieldGrams)}. Media tanda: 0,5.` : "1 tanda = la receta completa una vez."}>
+          <input type="number" min="0.25" step="0.25" value={batches} onChange={(e) => setBatches(e.target.value)} />
+        </Field>
         <Field label="Días que dura"><input type="number" min="1" value={days} onChange={(e) => setDays(e.target.value)} /></Field>
       </div>
       {recipe ? (
