@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel, initials, longDate, money, qty } from "@/lib/kitchen/format"
 import { Empty, Kpi, PageHead, useModal } from "../shared"
-import { PurchaseForm } from "../forms/inventory-forms"
+import { PurchaseForm } from "../forms/purchase-form"
 
 // ── Compras ──
 
@@ -16,11 +16,15 @@ export function PurchasesView() {
   return (
     <>
       <PageHead title="Compras" sub="Al registrar una compra sube la existencia del insumo y se actualiza su costo promedio.">
-        <button className="btn primary" onClick={() => open(<PurchaseForm />)}>
+        <button className="btn primary only-desktop" onClick={() => open(<PurchaseForm />)}>
           <Icon name="plus" />
           Registrar compra
         </button>
       </PageHead>
+      <button className="fab only-mobile" onClick={() => open(<PurchaseForm />)}>
+        <Icon name="plus" />
+        Registrar compra
+      </button>
       <div className="grid g4" style={{ marginBottom: 16 }}>
         <Kpi v={money(month)} l="Compras del mes" c="c-peach" />
         <Kpi v={data.purchases.length} l="Compras registradas" c="c-lilac" />

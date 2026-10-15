@@ -63,7 +63,7 @@ export function SuppliesView({ tab, setTab, query, setQuery }: { tab: SupplyTab;
                     </td>
                     <td className="r num" data-label="Costo promedio">{costLabel(s)}</td>
                     <td className="r num" data-label="Valor">{money(Math.max(0, s.stock) * s.cost)}</td>
-                    <td data-label="Estado">{r < 1 ? <span className="chip bad">Comprar ya</span> : r < 1.3 ? <span className="chip warn">Casi en el mínimo</span> : <span className="chip good">Bien</span>}</td>
+                    <td data-label="Estado">{s.min <= 0 ? <span className="chip warn">Ponle un mínimo</span> : r < 1 ? <span className="chip bad">Comprar ya</span> : r < 1.3 ? <span className="chip warn">Casi en el mínimo</span> : <span className="chip good">Bien</span>}</td>
                   </tr>
                 )
               })}

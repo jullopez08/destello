@@ -95,3 +95,17 @@
 .prod-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .prod-text b { font-size: 15px; overflow-wrap: anywhere; }
 .prod-text span { font-size: 12px; color: var(--ink-2); }
+
+/* ---------- Insumo nuevo dentro de Proveedor y Compra ---------- */
+.quick { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; background: var(--accent-soft); border: 1.5px solid var(--ink); }
+.quick .btn.primary { align-self: flex-start; }
+@media (max-width: 560px) {
+  .quick .btn.primary { align-self: stretch; min-height: 48px; }
+  .quick-open { min-height: 44px; }
+  /* Compra en el celular: insumo arriba; cantidad y unidad; total y quitar. */
+  .line.k-purchase { grid-template-columns: minmax(0, 1fr) 84px 44px; }
+  .line.k-purchase > :nth-child(1) { grid-column: 1 / -1; }
+  .line.k-purchase > :nth-child(2) { grid-column: 1; }
+  .line.k-purchase > :nth-child(3) { grid-column: 2 / -1; }
+  .line.k-purchase > :nth-child(4) { grid-column: 1 / 3; }
+}
