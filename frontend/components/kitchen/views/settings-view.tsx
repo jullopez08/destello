@@ -7,7 +7,7 @@ import { api, errorMessage } from "@/lib/api"
 import { useSession } from "@/lib/session"
 import { PALETTES } from "@/lib/palettes"
 import { useKitchen } from "@/lib/kitchen/store"
-import { DAYS, initials } from "@/lib/kitchen/format"
+import { DAYS, initials, phoneInput } from "@/lib/kitchen/format"
 import { Empty, Eyebrow, Field, PageHead, useModal } from "../shared"
 import { AccountForm, BREB_TYPE, CourierForm } from "../forms/settings-forms"
 import { ChangePasswordForm } from "../forms/password-form"
@@ -77,7 +77,7 @@ export function SettingsView() {
           <h2 style={{ margin: 0 }}>El negocio</h2>
           <div className="fields">
             <Field label="Nombre"><input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></Field>
-            <Field label="WhatsApp del negocio"><input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: e.target.value })} inputMode="tel" /></Field>
+            <Field label="WhatsApp del negocio"><input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: phoneInput(e.target.value) })} inputMode="tel" placeholder="300 000 0000" /></Field>
             <Field label="Hora de corte de pedidos" hint="Después de esta hora, el pedido pasa al siguiente día.">
               <input type="time" value={f.orderCutoff} onChange={(e) => setF({ ...f, orderCutoff: e.target.value })} required />
             </Field>

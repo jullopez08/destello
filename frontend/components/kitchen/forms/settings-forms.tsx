@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { phoneInput } from "@/lib/kitchen/format"
 import { Modal, FormError } from "@/components/ui/modal"
 import { useKitchen } from "@/lib/kitchen/store"
 import { Field, useModal } from "../shared"
@@ -91,7 +92,7 @@ export function CourierForm() {
     >
       <div className="fields">
         <Field label="Nombre"><input value={name} onChange={(e) => setName(e.target.value)} required /></Field>
-        <Field label="WhatsApp"><input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" required /></Field>
+        <Field label="WhatsApp"><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" required /></Field>
       </div>
     </Modal>
   )

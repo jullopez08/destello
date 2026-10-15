@@ -14,23 +14,33 @@ import { Eyebrow, Field, Seg } from "../shared"
 // el mínimo quedan en 0: la primera compra los llena y en Insumos sale
 // «Ponle un mínimo». Va dentro de otro <form>, así que no es un form propio.
 
-export function QuickSupply({ supplierId, supplierName, onAdded }: { supplierId?: string; supplierName?: string; onAdded: (supply: Supply) => void }) {
+type Added = { supplierId?: string; supplierName?: string; onAdded: (supply: Supply) => void }
+
+// Botón «¿No está? Insumo nuevo» que abre el recuadro (en Compra).
+export function QuickSupply(props: Added) {
+  const [shown, setShown] = useState(false)
+  if (shown) return <QuickSupplyPanel {...props} onClose={() => setShown(false)} />
+  return (
+    <button type="button" className="btn soft sm quick-open" onClick={() => setShown(true)}>
+      <Icon name="plus" />
+      ¿No está? Insumo nuevo
+    </button>
+  )
+}
+
+// El recuadro. Al agregar se cierra solo (onClose).
+export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, initialName = "" }: Added & { onClose: () => void; initialName?: string }) {
   const { data, mutate } = useKitchen()
   const toast = useToast()
-  const [shown, setShown] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const [name, setName] = useState("")
+  const [name, setName] = useState(initialName)
   const [kind, setKind] = useState<SupplyKind>("MASS")
   const [category, setCategory] = useState<"INGREDIENT" | "PACKAGING">("INGREDIENT")
-
-  if (!shown) {
-    return (
-      <button type="button" className="btn soft sm quick-open" onClick={() => setShown(true)}>
-        <Icon name="plus" />
-        ¿No está? Insumo nuevo
-      </button>
-    )
+  // Un empaque siempre se cuenta por unidad.
+  const pickCategory = (c: "INGREDIENT" | "PACKAGING") => {
+    setCategory(c)
+    if (c === "PACKAGING") setKind("UNIT")
   }
 
   async function add() {
@@ -41,12 +51,11 @@ export function QuickSupply({ supplierId, supplierName, onAdded }: { supplierId?
     setError("")
     try {
       const before = new Set(data.supplies.map((s) => s.id))
-      const next = await mutate("/supplies", "POST", { name: clean, kind, category, stock: 0, min: 0, cost: 0, supplierId: supplierId || null })
+      const next = await mutate("/supplies", "POST", { name: clean, kind: category === "PACKAGING" ? "UNIT" : kind, category, stock: 0, min: 0, cost: 0, supplierId: supplierId || null })
       const added = next.supplies.find((s) => !before.has(s.id))
       toast(`${clean} agregado`)
       if (added) onAdded(added)
-      setName("")
-      setShown(false)
+      onClose()
     } catch (err) {
       setError(errorMessage(err))
     } finally {
@@ -61,7 +70,7 @@ export function QuickSupply({ supplierId, supplierName, onAdded }: { supplierId?
           <b>Insumo nuevo</b>
           {supplierName ? <div className="small muted">Se agrega a lo que le compras a {supplierName}.</div> : null}
         </div>
-        <button type="button" className="iconbtn" aria-label="Cerrar insumo nuevo" onClick={() => setShown(false)}>
+        <button type="button" className="iconbtn" aria-label="Cerrar insumo nuevo" onClick={onClose}>
           <Icon name="x" />
         </button>
       </div>
@@ -81,13 +90,17 @@ export function QuickSupply({ supplierId, supplierName, onAdded }: { supplierId?
         />
       </Field>
       <div>
-        <Eyebrow>¿Cómo se mide?</Eyebrow>
-        <Seg name="quick-kind" value={kind} onChange={setKind} options={[["MASS", "Peso (kg)"], ["VOLUME", "Volumen (L)"], ["UNIT", "Unidad"]]} />
-      </div>
-      <div>
         <Eyebrow>Es un</Eyebrow>
-        <Seg name="quick-category" value={category} onChange={setCategory} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
+        <Seg name="quick-category" value={category} onChange={pickCategory} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
       </div>
+      {category === "PACKAGING" ? (
+        <p className="small muted">Los empaques se cuentan por unidad.</p>
+      ) : (
+        <div>
+          <Eyebrow>¿Cómo se mide?</Eyebrow>
+          <Seg name="quick-kind" value={kind} onChange={setKind} options={[["MASS", "Peso (kg)"], ["VOLUME", "Volumen (L)"], ["UNIT", "Unidad"]]} />
+        </div>
+      )}
       <p className="small muted">Lo que tienes y el costo se llenan solos con la primera compra. El mínimo se lo pones después en Insumos.</p>
       {error ? <div className="err" role="alert">{error}</div> : null}
       <button type="button" className="btn primary" disabled={busy} onClick={() => void add()}>

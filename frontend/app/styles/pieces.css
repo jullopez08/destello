@@ -84,12 +84,13 @@ tr.click:hover td { background: var(--bg); }
 .cookie.star { background: radial-gradient(circle at 50% 50%, #fff2b3 0 55%, #f2c94c 72%); }
 
 /* ---------- Ventanas ---------- */
-.veil { position: fixed; inset: 0; background: rgba(255, 244, 222, 0.72); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 16px; z-index: 50; overflow: auto; }
-.modal { background: var(--bg); border-radius: 26px; width: min(640px, 100%); max-height: calc(100vh - 32px); overflow: auto; box-shadow: 0 20px 60px rgba(120, 80, 20, 0.22); border: 1px solid var(--line); }
+/* Ventana: solo el cuerpo hace scroll (antes también el velo y la página de atrás: doble scroll y un hueco al deslizar). */
+.veil { position: fixed; inset: 0; height: 100dvh; background: rgba(255, 244, 222, 0.72); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 16px; z-index: 50; overflow: hidden; overscroll-behavior: contain; }
+.modal { background: var(--bg); border-radius: 26px; width: min(640px, 100%); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(120, 80, 20, 0.22); border: 1px solid var(--line); }
 .modal.wide { width: min(760px, 100%); }
-.modal > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 22px 24px 6px; position: sticky; top: 0; background: var(--bg); z-index: 1; }
-.modal .body { padding: 10px 24px 8px; display: flex; flex-direction: column; gap: 14px; }
-.modal > footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 14px 24px 22px; position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); }
+.modal > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 22px 24px 6px; flex: none; background: var(--bg); }
+.modal .body { padding: 10px 24px 8px; display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.modal > footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 14px 24px 22px; flex: none; background: var(--bg); border-top: 1px solid var(--line); }
 .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
 label.f { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 700; min-width: 0; }
 label.f span.h { font-weight: 400; color: var(--ink-2); font-size: 12px; }

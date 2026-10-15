@@ -4,12 +4,12 @@ import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { Icon } from "@/components/ui/icon"
 import { useKitchen } from "@/lib/kitchen/store"
-import { bigUnitOf, factorOf } from "@/lib/kitchen/format"
+import { bigUnitOf, factorOf, phoneInput } from "@/lib/kitchen/format"
 import type { SupplyKind } from "@/lib/kitchen/rules"
 import type { Supplier, Supply } from "@/lib/kitchen/types"
 import { ColorSeg, Eyebrow, Field, Seg, toNumber, useModal } from "../shared"
 import { ConfirmForm } from "./confirm-form"
-import { QuickSupply } from "./quick-supply"
+import { SupplyPicker } from "./supply-picker"
 
 // ── Proveedor ──
 
@@ -44,34 +44,13 @@ export function SupplierForm({ supplier }: { supplier?: Supplier }) {
       <div className="fields">
         <Field label="Nombre del proveedor"><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Harinas El Trigal" required /></Field>
         <Field label="Persona de contacto"><input value={f.contact} onChange={(e) => set({ contact: e.target.value })} placeholder="Ej. Marta López" /></Field>
-        <Field label="Teléfono o WhatsApp"><input value={f.phone} onChange={(e) => set({ phone: e.target.value })} inputMode="tel" placeholder="300 000 0000" /></Field>
+        <Field label="Teléfono o WhatsApp"><input value={f.phone} onChange={(e) => set({ phone: phoneInput(e.target.value) })} inputMode="tel" placeholder="300 000 0000" /></Field>
         <Field label="Correo"><input type="email" value={f.email} onChange={(e) => set({ email: e.target.value })} placeholder="ventas@proveedor.co" /></Field>
       </div>
       <Field label="Dirección"><input value={f.address} onChange={(e) => set({ address: e.target.value })} /></Field>
       <div>
         <Eyebrow>Qué le compras</Eyebrow>
-        <div className="seg" style={{ marginBottom: 10 }}>
-          {data.supplies.map((s) => (
-            <label key={s.id}>
-              <input
-                type="checkbox"
-                checked={sells.has(s.id)}
-                onChange={(e) => {
-                  const next = new Set(sells)
-                  if (e.target.checked) next.add(s.id)
-                  else next.delete(s.id)
-                  setSells(next)
-                }}
-              />
-              <span>{s.name}</span>
-            </label>
-          ))}
-        </div>
-        <QuickSupply
-          supplierId={supplier?.id}
-          supplierName={f.name.trim() || undefined}
-          onAdded={(s) => setSells((x) => new Set(x).add(s.id))}
-        />
+        <SupplyPicker value={sells} onChange={setSells} supplierId={supplier?.id} supplierName={f.name.trim() || undefined} />
       </div>
       <Field label="Notas"><textarea value={f.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Días de entrega, pedido mínimo, descuentos…" /></Field>
       <div>
