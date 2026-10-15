@@ -30,6 +30,17 @@ export function Modal({
   const [busy, setBusy] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
+  // Con la ventana abierta, la página de atrás no se mueve: así no hay doble
+  // scroll ni queda un hueco al deslizar en el celular.
+  useEffect(() => {
+    const html = document.documentElement
+    const before = html.style.overflow
+    html.style.overflow = "hidden"
+    return () => {
+      html.style.overflow = before
+    }
+  }, [])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose()
     window.addEventListener("keydown", onKey)

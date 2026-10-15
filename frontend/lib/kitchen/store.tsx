@@ -10,8 +10,8 @@ interface KitchenValue {
   data: KitchenSnapshot
   /** Reglas de cálculo con los datos actuales */
   rules: KitchenRuleData
-  /** Llama al backend con un cambio; la respuesta es el estado nuevo. Lanza si falla. */
-  mutate: (path: string, method: string, body?: unknown, successMessage?: string) => Promise<void>
+  /** Llama al backend con un cambio; devuelve el estado nuevo. Lanza si falla. */
+  mutate: (path: string, method: string, body?: unknown, successMessage?: string) => Promise<KitchenSnapshot>
   /** Igual que mutate, pero muestra el error como aviso en vez de lanzarlo. */
   act: (path: string, method: string, body?: unknown, successMessage?: string) => Promise<void>
 }
@@ -42,6 +42,7 @@ export function KitchenProvider({ children, fallback }: { children: React.ReactN
       const snapshot = await api<KitchenSnapshot>(`/kitchen${path}`, { method, body })
       setData(snapshot)
       if (successMessage) toast(successMessage)
+      return snapshot
     },
     [toast],
   )

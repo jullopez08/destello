@@ -18,11 +18,15 @@ export function RecipesView() {
     <>
       <PageHead title="Recetas y masas" sub="Cada receta rinde una tanda de masa en gramos. Las galletas se hacen por lote y se guardan; los rollos y panes se hacen solo con pedido.">
         <button className="btn soft" onClick={() => open(<LotForm />)} disabled={!data.recipes.length}>Producir lote de masa</button>
-        <button className="btn primary" onClick={() => open(<RecipeForm />)}>
+        <button className="btn primary only-desktop" onClick={() => open(<RecipeForm />)}>
           <Icon name="plus" />
           Nueva receta
         </button>
       </PageHead>
+      <button className="fab only-mobile" onClick={() => open(<RecipeForm />)}>
+        <Icon name="plus" />
+        Nueva receta
+      </button>
       <h2 style={{ marginBottom: 12 }}>Masa guardada</h2>
       {lots.length ? (
         <div className="grid g3" style={{ marginBottom: 26 }}>

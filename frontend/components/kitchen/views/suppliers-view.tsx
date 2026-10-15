@@ -10,6 +10,13 @@ import { ConfirmForm } from "../forms/confirm-form"
 
 // ── Proveedores ──
 
+// En el celular, el teléfono abre la llamada o el chat. Un número de 10
+// dígitos se toma como de Colombia (57).
+function whatsappLink(phone: string) {
+  const digits = phone.replace(/\D/g, "")
+  return `https://wa.me/${digits.length === 10 ? "57" + digits : digits}`
+}
+
 export function SuppliersView({ query, setQuery }: { query: string; setQuery: (q: string) => void }) {
   const { data } = useKitchen()
   const { open } = useModal()
@@ -21,11 +28,15 @@ export function SuppliersView({ query, setQuery }: { query: string; setQuery: (q
   return (
     <>
       <PageHead title="Proveedores" sub="A quién le compras cada insumo y cómo contactarlo.">
-        <button className="btn primary" onClick={() => open(<SupplierForm />)}>
+        <button className="btn primary only-desktop" onClick={() => open(<SupplierForm />)}>
           <Icon name="plus" />
           Nuevo proveedor
         </button>
       </PageHead>
+      <button className="fab only-mobile" onClick={() => open(<SupplierForm />)}>
+        <Icon name="plus" />
+        Nuevo proveedor
+      </button>
       <div className="row" style={{ marginBottom: 16 }}>
         <input className="search" placeholder="Buscar por nombre, contacto o insumo" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Buscar proveedor" />
       </div>
@@ -88,6 +99,12 @@ export function SuppliersView({ query, setQuery }: { query: string; setQuery: (q
                       >
                         <Icon name="copy" size={14} />
                       </button>
+                    </div>
+                  ) : null}
+                  {p.phone ? (
+                    <div className="row only-mobile" style={{ gap: 8 }}>
+                      <a className="btn sm" href={`tel:${p.phone.replace(/[^\d+]/g, "")}`}>Llamar</a>
+                      <a className="btn sm" href={whatsappLink(p.phone)} target="_blank" rel="noopener noreferrer">WhatsApp</a>
                     </div>
                   ) : null}
                   {p.email ? (

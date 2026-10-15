@@ -55,3 +55,12 @@ export const COLOR_NAMES: Record<string, string> = {
   sky: "Cielo",
   mint: "Menta",
 }
+
+// Teléfono mientras se escribe: 300 000 0000 (3, 3 y 4 dígitos) para ver si
+// falta alguno. Con indicativo (+57…) o más de 10 dígitos se deja como está.
+export function phoneInput(v: string): string {
+  if (v.trim().startsWith("+")) return v
+  const d = v.replace(/\D/g, "")
+  if (d.length > 10) return v
+  return [d.slice(0, 3), d.slice(3, 6), d.slice(6)].filter(Boolean).join(" ")
+}

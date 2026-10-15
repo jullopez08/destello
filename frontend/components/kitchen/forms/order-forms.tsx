@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/kitchen/store"
 import { linePrice, productionPlan } from "@/lib/kitchen/rules"
-import { dateLabel, longDate, money } from "@/lib/kitchen/format"
+import { dateLabel, longDate, money, phoneInput } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
 import { Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import { blankOrderRow, OrderRowPicker, type OrderRow } from "./order-row"
@@ -76,7 +76,7 @@ export function OrderForm() {
     >
       <div className="fields">
         <Field label="Cliente"><input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nombre" required /></Field>
-        <Field label="WhatsApp"><input value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" placeholder="300 000 0000" /></Field>
+        <Field label="WhatsApp"><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" /></Field>
       </div>
       <div className="eyebrow">Qué pidió</div>
       <LinesEditor
