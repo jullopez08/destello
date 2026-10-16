@@ -41,7 +41,7 @@ export function AnalyticsView() {
       <div className="grid g2" style={{ marginTop: 16 }}>
         <div className="card">
           <h2>¿Cómo van tus ventas cada semana?</h2>
-          <p className="small muted">Plata vendida por semana en las últimas 8 semanas.</p>
+          <p className="small muted">Plata vendida en cada una de las últimas 8 semanas.</p>
           <WeekBars weeks={weeks} today={data.today} />
         </div>
         <div className="card">
@@ -65,16 +65,16 @@ export function AnalyticsView() {
           {flagged.length ? (
             <div className="list">
               {flagged.map((x) => (
-                <div className="it" key={x.p.id}>
+                <div className="it noprofit" key={x.p.id}>
                   <div>
                     <b>{x.p.name}</b>
                     <div className="small muted">
                       Lo vendes en {money(x.p.price)} y te cuesta {money(x.c)}: {x.p.price >= x.c ? `te quedan ${money(x.p.price - x.c)}` : `pierdes ${money(x.c - x.p.price)}`}.
                     </div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div className="fix">
                     <span className={`chip ${x.h.kind}`}>{x.h.label}</span>
-                    <div className="small" style={{ marginTop: 4, whiteSpace: "nowrap" }}>Cóbralo a <b>{money(x.h.suggested ?? 0)}</b></div>
+                    <div className="small" style={{ whiteSpace: "nowrap" }}>Cóbralo a <b>{money(x.h.suggested ?? 0)}</b></div>
                   </div>
                 </div>
               ))}

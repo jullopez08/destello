@@ -46,16 +46,6 @@
 .trend.down { background: var(--strawberry); color: var(--cherry); }
 .trend.flat { background: var(--accent-soft); color: var(--ink-2); }
 .conclusion { margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); font-size: 14px; line-height: 1.45; }
-.wbars { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
-.wbar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; align-items: baseline; }
-.wbar .t { font-size: 13px; font-weight: 600; }
-.wbar .n { font-weight: 700; }
-.wbar .track { grid-column: 1 / -1; position: relative; height: 14px; border-radius: 999px; background: var(--accent-soft); }
-.wbar .track span { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--peach); }
-.wbar.now .track span { background: var(--accent-deep); }
-.wbar.now .t { font-weight: 800; }
-.wbar .track i { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-2); opacity: 0.6; }
-.wbar > .small { grid-column: 1 / -1; }
 .dbars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 14px; align-items: end; }
 .dbar { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .dbar .n { font-size: 13px; font-weight: 700; }
@@ -64,3 +54,31 @@
 .dbar.best .col span { background: var(--accent-deep); }
 .dbar .t { font-size: 12px; font-weight: 600; text-transform: capitalize; }
 @media (max-width: 560px) { .stat .v { font-size: 21px; } .summary p { font-size: 15px; } }
+.vchart { margin-top: 10px; }
+.vchart .axis-title { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.vchart .axis-title.x { text-align: center; margin-top: 4px; }
+.vchart .plot { position: relative; height: 190px; margin: 22px 0 0 34px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; align-items: end; border-bottom: 1.5px solid var(--ink-2); }
+.vchart .gridline { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); pointer-events: none; }
+.vchart .gridline span { position: absolute; right: calc(100% + 6px); top: -8px; font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.vchart .avgline { position: absolute; left: 0; right: 0; border-top: 2px dotted var(--ink); opacity: 0.7; z-index: 2; pointer-events: none; }
+.vchart .vcol { height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative; z-index: 1; }
+.vchart .vcol .vbar { position: relative; width: 100%; max-width: 46px; min-height: 2px; border-radius: 8px 8px 0 0; background: var(--peach); }
+.vchart .vcol.best .vbar { background: var(--accent-deep); }
+.vchart .vcol.now .vbar, .vchart .sw.now { background: repeating-linear-gradient(135deg, var(--accent-deep) 0 5px, var(--peach) 5px 10px); }
+.vchart .vcol .vbar b { position: absolute; bottom: calc(100% + 3px); left: 50%; transform: translateX(-50%); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vchart .xlabels { margin-left: 34px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+.vchart .xlabels span { display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 700; line-height: 1.1; }
+.vchart .xlabels small { font-size: 10px; font-weight: 500; color: var(--ink-2); }
+.vchart .xlabels .now { color: var(--ink); }
+@media (max-width: 560px) { .vchart .plot, .vchart .xlabels { gap: 3px; } .vchart .vcol .vbar b { font-size: 9.5px; } }
+
+/* «¿Qué no te deja ganancia?»: el texto se ajusta y el precio sugerido va debajo si no cabe. */
+.list .it.noprofit { flex-wrap: wrap; align-items: flex-start; }
+.list .it.noprofit > div:first-child { flex: 1 1 220px; overflow-wrap: anywhere; }
+.list .it.noprofit .fix { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+@media (max-width: 560px) { .list .it.noprofit .fix { flex-direction: row; align-items: center; } }
+.vchart .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+.vchart .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.vchart .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
+.vchart .sw.best { background: var(--accent-deep); }
+.vchart .sw.avg { height: 0; border-top: 2px dotted var(--ink); border-radius: 0; width: 18px; }
