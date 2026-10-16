@@ -107,3 +107,46 @@
 .torta-center .t { font-size: 12px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 .torta-center .small { font-size: 10.5px; }
 
+
+/* ---------- Configuración ---------- */
+/* Días cerrados: botones redondos de un toque (Lun … Dom). */
+.days { display: flex; flex-wrap: wrap; gap: 6px; }
+.days label { cursor: pointer; }
+.days input { position: absolute; opacity: 0; pointer-events: none; }
+.days span { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: 13px; text-transform: capitalize; }
+.days input:checked + span { background: var(--strawberry); border-color: var(--ink); text-decoration: line-through; }
+.days input:focus-visible + span { outline: 3px solid var(--accent-deep); }
+/* Paletas: círculos de color con su nombre debajo. */
+.palettes { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.palettes label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 56px; }
+.palettes input { position: absolute; opacity: 0; pointer-events: none; }
+.palettes .dot { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); }
+.palettes input:checked ~ .dot { border-color: var(--ink); box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.palettes input:checked ~ .small { font-weight: 700; }
+.palettes input:focus-visible ~ .dot { outline: 3px solid var(--accent-deep); outline-offset: 4px; }
+.iconbtn.touch { padding: 10px; }
+
+/* ---------- Suscripción ---------- */
+.sub-alert { margin-bottom: 16px; }
+.sub-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sub-facts > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sub-facts b { font-size: 17px; overflow-wrap: anywhere; }
+.sub-summary .chip { background: var(--surface); }
+/* Aviso de pago arriba de cada sección (día de gracia o 3 días antes de vencer). */
+.pay-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; color: var(--ink); text-decoration: none; border: 1.5px solid var(--ink); }
+.pay-banner-go { flex: none; font-weight: 700; padding: 8px 16px; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--ink); }
+
+@media (max-width: 560px) {
+  .days { flex-wrap: nowrap; gap: 4px; }
+  .days label { flex: 1; min-width: 0; display: flex; justify-content: center; }
+  .days span { width: 100%; max-width: 46px; height: auto; aspect-ratio: 1; font-size: 11px; }
+  /* Guardar siempre a la mano mientras se edita El negocio, encima de la barra de abajo. */
+  .settings .save-bar { position: sticky; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 5; margin: 0 -20px -20px; padding: 12px 20px 16px; background: var(--surface); border-top: 1px solid var(--line); border-radius: 0 0 22px 22px; }
+  .settings .save-bar .btn { width: 100%; min-height: 50px; }
+  .settings .it.courier { flex-wrap: wrap; }
+  .settings .it.my-account { flex-direction: column; align-items: stretch; }
+  .settings .it.my-account .btn { min-height: 44px; }
+  .sub-facts { grid-template-columns: minmax(0, 1fr); }
+  .pay-banner { flex-direction: column; align-items: stretch; text-align: left; }
+  .pay-banner-go { text-align: center; }
+}

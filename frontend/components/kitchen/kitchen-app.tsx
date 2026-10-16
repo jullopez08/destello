@@ -10,6 +10,7 @@ import { KitchenProvider, useKitchen } from "@/lib/kitchen/store"
 import { PAGES, TAB_PAGES } from "@/lib/kitchen/pages"
 import { initials, longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
+import { PayBanner } from "@/components/billing/pay-banner"
 import { Empty, ModalHost } from "./shared"
 import { VoiceIndicator, VoiceMicButton, VoiceProvider } from "./voice-listener"
 import { MoreView } from "./views/more-view"
@@ -106,6 +107,7 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
   return (
     <VoiceProvider>
       <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceIndicator />} mic={<VoiceMicButton />}>
+        <PayBanner subscription={subscription} page={page} />
         {view}
       </Shell>
     </VoiceProvider>

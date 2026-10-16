@@ -78,7 +78,7 @@ export function WompiCheckout({ label = "Pagar con Wompi" }: { label?: string })
     <div className="stack" style={{ gap: 8 }}>
       <Script id="wompi-widget" src={WIDGET_SRC} onReady={() => setReady(true)} onError={() => setError("No se pudo cargar la pasarela de pago. Revisa tu conexión.")} />
       <div>
-        <button type="button" className="btn primary" onClick={pay} disabled={!ready || opening}>
+        <button type="button" className="btn primary block" onClick={pay} disabled={!ready || opening}>
           <Icon name="suscripcion" />
           {opening ? "Abriendo…" : label}
         </button>
