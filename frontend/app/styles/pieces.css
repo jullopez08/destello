@@ -88,6 +88,9 @@ tr.click:hover td { background: var(--bg); }
 .cookie.bread { border-radius: 46% 46% 40% 40%; background: radial-gradient(circle at 50% 30%, #f3c27d, #c9853b 75%); }
 .cookie.pump { background: radial-gradient(circle at 50% 50%, #ff9f43 0 60%, #e77f1f 72%); }
 .cookie.star { background: radial-gradient(circle at 50% 50%, #fff2b3 0 55%, #f2c94c 72%); }
+/* Para otros negocios (página de presentación): pizza de domicilio y plato de restaurante. */
+.cookie.pizza { background: radial-gradient(circle at 34% 36%, #d8452f 0 7%, transparent 8%), radial-gradient(circle at 64% 32%, #d8452f 0 6%, transparent 7%), radial-gradient(circle at 58% 64%, #d8452f 0 7%, transparent 8%), radial-gradient(circle at 32% 66%, #d8452f 0 5%, transparent 6%), radial-gradient(circle at 50% 50%, #ffd36b 0 56%, #e9a64a 60% 72%); }
+.cookie.plate { background: radial-gradient(circle at 42% 44%, #8cc56a 0 12%, transparent 13%), radial-gradient(circle at 58% 56%, #e9784f 0 13%, transparent 14%), radial-gradient(circle at 46% 60%, #f3c96b 0 9%, transparent 10%), radial-gradient(circle at 50% 50%, #ffffff 0 44%, #efe6d8 46% 48%, #ffffff 50% 66%, #e8dccb 72%); }
 
 /* ---------- Ventanas ---------- */
 /* Ventana: solo el cuerpo hace scroll (antes también el velo y la página de atrás: doble scroll y un hueco al deslizar). */

@@ -26,21 +26,19 @@ export function LandingNav() {
   )
 }
 
+/** Portada como afiche pastel sobre papel crema (referencia OLIPOP). Titular de resultado, para todo negocio de comida. */
 export function LandingHero() {
   return (
     <section className="lp-hero">
       <div className="lp-hero-text">
-        <span className="eyebrow">Para pastelerías, panaderías y cocinas ocultas</span>
-        <h1>Deja de adivinar cuánto hornear.</h1>
-        <p className="lp-lead">
-          Anota los pedidos y Destello te dice cuánta masa hacer, qué te falta comprar y cuánto te queda de verdad en cada
-          venta. Desde el celular, en tu cocina.
-        </p>
+        <span className="eyebrow">Para negocios de comida</span>
+        <h1>Tu cocina, en orden.</h1>
+        <p className="lp-lead">Anota los pedidos y Destello te dice qué producir, qué comprar y cuánto ganas en cada venta.</p>
         <div className="lp-actions">
           <a className="btn primary" href={contactHref(TRIAL_MESSAGE)}>Probar 15 días gratis</a>
           <a className="btn ghost" href="#como-funciona">Ver cómo funciona</a>
         </div>
-        <p className="small muted">Sin tarjeta para la prueba. Funciona en el navegador del celular y del computador.</p>
+        <p className="small lp-trust">Sin tarjeta · Desde el celular · Te ayudamos a empezar</p>
       </div>
       <HeroPreview />
     </section>
@@ -64,10 +62,10 @@ function HeroPreview() {
         <span className="chip warn">Hacer 350 g</span>
       </div>
       <div className="lp-preview-row">
-        <Cookie look="roll" size={44} />
+        <Cookie look="pizza" size={44} />
         <div>
-          <b>6 rollos de canela</b>
-          <span className="small muted">Para 2 pedidos de domicilio</span>
+          <b>8 pizzas medianas</b>
+          <span className="small muted">Para 5 pedidos de domicilio</span>
         </div>
         <span className="chip ok">Listo</span>
       </div>

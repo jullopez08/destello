@@ -1,9 +1,11 @@
-/* Página de presentación (/). Misma marca del panel: fondo crema, tarjetas pastel y el café solo
-   en letras. Primero el celular; desde 900 px se abre a dos o tres columnas. */
+/* Página de presentación (/). Misma marca del panel (fondo crema, tarjetas pastel, café solo en
+   letras) con la referencia OLIPOP (DESIGN-OLIPOP.md): portada como afiche pastel sobre papel crema,
+   títulos grandes y centrados, tarjetas tipo "sabor" con un círculo ilustrado y una sola frase.
+   Primero el celular; desde 900 px se abre a columnas. */
 .lp { background: var(--bg); color: var(--ink); min-height: 100vh; overflow-x: clip; }
 .lp main { width: min(1120px, 100%); margin: 0 auto; padding: 0 16px; }
 .lp h1 { font-size: clamp(40px, 9vw, 72px); line-height: 0.98; }
-.lp h2 { font-size: clamp(26px, 5.5vw, 40px); line-height: 1.05; margin-top: 6px; max-width: 22ch; }
+.lp h2 { font-size: clamp(30px, 6.5vw, 52px); line-height: 1; margin-top: 6px; max-width: 18ch; }
 .lp h3 { font-size: 20px; }
 .lp .btn { min-height: 50px; padding-inline: 24px; font-size: 16px; }
 
@@ -26,9 +28,10 @@
 .lp-brand b { font-family: var(--display); font-weight: 400; font-size: 24px; }
 
 /* Portada */
-.lp-hero { display: grid; gap: 28px; padding: 36px 0 20px; }
+.lp-hero { display: grid; gap: 24px; margin-top: 16px; padding: 28px 20px 20px; border-radius: 28px; background: var(--accent-soft); }
 .lp-hero-text { display: flex; flex-direction: column; gap: 16px; }
-.lp-lead { font-size: 18px; line-height: 1.5; max-width: 46ch; }
+.lp-lead { font-size: 19px; line-height: 1.5; max-width: 36ch; }
+.lp-trust { font-weight: 600; color: var(--ink-2); }
 .lp-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .lp-preview { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 26px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 40px rgba(120, 80, 20, 0.12); }
 .lp-preview-head { display: flex; justify-content: space-between; align-items: center; }
@@ -38,12 +41,24 @@
 .lp-preview-alert { background: var(--strawberry); border-radius: 16px; padding: 12px 14px; font-size: 14px; }
 
 /* Secciones */
-.lp-section { padding: 44px 0 8px; display: flex; flex-direction: column; gap: 10px; }
-.lp-grid3, .lp-grid2 { display: grid; gap: 14px; margin-top: 14px; }
-.lp-problem { display: flex; flex-direction: column; gap: 8px; }
-.lp-steps { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 14px; }
-.lp-step { display: flex; flex-direction: column; gap: 8px; }
-.lp-step-head { display: flex; align-items: center; gap: 10px; }
+.lp-section { padding: 52px 0 8px; display: flex; flex-direction: column; gap: 10px; }
+/* Títulos centrados como afiche; las tarjetas debajo siguen alineadas a la izquierda. */
+.lp-center > .eyebrow, .lp-center > h2, .lp-center > .lp-sub { text-align: center; align-self: center; }
+.lp-grid3, .lp-grid2 { display: grid; gap: 14px; margin-top: 18px; text-align: left; }
+/* Tipos de negocio: tarjetas "sabor" (un pastel por tarjeta, círculo, título y una frase). */
+.lp-flavors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.lp-flavor { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 22px 14px; }
+.lp-flavor h3 { font-size: 18px; line-height: 1.1; }
+.lp-flavor p { font-size: 14px; line-height: 1.4; }
+.lp-soon-link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; text-decoration: none; }
+/* El problema: sin caja, un círculo con el ícono, título y una frase. */
+.lp-problem { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 6px 12px; }
+.lp-problem p { color: var(--ink-2); font-size: 16px; }
+.lp-circle { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--strawberry); margin-bottom: 4px; }
+.lp-grid3 .lp-problem:nth-child(2) .lp-circle { background: var(--lilac); }
+.lp-grid3 .lp-problem:nth-child(3) .lp-circle { background: var(--peach); }
+.lp-steps { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 12px; }
+.lp-step { display: flex; flex-direction: column; gap: 10px; }
 .lp-step-n { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); font-weight: 700; }
 .lp-example { margin-top: auto; padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); font-size: 14px; font-weight: 600; }
 .lp-voice { display: flex; flex-direction: column; gap: 16px; border: 1.5px solid var(--ink); }
@@ -63,7 +78,6 @@
 .lp-install li::marker { font-weight: 700; }
 .lp-price { font-family: var(--display); font-size: 34px; line-height: 1.1; }
 .lp-plan-soon { border-style: dashed; }
-.lp-restaurant { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .lp-faq { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .lp-faq details { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 0 16px; }
 .lp-faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 56px; font-weight: 700; }
@@ -79,14 +93,14 @@
 
 @media (min-width: 900px) {
   .lp main, .lp-nav { padding-inline: 32px; }
-  .lp-hero { grid-template-columns: 1.1fr 0.9fr; align-items: center; padding: 72px 0 32px; gap: 48px; }
-  .lp-section { padding-top: 72px; }
+  .lp-hero { grid-template-columns: 1.1fr 0.9fr; align-items: center; margin-top: 24px; padding: 64px 56px; gap: 48px; }
+  .lp-section { padding-top: 88px; }
+  .lp-flavors { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .lp-flavor { padding: 28px 18px; }
   .lp-grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lp-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lp-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .lp-voice { flex-direction: row; align-items: center; gap: 28px; padding: 32px; }
   .lp-voice-mic { width: 96px; height: 96px; }
-  .lp-restaurant { flex-direction: row; align-items: center; justify-content: space-between; padding: 32px; }
-  .lp-restaurant .btn { flex: none; }
   .lp-footer { flex-direction: row; align-items: center; justify-content: space-between; padding-inline: 32px; }
 }

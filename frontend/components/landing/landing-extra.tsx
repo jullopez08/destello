@@ -1,33 +1,14 @@
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
 import { Icon } from "@/components/ui/icon"
-import { ANDROID_APK_URL, contactHref, RESTAURANT_MESSAGE, TRIAL_MESSAGE } from "@/lib/contact"
+import { ANDROID_APK_URL, contactHref, TRIAL_MESSAGE } from "@/lib/contact"
 
-// ── Página de presentación: restaurantes (pronto), instalar, preguntas, contacto y pie ──
-
-/** Interés de restaurantes con mesas: mide la demanda antes de construir el modo restaurante (PLAN.md). */
-export function LandingRestaurants() {
-  return (
-    <section className="lp-section">
-      <div className="card c-sky lp-restaurant">
-        <div className="stack" style={{ gap: 10 }}>
-          <span className="eyebrow">Muy pronto</span>
-          <h2>¿Tienes restaurante con mesas?</h2>
-          <p>
-            Estamos construyendo Destello para restaurantes: el mesero toma el pedido en su celular, la cocina lo ve al
-            instante con un reloj y nadie se olvida de la mesa 7. Déjanos tu WhatsApp y te avisamos primero.
-          </p>
-        </div>
-        <a className="btn ghost" href={contactHref(RESTAURANT_MESSAGE)}>Avísame cuando esté</a>
-      </div>
-    </section>
-  )
-}
+// ── Página de presentación: descargar, preguntas, contacto y pie ──
 
 /** Descarga directa (sin Play Store ni App Store, decisión de Julieth): APK en Android, la web instalada en iPhone. */
 export function LandingInstall() {
   return (
-    <section className="lp-section" id="descargar">
+    <section className="lp-section lp-center" id="descargar">
       <span className="eyebrow">Descarga la app</span>
       <h2>Tenlo a un toque en tu celular.</h2>
       <p className="lp-sub">Destello no está en Play Store ni en App Store: lo descargas directo desde aquí.</p>
@@ -74,7 +55,7 @@ export function LandingInstall() {
 
 const FAQ = [
   ["¿Mis clientas tienen que instalar algo?", "No. Te siguen escribiendo a tu WhatsApp de siempre; tú anotas el pedido en Destello."],
-  ["¿Sirve si no hago galletas?", "Sí. Funciona con todo lo que se hace con una receta en gramos: tortas, panes, rollos, postres y comida de cocinas ocultas."],
+  ["¿Sirve para mi tipo de negocio?", "Sí, si produces con recetas: pastelerías, panaderías, cocinas ocultas y comidas a domicilio. Para restaurantes con mesas, muy pronto."],
   ["¿Necesito computador?", "No. Todo el panel funciona en el celular. Si tienes computador, también lo puedes usar ahí."],
   ["¿Qué pasa con mis datos?", "Son de tu negocio y no se los compartimos a nadie. Si dejas de usar Destello, los guardamos 6 meses por si vuelves y luego se borran."],
   ["¿Y si se me olvida pagar?", "Te avisamos antes de que venza y tienes un día de gracia. Tus datos no se pierden: el panel solo queda en pausa hasta que pagues."],
@@ -82,7 +63,7 @@ const FAQ = [
 
 export function LandingFaq() {
   return (
-    <section className="lp-section">
+    <section className="lp-section lp-center">
       <span className="eyebrow">Preguntas frecuentes</span>
       <h2>Lo que más nos preguntan.</h2>
       <div className="lp-faq">
@@ -107,7 +88,7 @@ export function LandingContact() {
         <div className="lp-cta-plate" aria-hidden="true">
           <Cookie size={48} />
           <Cookie look="choco" size={48} />
-          <Cookie look="bread" size={48} />
+          <Cookie look="pizza" size={48} />
         </div>
         <h2>Prueba Destello 15 días gratis.</h2>
         <p>Escríbenos y dejamos tu cocina lista para empezar mañana.</p>
