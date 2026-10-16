@@ -16,8 +16,11 @@ export function AnalyticsView() {
   const { now, before, weeks, weekdays, sellers } = analytics(data, rules)
   const avgNow = now.orders ? now.sales / now.orders : 0
   const avgBefore = before.orders ? before.sales / before.orders : 0
-  const sold = sellers.filter((s) => s.units > 0)
-  const least = sellers.filter((s) => !sold.slice(0, 5).includes(s)).slice(-4).reverse()
+  // Si todo se vendiera igual, cada cosa dejaría `fair` de la plata. Lo que
+  // deja menos de la mitad de eso es «lo que casi no se vende»; lo demás, lo que se vende.
+  const fair = sellers.length ? 1 / sellers.length : 0
+  const sold = sellers.filter((s) => s.sales > 0 && s.share >= fair / 2)
+  const least = sellers.filter((s) => s.share < fair / 2).reverse()
   const flagged = data.presentations
     .filter((p) => p.active)
     .map((p) => ({ p, h: presentationHealth(p, rules, data.settings.targetMargin), c: presentationCost(p, rules) }))
@@ -53,8 +56,8 @@ export function AnalyticsView() {
         </div>
         <div className="card">
           <h2>¿Qué es lo que más vendes?</h2>
-          <p className="small muted">Qué parte de la plata vendida en las últimas 8 semanas dejó cada cosa.</p>
-          {sold.length ? <SellerPie list={sold} max={5} /> : <Empty>Todavía no hay ventas.</Empty>}
+          <p className="small muted">Lo que deja buena parte de tu plata, en las últimas 8 semanas.</p>
+          {sold.length ? <SellerPie list={sold} max={9} /> : <Empty>Todavía no hay ventas.</Empty>}
           {sold.length ? (
             <p className="conclusion">
               <b>{sold[0].name}</b> es lo que más vendes: deja el <b>{Math.round(sold[0].share * 100)}&nbsp;%</b> de tu plata.
@@ -63,8 +66,11 @@ export function AnalyticsView() {
         </div>
         <div className="card">
           <h2>¿Qué casi no se vende?</h2>
-          <p className="small muted">Piensa si vale la pena seguir ofreciéndolo, cambiarle el precio o mostrarlo más.</p>
-          {least.some((x) => x.sales > 0) ? <SellerPie list={least} max={4} offset={6} /> : null}
+          <p className="small muted">
+            Cada una deja menos de la mitad de lo que deja, en promedio, cada cosa que vendes. Piensa si vale la pena seguir ofreciéndola, cambiarle el
+            precio o mostrarla más.
+          </p>
+          {least.some((x) => x.sales > 0) ? <SellerPie list={least} max={9} offset={Math.min(sold.length, 10)} /> : null}
           {least.some((x) => x.sales > 0) ? (
             <p className="conclusion">
               <b>{least.find((x) => x.sales > 0)?.name}</b> es lo que menos vendes: {least.find((x) => x.sales > 0)?.units} en 8 semanas.
