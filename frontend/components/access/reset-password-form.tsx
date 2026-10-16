@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
+import { PasswordInput } from "@/components/ui/password-input"
 import { api, errorMessage } from "@/lib/api"
 
 export function ResetPasswordForm({ token }: { token: string }) {
@@ -53,11 +54,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
             <h2>Nueva contraseña</h2>
             <label className="f">
               Contraseña nueva
-              <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <PasswordInput autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </label>
             <label className="f">
               Repítela
-              <input type="password" autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} required />
+              <PasswordInput autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} required />
             </label>
             {error ? <div className="err" role="alert">{error}</div> : null}
             <button className="btn primary" type="submit" disabled={busy}>{busy ? "Guardando…" : "Guardar contraseña"}</button>

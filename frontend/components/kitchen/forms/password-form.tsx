@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
+import { PasswordInput } from "@/components/ui/password-input"
 import { useToast } from "@/components/ui/toast"
 import { api } from "@/lib/api"
 import { Field, useModal } from "../shared"
@@ -27,10 +28,10 @@ export function ChangePasswordForm() {
         close()
       }}
     >
-      <Field label="Contraseña actual"><input type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required /></Field>
+      <Field label="Contraseña actual"><PasswordInput autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required /></Field>
       <div className="fields">
-        <Field label="Nueva contraseña"><input type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required /></Field>
-        <Field label="Repítela"><input type="password" autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} required /></Field>
+        <Field label="Nueva contraseña"><PasswordInput autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required /></Field>
+        <Field label="Repítela"><PasswordInput autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} required /></Field>
       </div>
     </Modal>
   )

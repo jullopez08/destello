@@ -176,3 +176,31 @@
 /* Resumen en una línea bajo el título (lo que antes era una tarjeta que no llevaba a nada). */
 .summary-line { margin: -4px 0 14px; font-size: 15px; }
 .summary-line b { font-size: 17px; }
+
+/* ---------- Contraseña con botón para verla ---------- */
+.pass { position: relative; display: block; }
+.pass input { padding-right: 48px; }
+.pass-eye { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.pass-eye:hover { color: var(--ink); background: var(--surface-2); }
+.pass-eye svg { width: 20px; height: 20px; }
+
+/* ---------- Entrada en el celular: marca arriba y compacta, el formulario a la vista ---------- */
+@media (max-width: 900px) {
+  .login { min-height: 100dvh; grid-template-rows: auto 1fr; }
+  .login .art { padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 22px; gap: 14px; border-radius: 0 0 28px 28px; }
+  .login .art h1 { font-size: 44px; margin-top: 4px !important; }
+  .login .art p { font-size: 15px; margin-top: 8px; line-height: 1.45; }
+  .login .plate { flex-wrap: nowrap; gap: 10px; }
+  .login .plate .cookie { --s: 42px; }
+  .login .form { place-items: start center; padding: 26px 20px calc(28px + env(safe-area-inset-bottom, 0px)); }
+  .login form { gap: 16px; }
+  /* 16 px: con menos, el iPhone agranda la pantalla al tocar el campo. */
+  .login .f input { font-size: 16px; min-height: 50px; }
+  .login .btn.primary { min-height: 52px; font-size: 16px; }
+  .login .linkbtn { font-size: 14px; padding: 6px 0; align-self: flex-start; }
+}
+/* Documentos legales en la bienvenida: filas que se tocan (abren en otra pestaña). */
+.doc-links { display: flex; flex-direction: column; padding: 4px 16px; }
+.doc-links a { display: flex; justify-content: space-between; align-items: center; min-height: 46px; color: var(--ink); font-weight: 600; text-decoration: none; border-top: 1px dashed var(--line); }
+.doc-links a:first-child { border-top: 0; }
+.doc-links a span { font-size: 20px; opacity: 0.55; }

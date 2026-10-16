@@ -44,6 +44,8 @@ export async function api<T>(path: string, options: { method?: string; body?: un
       if (code === "terms_not_accepted") window.dispatchEvent(new Event(TERMS_REQUIRED_EVENT))
     }
 
+    // 429: el servidor frena los intentos seguidos (p. ej. 6 entradas cada 3 minutos).
+    if (response.status === 429) throw new ApiError("Hiciste varios intentos seguidos. Espera unos minutos e inténtalo de nuevo.", 429, code)
     throw new ApiError(message || "Algo salió mal. Inténtalo de nuevo.", response.status, code)
   }
 
