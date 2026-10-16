@@ -5,7 +5,7 @@ import { presentationCost, presentationHealth } from "@/lib/kitchen/rules"
 import { analytics } from "@/lib/kitchen/analytics"
 import { money } from "@/lib/kitchen/format"
 import { Empty, PageHead } from "../shared"
-import { SellerBars, Stat, Summary, WeekdayBars } from "./analytics-charts"
+import { Stat, Summary, WeekdayBars } from "./analytics-charts"
 import { WeekLine } from "./analytics-line"
 import { SellerPie } from "./analytics-pie"
 
@@ -54,7 +54,7 @@ export function AnalyticsView() {
         <div className="card">
           <h2>¿Qué es lo que más vendes?</h2>
           <p className="small muted">Qué parte de la plata vendida en las últimas 8 semanas dejó cada cosa.</p>
-          {sold.length ? <SellerPie list={sold} /> : <Empty>Todavía no hay ventas.</Empty>}
+          {sold.length ? <SellerPie list={sold} max={5} /> : <Empty>Todavía no hay ventas.</Empty>}
           {sold.length ? (
             <p className="conclusion">
               <b>{sold[0].name}</b> es lo que más vendes: deja el <b>{Math.round(sold[0].share * 100)}&nbsp;%</b> de tu plata.
@@ -64,7 +64,18 @@ export function AnalyticsView() {
         <div className="card">
           <h2>¿Qué casi no se vende?</h2>
           <p className="small muted">Piensa si vale la pena seguir ofreciéndolo, cambiarle el precio o mostrarlo más.</p>
-          {least.length ? <SellerBars list={least} warn /> : <Empty>Todo lo que ofreces se está vendiendo.</Empty>}
+          {least.some((x) => x.sales > 0) ? <SellerPie list={least} max={4} offset={6} /> : null}
+          {least.some((x) => x.sales > 0) ? (
+            <p className="conclusion">
+              <b>{least.find((x) => x.sales > 0)?.name}</b> es lo que menos vendes: {least.find((x) => x.sales > 0)?.units} en 8 semanas.
+            </p>
+          ) : null}
+          {least.some((x) => x.sales === 0) ? (
+            <p className="conclusion">
+              Sin ninguna venta en 8 semanas: <b>{least.filter((x) => x.sales === 0).map((x) => x.name).join(", ")}</b>.
+            </p>
+          ) : null}
+          {least.length ? null : <Empty>Todo lo que ofreces se está vendiendo.</Empty>}
         </div>
         <div className="card">
           <h2>¿Qué no te deja ganancia?</h2>

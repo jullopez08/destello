@@ -5,34 +5,35 @@ import { money } from "@/lib/kitchen/format"
 import type { Seller } from "@/lib/kitchen/analytics"
 import { Cherry, SliceDrawing } from "./pie-patterns"
 
-// «¿Qué es lo que más vendes?» como una torta vista desde arriba: cada tajada es
-// qué parte de la plata dejó cada cosa. Sin lista de colores: al tocar una
-// tajada, el centro dice qué es, su porcentaje y cuánto dejó. Cada cosa vendida
-// es una tajada de dona con su propio glaseado (hasta 9; si hay más, el resto
-// va junto en «Lo demás»).
+// Torta de dona para «lo que más vendes» y «lo que casi no se vende»: cada
+// tajada es una cosa de la lista, del tamaño de lo que dejó frente a las demás
+// de esa misma lista. Sin lista de colores: al tocar una tajada, el centro dice
+// qué es, qué parte de TODO lo vendido es y cuánto dejó. Si la lista pasa de
+// `max`, el resto va junto en «Lo demás». `offset` corre los colores para que
+// las dos tortas no compartan glaseados.
 
-const MAX = 9
 type Slice = { name: string; sales: number; units: number; share: number; start: number; end: number }
 
-function slices(list: Seller[]): Slice[] {
+function slices(list: Seller[], max: number): Slice[] {
   const sold = list.filter((s) => s.sales > 0)
-  const keep = sold.length > MAX + 1 ? MAX : sold.length
+  const keep = sold.length > max + 1 ? max : sold.length
   const rest = sold.slice(keep)
   const parts: Omit<Slice, "start" | "end">[] = sold.slice(0, keep).map(({ name, sales, units, share }) => ({ name, sales, units, share }))
   if (rest.length) {
     parts.push({ name: `Lo demás (${rest.length} cosas)`, sales: rest.reduce((a, s) => a + s.sales, 0), units: rest.reduce((a, s) => a + s.units, 0), share: rest.reduce((a, s) => a + s.share, 0) })
   }
   // Dónde empieza y termina cada tajada (en radianes, desde arriba).
+  const total = parts.reduce((a, p) => a + p.sales, 0) || 1
   let at = 0
   return parts.map((p) => {
     const start = at
-    at += p.share * Math.PI * 2
+    at += (p.sales / total) * Math.PI * 2
     return { ...p, start, end: at }
   })
 }
 
-export function SellerPie({ list }: { list: Seller[] }) {
-  const parts = slices(list)
+export function SellerPie({ list, max = 5, offset = 0 }: { list: Seller[]; max?: number; offset?: number }) {
+  const parts = slices(list, max)
   const [sel, setSel] = useState(0)
   const s = parts[sel] ?? parts[0]
   return (
@@ -56,9 +57,9 @@ export function SellerPie({ list }: { list: Seller[] }) {
                 onMouseEnter={() => setSel(i)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(i)}
               >
-                <SliceDrawing i={i} start={p.start} end={p.end} />
+                <SliceDrawing i={i + offset} start={p.start} end={p.end} />
                 {i === sel ? <Cherry angle={mid} /> : null}
-                {p.share >= 0.07 ? (
+                {p.end - p.start >= 0.42 ? (
                   // El porcentaje va en una etiqueta crema para leerse sobre la cobertura.
                   <g transform={`translate(${100 + 68 * Math.sin(mid)} ${100 - 68 * Math.cos(mid)})`} className="pct">
                     <rect x="-15" y="-9" width="30" height="18" rx="9" />
@@ -71,6 +72,7 @@ export function SellerPie({ list }: { list: Seller[] }) {
         </svg>
         <div className="torta-center" aria-live="polite">
           <b className="num">{Math.round(s.share * 100)}&nbsp;%</b>
+          <span className="small muted">de todo lo vendido</span>
           <span className="t">{s.name}</span>
           <span className="small muted">{money(s.sales)} · {s.units} vendidas</span>
         </div>

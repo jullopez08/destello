@@ -1,7 +1,7 @@
 "use client"
 
 import { DAYS, dateLabel, fmtN, money } from "@/lib/kitchen/format"
-import type { Period, Seller } from "@/lib/kitchen/analytics"
+import type { Period } from "@/lib/kitchen/analytics"
 import { change } from "@/lib/kitchen/analytics"
 
 // Gráficas de Analítica. Cada una responde una pregunta, dice de qué fechas
@@ -49,6 +49,17 @@ export function Stat({ label, value, hint, now, before, beforeText }: { label: s
   )
 }
 
+// Barquillo de cada día, cada uno de un sabor: [masa, rayas]. Domingo primero (getDay).
+const WAFERS: [string, string][] = [
+  ["#efc27f", "#d38f45"], // domingo: vainilla
+  ["#f6a5c0", "#e06d93"], // lunes: fresa
+  ["#c9b6ea", "#9a80cf"], // martes: lavanda
+  ["#a8dfc2", "#6fb892"], // miércoles: menta
+  ["#a6d4f0", "#6aaed8"], // jueves: cielo
+  ["#ffe17a", "#e0b52c"], // viernes: limón
+  ["#f8bf8f", "#e08d4f"], // sábado: durazno
+]
+
 // Pedidos por día de producción: ayuda a saber qué días habrá más trabajo.
 export function WeekdayBars({ counts }: { counts: number[] }) {
   const order = [1, 2, 3, 4, 5, 6, 0]
@@ -58,7 +69,7 @@ export function WeekdayBars({ counts }: { counts: number[] }) {
     <>
       <div className="dbars" role="list" aria-label="Pedidos por día de la semana">
         {order.map((d) => (
-          <div className={`dbar${d === top && counts[d] ? " best" : ""}`} role="listitem" key={d}>
+          <div className={`dbar${d === top && counts[d] ? " best" : ""}`} role="listitem" key={d} style={{ "--wafer": WAFERS[d][0], "--stripe": WAFERS[d][1] } as React.CSSProperties}>
             <span className="n num">{counts[d]}</span>
             <div className="col"><span style={{ height: `${(counts[d] / max) * 100}%` }} /></div>
             <span className="t">{DAYS[d].slice(0, 3)}</span>
@@ -69,24 +80,5 @@ export function WeekdayBars({ counts }: { counts: number[] }) {
         {counts[top] ? <>Los <b>{DAYS[top]}{DAYS[top].endsWith("s") ? "" : "s"}</b> es cuando más produces: ten listos insumos y masa desde antes.</> : "Todavía no hay pedidos para ver qué días tienes más trabajo."}
       </p>
     </>
-  )
-}
-
-// Lo que más vende: unidades, plata y qué parte de las ventas es.
-export function SellerBars({ list, warn }: { list: Seller[]; warn?: boolean }) {
-  const max = Math.max(1, ...list.map((s) => s.sales))
-  return (
-    <div className="hbars">
-      {list.map((s) => (
-        <div className="hbar" key={s.id}>
-          <span className="t">{s.name}</span>
-          <span className="n">{compact(s.sales)}</span>
-          <div className={`bar${warn ? " warn" : ""}`}><span style={{ width: `${(s.sales / max) * 100}%` }} /></div>
-          <span className="small muted" style={{ gridColumn: "1 / -1" }}>
-            {s.units} vendidas · {Math.round(s.share * 100)} % de lo que vendiste
-          </span>
-        </div>
-      ))}
-    </div>
   )
 }
