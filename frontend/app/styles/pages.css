@@ -54,40 +54,44 @@
 .dbar.best .col span { background: var(--accent-deep); }
 .dbar .t { font-size: 12px; font-weight: 600; text-transform: capitalize; }
 @media (max-width: 560px) { .stat .v { font-size: 21px; } .summary p { font-size: 15px; } }
-.vchart { margin-top: 10px; }
-.vchart .axis-title { font-size: 12px; font-weight: 700; color: var(--ink-2); }
-.vchart .axis-title.x { text-align: center; margin-top: 4px; }
-.vchart .plot { position: relative; height: 190px; margin: 22px 0 0 34px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; align-items: end; border-bottom: 1.5px solid var(--ink-2); }
-.vchart .gridline { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line); pointer-events: none; }
-.vchart .gridline span { position: absolute; right: calc(100% + 6px); top: -8px; font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.vchart .avgline { position: absolute; left: 0; right: 0; border-top: 2px dotted var(--ink); opacity: 0.7; z-index: 2; pointer-events: none; }
-.vchart .vcol { height: 100%; display: flex; align-items: flex-end; justify-content: center; position: relative; z-index: 1; }
-.vchart .vcol .vbar { position: relative; width: 100%; max-width: 46px; min-height: 2px; border-radius: 8px 8px 0 0; background: var(--peach); }
-.vchart .vcol.best .vbar { background: var(--accent-deep); }
-.vchart .vcol.now .vbar, .vchart .sw.now { background: repeating-linear-gradient(135deg, var(--accent-deep) 0 5px, var(--peach) 5px 10px); }
-.vchart .vcol .vbar b { position: absolute; bottom: calc(100% + 3px); left: 50%; transform: translateX(-50%); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.vchart .xlabels { margin-left: 34px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
-.vchart .xlabels span { display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: 700; line-height: 1.1; }
-.vchart .xlabels small { font-size: 10px; font-weight: 500; color: var(--ink-2); }
-.vchart .xlabels .now { color: var(--ink); }
-@media (max-width: 560px) { .vchart .plot, .vchart .xlabels { gap: 3px; } .vchart .vcol .vbar b { font-size: 9.5px; } }
 
 /* «¿Qué no te deja ganancia?»: el texto se ajusta y el precio sugerido va debajo si no cabe. */
 .list .it.noprofit { flex-wrap: wrap; align-items: flex-start; }
 .list .it.noprofit > div:first-child { flex: 1 1 220px; overflow-wrap: anywhere; }
 .list .it.noprofit .fix { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 @media (max-width: 560px) { .list .it.noprofit .fix { flex-direction: row; align-items: center; } }
-.vchart .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; margin-top: 8px; font-size: 12px; color: var(--ink-2); }
-.vchart .legend span { display: inline-flex; align-items: center; gap: 6px; }
-.vchart .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
-.vchart .sw.best { background: var(--accent-deep); }
-.vchart .sw.avg { height: 0; border-top: 2px dotted var(--ink); border-radius: 0; width: 18px; }
-.pie { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); gap: 16px; align-items: center; margin-top: 12px; }
-.pie svg { width: 100%; height: auto; display: block; }
-.pie-pct { font-size: 13px; font-weight: 800; fill: #3d2417; }
-.pie-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.pie-legend li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 0 8px; align-items: center; }
-.pie-legend i { width: 14px; height: 14px; border-radius: 4px; }
-.pie-legend .t { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
-.pie-legend .small { grid-column: 2 / -1; }
-@media (max-width: 560px) { .pie { grid-template-columns: 1fr; justify-items: center; } .pie svg { max-width: 230px; } .pie-legend { width: 100%; } }
+/* Ventas por semana en línea */
+.wline .axis-title { font-size: 12px; font-weight: 700; color: var(--ink-2); margin-top: 8px; }
+.wline .axis-title.x { text-align: center; margin-top: 0; }
+.wline svg { width: 100%; height: auto; display: block; overflow: visible; }
+.wline path, .wline polyline, .wline line { pointer-events: none; }
+.wline .grid { stroke: var(--line); stroke-dasharray: 3 4; }
+.wline .tick { font-size: 10px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.wline .avg { stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.wline .line { fill: none; stroke: var(--accent-deep); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.wline .line.now { stroke-dasharray: 2 6; }
+.wline .pt { cursor: pointer; outline: none; }
+.wline .hit { fill: transparent; }
+.wline .dot { fill: var(--surface); stroke: var(--accent-deep); stroke-width: 2.5; transition: r 0.15s; }
+.wline .pt.best .dot { fill: var(--accent-deep); }
+.wline .pt.on .dot { fill: var(--ink); stroke: var(--surface); stroke-width: 2; }
+.wline .pt:focus-visible .dot { stroke: var(--ink); stroke-width: 3; }
+.wline .val { font-size: 10px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.wline .xl { font-size: 10.5px; font-weight: 700; fill: var(--ink); }
+.wline .xs { font-size: 9px; fill: var(--ink-2); }
+.wline-detail { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; padding: 10px 12px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface); }
+/* Lo que más se vende: torta vista desde arriba, el centro dice qué tajada es */
+.torta { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 10px; }
+.torta-plate { position: relative; width: min(100%, 290px); }
+.torta-plate svg { width: 100%; height: auto; display: block; overflow: visible; }
+.torta .plate { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 4; }
+.torta .slice { cursor: pointer; outline: none; transition: transform 0.2s ease; }
+.torta .slice path { stroke: var(--surface); stroke-width: 2.5; stroke-linejoin: round; opacity: 0.82; transition: opacity 0.2s; }
+.torta .slice.on path { opacity: 1; stroke: var(--ink); stroke-width: 1.5; }
+.torta .slice:focus-visible path { stroke: var(--ink); stroke-width: 2.5; }
+.torta .pct { font-size: 11px; font-weight: 800; fill: #3d2417; pointer-events: none; }
+.torta-center { position: absolute; inset: 30%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1px; pointer-events: none; }
+.torta-center b { font-size: 24px; line-height: 1; }
+.torta-center .t { font-size: 12px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.torta-center .small { font-size: 10.5px; }
+

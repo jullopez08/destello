@@ -1,7 +1,7 @@
 "use client"
 
 import { DAYS, dateLabel, fmtN, money } from "@/lib/kitchen/format"
-import type { Period, Seller, WeekStat } from "@/lib/kitchen/analytics"
+import type { Period, Seller } from "@/lib/kitchen/analytics"
 import { change } from "@/lib/kitchen/analytics"
 
 // Gráficas de Analítica. Cada una responde una pregunta, dice de qué fechas
@@ -46,61 +46,6 @@ export function Stat({ label, value, hint, now, before, beforeText }: { label: s
       <Trend now={now} before={before} />
       <span className="small muted">Antes: {beforeText}</span>
     </div>
-  )
-}
-
-// Ventas semana a semana en columnas. El eje de la izquierda es la plata
-// (en miles de pesos) y el de abajo, la semana (el día en que empieza).
-export function WeekBars({ weeks, today }: { weeks: WeekStat[]; today: string }) {
-  const done = weeks.filter((w) => !w.current)
-  const avg = done.length ? done.reduce((a, w) => a + w.sales, 0) / done.length : 0
-  const best = [...done].sort((a, b) => b.sales - a.sales)[0]
-  const step = Math.max(...weeks.map((w) => w.sales)) > 2e6 ? 500000 : 100000
-  const top = Math.max(step, Math.ceil(Math.max(...weeks.map((w) => w.sales)) / step) * step)
-  const pct = (v: number) => `${(v / top) * 100}%`
-  const k = (v: number) => fmtN(v / 1000)
-  return (
-    <>
-      <div className="vchart">
-        <div className="axis-title">Miles de pesos vendidos ↑</div>
-        <div className="plot" role="list" aria-label="Ventas por semana">
-          {[0, top / 2, top].map((t) => (
-            <div className="gridline" style={{ bottom: pct(t) }} key={t}>
-              <span>{k(t)}</span>
-            </div>
-          ))}
-          {avg ? <div className="avgline" style={{ bottom: pct(avg) }} /> : null}
-          {weeks.map((w) => (
-            <div className={`vcol${w.current ? " now" : ""}${w === best ? " best" : ""}`} role="listitem" key={w.start} aria-label={`${range(w.start, w.end, today)}: ${money(w.sales)}, ${w.orders} pedidos`}>
-              <span className="vbar" style={{ height: pct(w.sales) }}>
-                <b>{k(w.sales)}</b>
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="xlabels" aria-hidden="true">
-          {weeks.map((w) => {
-            const [d, m] = dateLabel(w.start, "").split(" ")
-            return (
-              <span className={w.current ? "now" : ""} key={w.start}>
-                {w.current ? "Esta" : d}
-                <small>{w.current ? "semana" : m}</small>
-              </span>
-            )
-          })}
-        </div>
-        <div className="axis-title x">Semana (día en que empieza) →</div>
-        <div className="legend">
-          <span><i className="sw best" /> Tu mejor semana</span>
-          <span><i className="sw now" /> Esta semana (va en curso)</span>
-          {avg ? <span><i className="sw avg" /> Promedio: {k(avg)} mil</span> : null}
-        </div>
-      </div>
-      <p className="conclusion">
-        {best && best.sales > 0 ? <>Tu mejor semana fue la del <b>{range(best.start, best.end, today)}</b> con <b>{money(best.sales)}</b>. </> : null}
-        En promedio vendes <b>{money(avg)}</b> por semana (la línea punteada).
-      </p>
-    </>
   )
 }
 

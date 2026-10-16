@@ -5,7 +5,8 @@ import { presentationCost, presentationHealth } from "@/lib/kitchen/rules"
 import { analytics } from "@/lib/kitchen/analytics"
 import { money } from "@/lib/kitchen/format"
 import { Empty, PageHead } from "../shared"
-import { SellerBars, Stat, Summary, WeekBars, WeekdayBars } from "./analytics-charts"
+import { SellerBars, Stat, Summary, WeekdayBars } from "./analytics-charts"
+import { WeekLine } from "./analytics-line"
 import { SellerPie } from "./analytics-pie"
 
 // ── Analítica: cómo van las ventas, qué se vende y qué no deja ganancia ──
@@ -43,7 +44,7 @@ export function AnalyticsView() {
         <div className="card">
           <h2>¿Cómo van tus ventas cada semana?</h2>
           <p className="small muted">Plata vendida en cada una de las últimas 8 semanas.</p>
-          <WeekBars weeks={weeks} today={data.today} />
+          <WeekLine weeks={weeks} today={data.today} />
         </div>
         <div className="card">
           <h2>¿Qué días tienes más trabajo?</h2>
