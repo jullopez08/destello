@@ -7,7 +7,7 @@ function makeCron(plan: object | null) {
     plan: { findFirst: jest.fn().mockResolvedValue(plan) },
     subscription: { update: jest.fn().mockResolvedValue({}) },
   };
-  return { cron: new SubscriptionBillingCron(prisma as any), prisma };
+  return { cron: new SubscriptionBillingCron(prisma as any, { send: jest.fn() } as any), prisma };
 }
 
 const subscription = { id: 'sub-1', organizationId: 'organization-1' };

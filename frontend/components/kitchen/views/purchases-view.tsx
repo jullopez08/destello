@@ -3,7 +3,7 @@
 import { Icon } from "@/components/ui/icon"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel, initials, longDate, money, qty } from "@/lib/kitchen/format"
-import { Empty, Kpi, PageHead, useModal } from "../shared"
+import { Empty, PageHead, useModal } from "../shared"
 import { PurchaseForm } from "../forms/purchase-form"
 
 // ── Compras ──
@@ -25,10 +25,9 @@ export function PurchasesView() {
         <Icon name="plus" />
         Registrar compra
       </button>
-      <div className="grid g4" style={{ marginBottom: 16 }}>
-        <Kpi v={money(month)} l="Compras del mes" c="c-peach" />
-        <Kpi v={data.purchases.length} l="Compras registradas" c="c-lilac" />
-      </div>
+      <p className="summary-line">
+        Este mes llevas <b className="num">{money(month)}</b> en compras.
+      </p>
       {data.purchases.length ? (
         <div className="stack">
           {data.purchases.map((c) => {
@@ -40,7 +39,7 @@ export function PurchasesView() {
                     <div className="avatar" style={{ background: `var(--${p?.color ?? "banana"})` }}>{initials(p?.name ?? "?")}</div>
                     <div>
                       <b>{p?.name ?? "Proveedor eliminado"}</b>
-                      <div className="small muted">{dateLabel(c.date, data.today)} · {longDate(c.date)}</div>
+                      <div className="small muted">{/^\d/.test(dateLabel(c.date, data.today)) ? longDate(c.date) : `${dateLabel(c.date, data.today)} · ${longDate(c.date)}`}</div>
                     </div>
                   </div>
                   <b className="num">{money(c.lines.reduce((a, l) => a + l.total, 0))}</b>

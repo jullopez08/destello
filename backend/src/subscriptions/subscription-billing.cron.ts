@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaymentDueNotice } from './payment-due-notice';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -14,7 +15,10 @@ export class SubscriptionBillingCron {
 
   private readonly logger = new Logger(SubscriptionBillingCron.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentDueNotice: PaymentDueNotice,
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_6AM)
   async handleDueSubscriptions() {
@@ -126,6 +130,8 @@ export class SubscriptionBillingCron {
       await this.assignPaidPlanAfterTrial(subscription);
     }
     await this.markPastDueWithGracePeriod(subscription.id);
+    // Aviso del día de gracia: "tu acceso está a punto de vencer, actualiza tu pago".
+    await this.paymentDueNotice.send(subscription.organizationId, subscription.plan.isTrial);
   }
 
   // Paso aparte (y probado): un plan de prueba no tiene nada que pagar, así

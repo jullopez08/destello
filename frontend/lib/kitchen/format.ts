@@ -2,7 +2,8 @@ import type { SupplyKind } from "./rules"
 import { addDays } from "./rules"
 
 export const fmtN = (n: number, d = 0) => Number(n || 0).toLocaleString("es-CO", { maximumFractionDigits: d })
-export const money = (n: number) => "$ " + fmtN(Math.round(n))
+// Espacio que no se parte: el "$" nunca queda solo en una línea y el número en la otra.
+export const money = (n: number) => "$ " + fmtN(Math.round(n))
 
 // Cantidades en g/ml/und: desde 1000 se muestran en kg o litros.
 export function qty(n: number, kind: SupplyKind | undefined): string {

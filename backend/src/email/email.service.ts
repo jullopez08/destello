@@ -9,6 +9,11 @@ import {
   buildDataDeletionEmailSubject,
   DataDeletionNoticeDetails,
 } from './data-deletion-email.template';
+import {
+  buildPaymentDueEmailHtml,
+  buildPaymentDueEmailSubject,
+  PaymentDueNoticeDetails,
+} from './payment-due-email.template';
 
 const DEFAULT_FROM = `${BRAND_NAME} <noreply@aggendarme.com>`;
 
@@ -98,6 +103,24 @@ export class EmailService {
     }
 
     this.logger.log(`Data deletion notice accepted by Resend (id=${data?.id})`);
+    return true;
+  }
+
+  // Aviso del día de gracia: el plan venció sin pago (SubscriptionBillingCron).
+  async sendPaymentDueNotice(to: string[], details: PaymentDueNoticeDetails): Promise<boolean> {
+    const { data, error } = await this.send({
+      from: this.from,
+      to,
+      subject: buildPaymentDueEmailSubject(details),
+      html: buildPaymentDueEmailHtml(details),
+    });
+
+    if (error) {
+      this.logger.error(`Failed to send payment due notice: ${error.message}`);
+      return false;
+    }
+
+    this.logger.log(`Payment due notice accepted by Resend (id=${data?.id})`);
     return true;
   }
 }

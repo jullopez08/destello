@@ -8,20 +8,24 @@ import { useSession } from "@/lib/session"
 import { PALETTES } from "@/lib/palettes"
 import { useKitchen } from "@/lib/kitchen/store"
 import { DAYS, initials, phoneInput } from "@/lib/kitchen/format"
-import { Empty, Eyebrow, Field, PageHead, useModal } from "../shared"
-import { AccountForm, BREB_TYPE, CourierForm } from "../forms/settings-forms"
-import { ChangePasswordForm } from "../forms/password-form"
+import { Eyebrow, Field, PageHead } from "../shared"
+import { AccountsCard, CouriersCard, MyAccountCard, WhatsappCard } from "./settings-lists"
+
+// Lunes primero, como se lee la semana; DAYS empieza en domingo (getDay).
+const WEEK = [1, 2, 3, 4, 5, 6, 0]
 
 // ── Configuración ──
 
 export function SettingsView() {
   const { data, mutate, act } = useKitchen()
   const { user, setUser } = useSession()
-  const { open } = useModal()
   const toast = useToast()
   const st = data.settings
   const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays })
   const [saving, setSaving] = useState(false)
+  // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
+  const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
+  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -72,7 +76,7 @@ export function SettingsView() {
   return (
     <>
       <PageHead title="Configuración" sub="Los datos de tu negocio, cómo se ve tu panel y tu cuenta." />
-      <div className="grid g2">
+      <div className="grid g2 settings">
         <form className="card stack" onSubmit={saveBusiness}>
           <h2 style={{ margin: 0 }}>El negocio</h2>
           <div className="fields">
@@ -85,36 +89,39 @@ export function SettingsView() {
           </div>
           <div>
             <Eyebrow>Días cerrados</Eyebrow>
-            <div className="seg">
-              {DAYS.map((d, i) => (
-                <label key={d}>
+            <div className="days" role="group" aria-label="Días cerrados">
+              {WEEK.map((i) => (
+                <label key={i} title={DAYS[i]}>
                   <input
                     type="checkbox"
                     checked={f.closedDays.includes(i)}
                     onChange={(e) => setF({ ...f, closedDays: e.target.checked ? [...f.closedDays, i] : f.closedDays.filter((x) => x !== i) })}
+                    aria-label={DAYS[i]}
                   />
-                  <span>{d[0].toUpperCase() + d.slice(1)}</span>
+                  <span>{DAYS[i].slice(0, 3)}</span>
                 </label>
               ))}
             </div>
+            <p className="small muted" style={{ marginTop: 6 }}>Toca los días que no produces ni entregas.</p>
           </div>
-          <div>
-            <button className="btn primary" type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar cambios"}</button>
+          <div className="save-bar">
+            <button className="btn primary" type="submit" disabled={saving || !dirty}>{saving ? "Guardando…" : dirty ? "Guardar cambios" : "Sin cambios por guardar"}</button>
           </div>
         </form>
 
+        <AccountsCard />
+        <CouriersCard />
+        <WhatsappCard />
         <div className="card stack">
           <h2 style={{ margin: 0 }}>Tu marca</h2>
           <div>
             <Eyebrow>Paleta del panel</Eyebrow>
-            <div className="seg">
+            <div className="palettes">
               {PALETTES.map((p) => (
                 <label key={p.id}>
                   <input type="radio" name="palette" checked={(user?.palette ?? "vainilla") === p.id} onChange={() => branding({ palette: p.id })} />
-                  <span className="row" style={{ gap: 6, display: "inline-flex" }}>
-                    <span className="swatch" style={{ background: `linear-gradient(135deg, ${p.swatch} 50%, ${p.soft} 50%)`, width: 18, height: 18 }} />
-                    {p.name}
-                  </span>
+                  <span className="dot" style={{ background: `linear-gradient(135deg, ${p.swatch} 50%, ${p.soft} 50%)` }} />
+                  <span className="small">{p.name}</span>
                 </label>
               ))}
             </div>
@@ -136,92 +143,11 @@ export function SettingsView() {
               </button>
               {user?.logoUrl ? <button className="btn ghost sm" type="button" onClick={() => branding({ logoUrl: null })}>Quitar</button> : null}
             </div>
-            <p className="small muted" style={{ marginTop: 8 }}>Imagen cuadrada de hasta 5 MB. Sale en la barra lateral.</p>
+            <p className="small muted" style={{ marginTop: 8 }}>Imagen cuadrada de hasta 5 MB. Sale arriba en tu panel.</p>
           </div>
         </div>
 
-        <div className="card">
-          <div className="row between">
-            <h2 style={{ margin: 0 }}>Cuentas y llaves Bre-B</h2>
-            <button className="btn soft sm" onClick={() => open(<AccountForm />)}>
-              <Icon name="plus" />
-              Agregar
-            </button>
-          </div>
-          <p className="small muted" style={{ margin: "6px 0 10px" }}>Las que les compartes a tus clientes cuando pagan por transferencia: cuentas bancarias o llaves Bre-B (celular, correo, cédula o la que te dio tu banco).</p>
-          {data.accounts.length ? (
-            <div className="list">
-              {data.accounts.map((a) => (
-                <div className="it" key={a.id}>
-                  <div>
-                    <b>{a.type === BREB_TYPE ? `Llave Bre-B${a.bank ? ` · ${a.bank}` : ""}` : `${a.bank} · ${a.type}`}</b>
-                    <div className="small num">{a.number} · {a.owner}</div>
-                  </div>
-                  <button className="iconbtn" aria-label="Eliminar cuenta" onClick={() => act(`/accounts/${a.id}`, "DELETE", undefined, "Cuenta eliminada")}>
-                    <Icon name="trash" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Empty>Sin cuentas ni llaves.</Empty>
-          )}
-        </div>
-
-        <div className="card">
-          <div className="row between">
-            <h2 style={{ margin: 0 }}>Repartidores</h2>
-            <button className="btn soft sm" onClick={() => open(<CourierForm />)}>
-              <Icon name="plus" />
-              Agregar
-            </button>
-          </div>
-          <p className="small muted" style={{ margin: "6px 0 10px" }}>Se le pregunta primero al de arriba. Si no puede, se pasa al siguiente.</p>
-          {data.couriers.length ? (
-            <div className="list">
-              {data.couriers.map((c, i) => (
-                <div className="it" key={c.id}>
-                  <div className="row">
-                    <span className={`chip ${i === 0 ? "accent" : ""}`}>{i === 0 ? "Principal" : `${i + 1}º`}</span>
-                    <div>
-                      <b>{c.name}</b>
-                      <div className="small num">{c.phone}</div>
-                    </div>
-                  </div>
-                  <div className="row nowrap" style={{ gap: 0 }}>
-                    <button className="iconbtn" aria-label="Subir" disabled={i === 0} onClick={() => act(`/couriers/${c.id}/move`, "POST", { direction: "up" })}><Icon name="up" /></button>
-                    <button className="iconbtn" aria-label="Bajar" disabled={i === data.couriers.length - 1} onClick={() => act(`/couriers/${c.id}/move`, "POST", { direction: "down" })}><Icon name="down" /></button>
-                    <button className="iconbtn" aria-label="Eliminar" onClick={() => act(`/couriers/${c.id}`, "DELETE", undefined, "Repartidor eliminado")}><Icon name="trash" /></button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <Empty>Sin repartidores.</Empty>
-          )}
-        </div>
-
-        <div className="card">
-          <h2>Tu cuenta</h2>
-          <div className="list">
-            <div className="it">
-              <div className="row">
-                <div className="avatar">{initials(user?.name ?? "")}</div>
-                <div>
-                  <b>{user?.name}</b>
-                  <div className="small muted">Dueña · {user?.email}</div>
-                </div>
-              </div>
-              <button className="btn soft sm" onClick={() => open(<ChangePasswordForm />)}>Cambiar contraseña</button>
-            </div>
-          </div>
-          <p className="small muted" style={{ marginTop: 10 }}>Si alguien entra a tu cuenta desde un dispositivo nuevo, te llega un correo.</p>
-        </div>
-
-        <div className="card c-mint">
-          <h2>WhatsApp</h2>
-          <p>Tus clientes te siguen escribiendo al WhatsApp de siempre y respondes desde tu celular. Aquí registras los pedidos y la cocina calcula el resto.</p>
-        </div>
+        <MyAccountCard />
       </div>
     </>
   )

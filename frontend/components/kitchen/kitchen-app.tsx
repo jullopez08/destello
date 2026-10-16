@@ -10,6 +10,7 @@ import { KitchenProvider, useKitchen } from "@/lib/kitchen/store"
 import { PAGES, TAB_PAGES } from "@/lib/kitchen/pages"
 import { initials, longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
+import { PayBanner } from "@/components/billing/pay-banner"
 import { Empty, ModalHost } from "./shared"
 import { VoiceIndicator, VoiceMicButton, VoiceProvider } from "./voice-listener"
 import { MoreView } from "./views/more-view"
@@ -31,7 +32,8 @@ function subscribeHash(cb: () => void) {
   return () => window.removeEventListener("hashchange", cb)
 }
 export function useHashPage(valid: string[], fallback: string) {
-  const hash = useSyncExternalStore(subscribeHash, () => window.location.hash.replace("#", ""), () => "")
+  // "#insumos/bajos": la sección es lo de antes de "/"; lo de después lo lee la sección.
+  const hash = useSyncExternalStore(subscribeHash, () => window.location.hash.replace("#", "").split("/")[0], () => "")
   return valid.includes(hash) ? hash : fallback
 }
 
@@ -87,6 +89,17 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
     window.scrollTo(0, 0)
   }, [page])
 
+  // Desde Hoy, "Insumos bajos" abre Insumos con la pestaña "Bajos".
+  useEffect(() => {
+    const onHash = () => {
+      if (window.location.hash !== "#insumos/bajos") return
+      setSupplyTab("bajos")
+      history.replaceState(null, "", "#insumos")
+    }
+    window.addEventListener("hashchange", onHash)
+    return () => window.removeEventListener("hashchange", onHash)
+  }, [])
+
   const view = {
     hoy: <TodayView />,
     pedidos: <OrdersView tab={orderTab} setTab={setOrderTab} />,
@@ -106,6 +119,7 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
   return (
     <VoiceProvider>
       <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceIndicator />} mic={<VoiceMicButton />}>
+        <PayBanner subscription={subscription} page={page} />
         {view}
       </Shell>
     </VoiceProvider>

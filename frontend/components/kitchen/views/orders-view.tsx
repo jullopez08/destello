@@ -95,12 +95,12 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
                     <b>{o.customer}</b>
                     <div className="small muted">{o.phone}</div>
                   </td>
-                  <td className="small c-full" data-label="Productos">
+                  <td className="small c-full">
                     {o.lines.map((l, i) => (
                       <div key={i}>{lineLabel(data, l)}</div>
                     ))}
                   </td>
-                  <td className="small c-full" data-label="Entrega">
+                  <td className="small c-full c-soft">
                     {o.delivery === "DELIVERY" ? (
                       <>Domicilio<div className="muted">{o.address}</div></>
                     ) : (
@@ -109,11 +109,11 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
                     <div className="muted">Se produce: {dateLabel(o.productionDate, data.today)}</div>
                   </td>
                   <td data-label="Pago"><span className={`chip ${o.payment === "CASH" ? "banana" : "lilac"}`}>{o.payment === "CASH" ? "Efectivo" : "Transferencia"}</span></td>
-                  <td className="r num" data-label="Total">
+                  <td className="r num c-end" data-label="Total">
                     <b>{money(orderTotal(o))}</b>
                     {o.fee ? <div className="small muted">incluye {money(o.fee)} domicilio</div> : null}
                   </td>
-                  <td className="c-full" data-label="Estado">{statusChip(o)}</td>
+                  <td className="c-badge" data-label="Estado">{statusChip(o)}</td>
                   <td className="c-actions">{actions(o)}</td>
                 </tr>
               ))}

@@ -17,8 +17,13 @@ import { OrganizationPanel } from "./organization-panel"
 export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[]; plans: Plan[]; reload: () => Promise<void> }) {
   const { open } = useModal()
   const [q, setQ] = useState("")
-  const list = orgs.filter((o) => !q || `${o.name} ${o.slug} ${o.users.map((u) => u.email).join(" ")}`.toLowerCase().includes(q.toLowerCase()))
+  // Cada cifra filtra la lista por ese estado; tocarla de nuevo (o "Empresas") muestra todas.
+  const [only, setOnly] = useState<"all" | "ACTIVE" | "TRIALING" | "due">("all")
+  const due = (o: Organization) => o.subscription?.status === "PAST_DUE" || !o.active
+  const matches = (o: Organization) => only === "all" || (only === "due" ? due(o) : o.subscription?.status === only)
+  const list = orgs.filter((o) => matches(o) && (!q || `${o.name} ${o.slug} ${o.users.map((u) => u.email).join(" ")}`.toLowerCase().includes(q.toLowerCase())))
   const count = (s: string) => orgs.filter((o) => o.subscription?.status === s).length
+  const pick = (f: typeof only) => () => setOnly(only === f ? "all" : f)
 
   return (
     <>
@@ -29,10 +34,10 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
         </button>
       </PageHead>
       <div className="grid g4" style={{ marginBottom: 16 }}>
-        <Kpi v={orgs.length} l="Empresas" c="c-accent" />
-        <Kpi v={count("ACTIVE")} l="Activas pagando" c="c-mint" />
-        <Kpi v={count("TRIALING")} l="En prueba" c="c-lilac" />
-        <Kpi v={count("PAST_DUE") + orgs.filter((o) => !o.active).length} l="Con pago pendiente o bloqueadas" c="c-peach" />
+        <Kpi v={orgs.length} l="Empresas" s="Ver todas" c="c-accent" onClick={() => setOnly("all")} on={only === "all"} />
+        <Kpi v={count("ACTIVE")} l="Activas pagando" c="c-mint" onClick={pick("ACTIVE")} on={only === "ACTIVE"} />
+        <Kpi v={count("TRIALING")} l="En prueba" c="c-lilac" onClick={pick("TRIALING")} on={only === "TRIALING"} />
+        <Kpi v={orgs.filter(due).length} l="Con pago pendiente o bloqueadas" c="c-peach" onClick={pick("due")} on={only === "due"} />
       </div>
       <div className="row" style={{ marginBottom: 12 }}>
         <input className="search" placeholder="Buscar por nombre o correo" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar empresa" />

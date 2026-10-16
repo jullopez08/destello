@@ -31,14 +31,23 @@ export const useModal = () => useContext(ModalContext)
 
 // ── Tarjeta de cifra ──
 
-export function Kpi({ v, l, s, c }: { v: React.ReactNode; l: string; s?: string; c: string }) {
-  return (
-    <div className={`card ${c} kpi`}>
+/**
+ * Una cifra solo va en tarjeta si sirve para actuar (decisión de Julieth, 2026-10-16). Con `href`
+ * u `onClick` la tarjeta lleva a lo que cuenta (la flecha avisa que se puede tocar); `on` la marca
+ * como el filtro activo.
+ */
+export function Kpi({ v, l, s, c, href, onClick, on }: { v: React.ReactNode; l: string; s?: string; c: string; href?: string; onClick?: () => void; on?: boolean }) {
+  const body = (
+    <>
       <span className="l">{l}</span>
       <span className="v">{v}</span>
       {s ? <span className="s">{s}</span> : null}
-    </div>
+    </>
   )
+  const cls = `card ${c} kpi${href || onClick ? " kpi-link" : ""}${on ? " on" : ""}`
+  if (href) return <a className={cls} href={href}>{body}</a>
+  if (onClick) return <button type="button" className={cls} onClick={onClick} aria-pressed={on}>{body}</button>
+  return <div className={cls}>{body}</div>
 }
 
 export function Empty({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -61,11 +70,12 @@ export function PageHead({ title, sub, children }: { title: string; sub?: string
   )
 }
 
-export function Tabs<T extends string>({ value, options, onChange, style }: { value: T; options: [T, string][]; onChange: (v: T) => void; style?: React.CSSProperties }) {
+/** Pestañas; el tercer valor opcional resalta una (p. ej. "alert" para "Bajos · 3"). */
+export function Tabs<T extends string>({ value, options, onChange, style }: { value: T; options: [T, string, string?][]; onChange: (v: T) => void; style?: React.CSSProperties }) {
   return (
     <div className="tabs" style={style}>
-      {options.map(([k, t]) => (
-        <button key={k} type="button" className={k === value ? "on" : ""} onClick={() => onChange(k)} aria-pressed={k === value}>
+      {options.map(([k, t, tone]) => (
+        <button key={k} type="button" className={[k === value ? "on" : "", tone ?? ""].join(" ").trim()} onClick={() => onChange(k)} aria-pressed={k === value}>
           {t}
         </button>
       ))}

@@ -48,7 +48,7 @@ export function ProductionView({ day, setDay }: { day: string | null; setDay: (d
           </div>
           <div className="only-desktop">
             <div className="grid g4">
-              <Kpi v={pend.length} l="Pedidos" s="por producir" c="c-accent" />
+              <Kpi v={pend.length} l="Pedidos" s="por producir" c="c-accent" href="#pedidos" />
               <Kpi v={boxes.reduce((a, b) => a + b[1], 0)} l="Cajas" s="por armar" c="c-lilac" />
               <Kpi v={Object.values(plan.units).reduce((a, b) => a + b, 0)} l="Unidades" s="galletas, rollos y panes" c="c-strawberry" />
               <Kpi v={grams(plan.doughRows.reduce((a, d) => a + d.toMake, 0))} l="Masa por hacer" s="sin contar lotes" c="c-peach" />

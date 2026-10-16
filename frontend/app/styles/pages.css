@@ -107,3 +107,72 @@
 .torta-center .t { font-size: 12px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 .torta-center .small { font-size: 10.5px; }
 
+
+/* ---------- Configuración ---------- */
+/* Días cerrados: botones redondos de un toque (Lun … Dom). */
+.days { display: flex; flex-wrap: wrap; gap: 6px; }
+.days label { cursor: pointer; }
+.days input { position: absolute; opacity: 0; pointer-events: none; }
+.days span { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: 13px; text-transform: capitalize; }
+.days input:checked + span { background: var(--strawberry); border-color: var(--ink); text-decoration: line-through; }
+.days input:focus-visible + span { outline: 3px solid var(--accent-deep); }
+/* Paletas: círculos de color con su nombre debajo. */
+.palettes { display: flex; flex-wrap: wrap; gap: 10px 14px; }
+.palettes label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 56px; }
+.palettes input { position: absolute; opacity: 0; pointer-events: none; }
+.palettes .dot { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); }
+.palettes input:checked ~ .dot { border-color: var(--ink); box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
+.palettes input:checked ~ .small { font-weight: 700; }
+.palettes input:focus-visible ~ .dot { outline: 3px solid var(--accent-deep); outline-offset: 4px; }
+.iconbtn.touch { padding: 10px; }
+
+/* ---------- Suscripción ---------- */
+.sub-alert { margin-bottom: 16px; }
+.sub-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sub-facts > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sub-facts b { font-size: 17px; overflow-wrap: anywhere; }
+.sub-summary .chip { background: var(--surface); }
+/* Aviso de pago arriba de cada sección (día de gracia o 3 días antes de vencer). */
+.pay-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; color: var(--ink); text-decoration: none; border: 1.5px solid var(--ink); }
+.pay-banner-go { flex: none; font-weight: 700; padding: 8px 16px; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--ink); }
+
+@media (max-width: 560px) {
+  .days { flex-wrap: nowrap; gap: 4px; }
+  .days label { flex: 1; min-width: 0; display: flex; justify-content: center; }
+  .days span { width: 100%; max-width: 46px; height: auto; aspect-ratio: 1; font-size: 11px; }
+  .settings .save-bar .btn { width: 100%; min-height: 50px; }
+  .settings .it.courier { flex-wrap: wrap; }
+  .settings .it.my-account { flex-direction: column; align-items: stretch; }
+  .settings .it.my-account .btn { min-height: 44px; }
+  .sub-facts { grid-template-columns: minmax(0, 1fr); }
+  .pay-banner { flex-direction: column; align-items: stretch; text-align: left; }
+  .pay-banner-go { text-align: center; }
+}
+
+/* ---------- Productos: el dibujo arriba, nombre, gramos y al pie la etiqueta y el costo ---------- */
+.product-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
+.product-tile > b { font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+.product-tile > .small { line-height: 1.35; overflow-wrap: anywhere; }
+.product-tile-foot { margin-top: auto; padding-top: 10px; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; border-top: 1px dashed var(--line); }
+.product-tile-foot .chip { white-space: normal; text-align: center; }
+@media (max-width: 560px) {
+  .product-tile { padding: 14px; }
+  .product-tile-foot { flex-direction: column; align-items: flex-start; }
+}
+
+/* ---------- Ediciones: fechas y vendidas en una sola línea al pie ---------- */
+.edition-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(61, 36, 23, 0.25); font-size: 15px; }
+.edition-dates { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.edition-dates svg { width: 18px; height: 18px; }
+.edition-foot b { font-size: 20px; }
+
+/* Cifras en el celular: si quedan en número impar, la última ocupa toda la fila (sin huecos). */
+@media (max-width: 560px) {
+  .g4 > .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  /* Una cifra nunca se parte en dos líneas. */
+  .g4 .kpi .v { font-size: 22px; overflow-wrap: normal; white-space: nowrap; }
+}
+
+/* Resumen en una línea bajo el título (lo que antes era una tarjeta que no llevaba a nada). */
+.summary-line { margin: -4px 0 14px; font-size: 15px; }
+.summary-line b { font-size: 17px; }

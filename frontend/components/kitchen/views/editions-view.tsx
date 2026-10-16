@@ -57,10 +57,12 @@ export function EditionsView() {
                 <div className="row small" style={{ gap: 6 }}>
                   {e.presentationIds.map((id) => <span className="chip white" key={id}>{byId(data.presentations, id)?.name}</span>)}
                 </div>
-                <div className="grid g4" style={{ marginTop: 14, gap: 10 }}>
-                  <div className="kpi"><span className="l">Vendidas</span><span className="v" style={{ fontSize: 24 }}>{sold}</span></div>
-                  <div className="kpi"><span className="l">Desde</span><span className="v" style={{ fontSize: 18 }}>{dateLabel(e.startDate, today)}</span></div>
-                  <div className="kpi"><span className="l">Hasta</span><span className="v" style={{ fontSize: 18 }}>{dateLabel(e.endDate, today)}</span></div>
+                <div className="edition-foot">
+                  <span className="edition-dates">
+                    <Icon name="calendar" />
+                    {dateLabel(e.startDate, today)} – {dateLabel(e.endDate, today)}
+                  </span>
+                  <span><b className="num">{sold}</b> {sold === 1 ? "vendida" : "vendidas"}</span>
                 </div>
               </article>
             )
