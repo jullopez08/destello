@@ -50,18 +50,14 @@ export function ProductsView() {
           {data.products.map((p) => {
             const r = byId(data.recipes, p.recipeId)
             return (
-              <button type="button" className="card" key={p.id} onClick={() => open(<ProductForm product={p} />)} style={{ textAlign: "left", cursor: "pointer", font: "inherit" }}>
-                <div className="row nowrap">
-                  <Cookie look={p.look} />
-                  <div style={{ minWidth: 0 }}>
-                    <b>{p.name}</b>
-                    <div className="small muted">{grams(p.grams)} de {r?.name.replace(/^Masa de /, "masa de ")}</div>
-                  </div>
-                </div>
-                <div className="row between" style={{ marginTop: 12 }}>
+              <button type="button" className="card product-tile" key={p.id} onClick={() => open(<ProductForm product={p} />)}>
+                <Cookie look={p.look} size={56} />
+                <b>{p.name}</b>
+                <span className="small muted">{grams(p.grams)} de {r?.name.replace(/^Masa de /, "masa de ")}</span>
+                <span className="product-tile-foot">
                   <span className={`chip ${p.mode === "LOT" ? "banana" : "lilac"}`}>{p.mode === "LOT" ? "Con lote de masa" : "Solo sobre pedido"}</span>
-                  <span className="small num">Costo {money(productCost(p, rules))}</span>
-                </div>
+                  <span className="small num">Costo <b>{money(productCost(p, rules))}</b></span>
+                </span>
               </button>
             )
           })}

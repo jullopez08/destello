@@ -148,3 +148,14 @@
   .pay-banner { flex-direction: column; align-items: stretch; text-align: left; }
   .pay-banner-go { text-align: center; }
 }
+
+/* ---------- Productos: el dibujo arriba, nombre, gramos y al pie la etiqueta y el costo ---------- */
+.product-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; text-align: left; cursor: pointer; font: inherit; color: var(--ink); }
+.product-tile > b { font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+.product-tile > .small { line-height: 1.35; overflow-wrap: anywhere; }
+.product-tile-foot { margin-top: auto; padding-top: 10px; width: 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; border-top: 1px dashed var(--line); }
+.product-tile-foot .chip { white-space: normal; text-align: center; }
+@media (max-width: 560px) {
+  .product-tile { padding: 14px; }
+  .product-tile-foot { flex-direction: column; align-items: flex-start; }
+}
