@@ -33,7 +33,7 @@ function Art() {
     <section className="art">
       <div>
         <div className="eyebrow" style={{ color: "inherit", opacity: 0.7 }}>Panel de la cocina</div>
-        <h1 style={{ marginTop: 10 }}>Destello</h1>
+        <h1 style={{ marginTop: 10 }}><Link href="/" className="home-link" title="Ir a la página de Destello">Destello</Link></h1>
         <p>Pedidos del día, producción, inventario por peso y proveedores. Todo en un solo lugar.</p>
       </div>
       <div className="plate" aria-hidden="true">

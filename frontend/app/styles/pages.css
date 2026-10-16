@@ -204,3 +204,6 @@
 .doc-links a { display: flex; justify-content: space-between; align-items: center; min-height: 46px; color: var(--ink); font-weight: 600; text-decoration: none; border-top: 1px dashed var(--line); }
 .doc-links a:first-child { border-top: 0; }
 .doc-links a span { font-size: 20px; opacity: 0.55; }
+/* "Destello" en la entrada lleva a la página de presentación. */
+.home-link { color: inherit; text-decoration: none; }
+.home-link:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
