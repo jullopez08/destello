@@ -3,26 +3,24 @@
 import { useState } from "react"
 import { money } from "@/lib/kitchen/format"
 import type { Seller } from "@/lib/kitchen/analytics"
-import { PATTERN_IDS, PiePatterns } from "./pie-patterns"
+import { PiePatterns, REST_TOPPING, TOPPINGS } from "./pie-patterns"
+import type { Topping } from "./pie-patterns"
 
 // «¿Qué es lo que más vendes?» como una torta vista desde arriba: cada tajada es
 // qué parte de la plata dejó cada cosa. Sin lista de colores: al tocar una
 // tajada, el centro dice qué es, su porcentaje y cuánto dejó. Las 5 primeras
-// llevan cada una su cobertura (chispas, glaseado, confeti, espiral, lunares)
-// y el resto va junto en «Lo demás» con migas.
-
-const COLORS = PATTERN_IDS.slice(0, 5).map((id) => `url(#${id})`)
-const REST = `url(#${PATTERN_IDS[5]})`
+// llevan cada una su cobertura (chispas, glaseado, confeti, espiral de canela,
+// lunares) y el resto va junto en «Lo demás» con migas.
 const R = 92, IN = 52
 
-type Slice = { name: string; sales: number; units: number; share: number; color: string; start: number; end: number }
+type Slice = { name: string; sales: number; units: number; share: number; topping: Topping; start: number; end: number }
 
 function slices(list: Seller[]): Slice[] {
-  const top = list.slice(0, 5).map((s, i) => ({ ...s, color: COLORS[i] }))
+  const top = list.slice(0, 5).map((s, i) => ({ ...s, topping: TOPPINGS[i] }))
   const rest = list.slice(5).filter((s) => s.sales > 0)
-  const parts: Omit<Slice, "start" | "end">[] = top.map(({ name, sales, units, share, color }) => ({ name, sales, units, share, color }))
+  const parts: Omit<Slice, "start" | "end">[] = top.map(({ name, sales, units, share, topping }) => ({ name, sales, units, share, topping }))
   if (rest.length) {
-    parts.push({ name: `Lo demás (${rest.length} cosas)`, sales: rest.reduce((a, s) => a + s.sales, 0), units: rest.reduce((a, s) => a + s.units, 0), share: rest.reduce((a, s) => a + s.share, 0), color: REST })
+    parts.push({ name: `Lo demás (${rest.length} cosas)`, sales: rest.reduce((a, s) => a + s.sales, 0), units: rest.reduce((a, s) => a + s.units, 0), share: rest.reduce((a, s) => a + s.share, 0), topping: REST_TOPPING })
   }
   // Dónde empieza y termina cada tajada (en radianes, desde arriba).
   let at = 0
@@ -51,6 +49,7 @@ export function SellerPie({ list }: { list: Seller[] }) {
         <svg viewBox="0 0 200 200" role="group" aria-label="Qué parte de lo vendido es cada cosa">
           <PiePatterns />
           <circle cx="100" cy="100" r="98" className="plate" />
+          <g filter="url(#torta-sombra)">
           {parts.map((p, i) => {
             const mid = (p.start + p.end) / 2
             const lift = i === sel ? 5 : 0
@@ -67,7 +66,16 @@ export function SellerPie({ list }: { list: Seller[] }) {
                 onMouseEnter={() => setSel(i)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(i)}
               >
-                <path d={ring(p.start, p.end)} fill={p.color} />
+                <path d={ring(p.start, p.end)} fill={`url(#torta-base-${p.topping.id})`} className="base" />
+                {p.topping.decor === "rings" ? (
+                  // Espiral de canela: anillos como la galleta de rollo.
+                  <g clipPath={`url(#torta-clip-${i})`} className="decor">
+                    <clipPath id={`torta-clip-${i}`}><path d={ring(p.start, p.end)} /></clipPath>
+                    {[58, 66, 74, 82, 90].map((rr) => <circle key={rr} cx="100" cy="100" r={rr} fill="none" stroke="#c98642" strokeWidth="2.6" />)}
+                  </g>
+                ) : (
+                  <path d={ring(p.start, p.end)} fill={`url(#torta-decor-${p.topping.decor})`} className="decor" />
+                )}
                 {p.share >= 0.07 ? (
                   // El porcentaje va en una etiqueta crema para leerse sobre la cobertura.
                   <g transform={`translate(${100 + ((R + IN) / 2) * Math.sin(mid)} ${100 - ((R + IN) / 2) * Math.cos(mid)})`} className="pct">
@@ -78,6 +86,7 @@ export function SellerPie({ list }: { list: Seller[] }) {
               </g>
             )
           })}
+          </g>
         </svg>
         <div className="torta-center" aria-live="polite">
           <b className="num">{Math.round(s.share * 100)}&nbsp;%</b>
