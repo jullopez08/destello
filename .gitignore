@@ -47,3 +47,12 @@ tmp/
 # Destello
 .next/
 next-env.d.ts
+
+# Documentos internos de trabajo (guías para el equipo y para Claude): se quedan en el computador, no se suben
+CLAUDE.md
+**/CLAUDE.md
+AGENTS.md
+**/AGENTS.md
+PLAN.md
+DESIGN.md
+DESIGN-OLIPOP.md
