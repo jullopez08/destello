@@ -3,14 +3,16 @@
 import { useState } from "react"
 import { money } from "@/lib/kitchen/format"
 import type { Seller } from "@/lib/kitchen/analytics"
+import { PATTERN_IDS, PiePatterns } from "./pie-patterns"
 
 // «¿Qué es lo que más vendes?» como una torta vista desde arriba: cada tajada es
 // qué parte de la plata dejó cada cosa. Sin lista de colores: al tocar una
 // tajada, el centro dice qué es, su porcentaje y cuánto dejó. Las 5 primeras
-// van con su color pastel y el resto junto en «Lo demás».
+// llevan cada una su cobertura (chispas, glaseado, confeti, espiral, lunares)
+// y el resto va junto en «Lo demás» con migas.
 
-const COLORS = ["#f6a96c", "#f48fb1", "#b39ddb", "#7fc4e8", "#8fd3b0"]
-const REST = "#eadfc8"
+const COLORS = PATTERN_IDS.slice(0, 5).map((id) => `url(#${id})`)
+const REST = `url(#${PATTERN_IDS[5]})`
 const R = 92, IN = 52
 
 type Slice = { name: string; sales: number; units: number; share: number; color: string; start: number; end: number }
@@ -47,6 +49,7 @@ export function SellerPie({ list }: { list: Seller[] }) {
     <div className="torta">
       <div className="torta-plate">
         <svg viewBox="0 0 200 200" role="group" aria-label="Qué parte de lo vendido es cada cosa">
+          <PiePatterns />
           <circle cx="100" cy="100" r="98" className="plate" />
           {parts.map((p, i) => {
             const mid = (p.start + p.end) / 2
@@ -66,9 +69,11 @@ export function SellerPie({ list }: { list: Seller[] }) {
               >
                 <path d={ring(p.start, p.end)} fill={p.color} />
                 {p.share >= 0.07 ? (
-                  <text x={100 + ((R + IN) / 2) * Math.sin(mid)} y={100 - ((R + IN) / 2) * Math.cos(mid) + 4} textAnchor="middle" className="pct">
-                    {Math.round(p.share * 100)}%
-                  </text>
+                  // El porcentaje va en una etiqueta crema para leerse sobre la cobertura.
+                  <g transform={`translate(${100 + ((R + IN) / 2) * Math.sin(mid)} ${100 - ((R + IN) / 2) * Math.cos(mid)})`} className="pct">
+                    <rect x="-15" y="-9" width="30" height="18" rx="9" />
+                    <text y="4" textAnchor="middle">{Math.round(p.share * 100)}%</text>
+                  </g>
                 ) : null}
               </g>
             )
