@@ -3,7 +3,7 @@
 import { Icon } from "@/components/ui/icon"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel, initials, longDate, money, qty } from "@/lib/kitchen/format"
-import { Empty, Kpi, PageHead, useModal } from "../shared"
+import { Empty, PageHead, useModal } from "../shared"
 import { PurchaseForm } from "../forms/purchase-form"
 
 // ── Compras ──
@@ -25,10 +25,9 @@ export function PurchasesView() {
         <Icon name="plus" />
         Registrar compra
       </button>
-      <div className="grid g4" style={{ marginBottom: 16 }}>
-        <Kpi v={money(month)} l="Compras del mes" c="c-peach" />
-        <Kpi v={data.purchases.length} l="Compras registradas" c="c-lilac" />
-      </div>
+      <p className="summary-line">
+        Este mes llevas <b className="num">{money(month)}</b> en compras.
+      </p>
       {data.purchases.length ? (
         <div className="stack">
           {data.purchases.map((c) => {

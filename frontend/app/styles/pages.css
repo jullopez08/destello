@@ -172,3 +172,7 @@
   /* Una cifra nunca se parte en dos líneas. */
   .g4 .kpi .v { font-size: 22px; overflow-wrap: normal; white-space: nowrap; }
 }
+
+/* Resumen en una línea bajo el título (lo que antes era una tarjeta que no llevaba a nada). */
+.summary-line { margin: -4px 0 14px; font-size: 15px; }
+.summary-line b { font-size: 17px; }

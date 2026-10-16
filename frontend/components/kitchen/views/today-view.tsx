@@ -47,10 +47,10 @@ export function TodayView() {
         <VoiceCard />
       </div>
       <div className="grid g4">
-        <Kpi v={todays.length} l="Pedidos para hoy" s={`${pend.length} por producir`} c="c-accent" />
+        <Kpi v={todays.length} l="Pedidos para hoy" s={`${pend.length} por producir`} c="c-accent" href="#pedidos" />
         <Kpi v={money(sales)} l="Ventas de hoy" s="Sin contar domicilios" c="c-strawberry" />
-        <Kpi v={boxes} l="Cajas por armar" s={`${Object.keys(plan.boxes).length} presentaciones`} c="c-lilac" />
-        <Kpi v={low.length} l="Insumos bajos" s={low.length ? "Revisa antes de producir" : "Todo en orden"} c="c-peach" />
+        <Kpi v={boxes} l="Cajas por armar" s={`${Object.keys(plan.boxes).length} presentaciones`} c="c-lilac" href="#produccion" />
+        <Kpi v={low.length} l="Insumos bajos" s={low.length ? "Revisa antes de producir" : "Todo en orden"} c="c-peach" href={low.length ? "#insumos/bajos" : undefined} />
       </div>
       <div className="grid g2" style={{ marginTop: 16 }}>
         <div className="card">

@@ -32,7 +32,8 @@ function subscribeHash(cb: () => void) {
   return () => window.removeEventListener("hashchange", cb)
 }
 export function useHashPage(valid: string[], fallback: string) {
-  const hash = useSyncExternalStore(subscribeHash, () => window.location.hash.replace("#", ""), () => "")
+  // "#insumos/bajos": la sección es lo de antes de "/"; lo de después lo lee la sección.
+  const hash = useSyncExternalStore(subscribeHash, () => window.location.hash.replace("#", "").split("/")[0], () => "")
   return valid.includes(hash) ? hash : fallback
 }
 
@@ -87,6 +88,17 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [page])
+
+  // Desde Hoy, "Insumos bajos" abre Insumos con la pestaña "Bajos".
+  useEffect(() => {
+    const onHash = () => {
+      if (window.location.hash !== "#insumos/bajos") return
+      setSupplyTab("bajos")
+      history.replaceState(null, "", "#insumos")
+    }
+    window.addEventListener("hashchange", onHash)
+    return () => window.removeEventListener("hashchange", onHash)
+  }, [])
 
   const view = {
     hoy: <TodayView />,
