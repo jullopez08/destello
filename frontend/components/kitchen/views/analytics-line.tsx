@@ -4,9 +4,17 @@ import { useState } from "react"
 import { dateLabel, fmtN, money } from "@/lib/kitchen/format"
 import type { WeekStat } from "@/lib/kitchen/analytics"
 
-// «¿Cómo van tus ventas cada semana?» en línea: se ve de un vistazo si sube o
-// baja. Eje de la izquierda: miles de pesos; abajo: la semana (día en que
-// empieza). La semana en curso va punteada. Al tocar un punto sale el detalle.
+// «¿Cómo van tus ventas cada semana?» en línea de mermelada de fresa que
+// chorrea: se ve de un vistazo si sube o baja. Eje de la izquierda: miles de
+// pesos; abajo: la semana (día en que empieza). La semana en curso va más
+// clarita. Al tocar un punto sale el detalle. Solo colores lisos y un degradado.
+
+const JAM = "#c8102e"
+const DRIPS = [9, 14, 7, 12, 10, 15, 8, 11]
+
+// Gota que cuelga de la línea: más larga o más corta según el punto.
+const drip = (x: number, y: number, len: number) =>
+  `M${x - 2.6} ${y} Q${x - 2.6} ${y + len} ${x} ${y + len + 3} Q${x + 2.6} ${y + len} ${x + 2.6} ${y} Z`
 
 const W = 340, H = 210, L = 38, R = 14, T = 26, B = 34
 
@@ -34,8 +42,8 @@ export function WeekLine({ weeks, today }: { weeks: WeekStat[]; today: string })
       <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Ventas por semana">
         <defs>
           <linearGradient id="wline-fill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent-deep)" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="var(--accent-deep)" stopOpacity="0.02" />
+            <stop offset="0%" stopColor={JAM} stopOpacity="0.28" />
+            <stop offset="100%" stopColor={JAM} stopOpacity="0.02" />
           </linearGradient>
         </defs>
         {[0, top / 2, top].map((t) => (
@@ -46,8 +54,12 @@ export function WeekLine({ weeks, today }: { weeks: WeekStat[]; today: string })
         ))}
         {avg ? <line x1={L} x2={W - R} y1={y(avg)} y2={y(avg)} className="avg" /> : null}
         <path d={area} fill="url(#wline-fill)" />
-        <polyline points={closed} className="line" />
-        <line x1={pts[pts.length - 2][0]} y1={pts[pts.length - 2][1]} x2={pts[pts.length - 1][0]} y2={pts[pts.length - 1][1]} className="line now" />
+        {pts.slice(0, -1).map(([px, py], i) => (
+          <path key={i} d={drip(px, py + 2, DRIPS[i % DRIPS.length])} fill={JAM} className="jam-drip" />
+        ))}
+        <polyline points={closed} className="jam" />
+        <line x1={pts[pts.length - 2][0]} y1={pts[pts.length - 2][1]} x2={pts[pts.length - 1][0]} y2={pts[pts.length - 1][1]} className="jam now" />
+        <polyline points={closed} className="jam-shine" transform="translate(-0.6 -1.8)" />
         {weeks.map((wk, i) => {
           const [px, py] = pts[i]
           const [d, m] = dateLabel(wk.start, "").split(" ")

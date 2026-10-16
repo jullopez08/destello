@@ -49,9 +49,16 @@
 .dbars { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 14px; align-items: end; }
 .dbar { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .dbar .n { font-size: 13px; font-weight: 700; }
-.dbar .col { width: 100%; max-width: 40px; height: 120px; display: flex; align-items: flex-end; border-radius: 10px; background: var(--accent-soft); overflow: hidden; }
-.dbar .col span { width: 100%; background: var(--peach); border-radius: 10px 10px 0 0; }
-.dbar.best .col span { background: var(--accent-deep); }
+.dbar .col { width: 100%; max-width: 38px; height: 130px; display: flex; align-items: flex-end; justify-content: center; }
+/* Cada columna es un barquillo: masa dorada enrollada con sus rayas, la boca
+   del rollo arriba; el día de más trabajo va bañado en chocolate. */
+.dbar .col span { position: relative; width: 100%; min-height: 10px; border-radius: 10px 10px 5px 5px; background-color: #efc27f;
+  background-image: repeating-linear-gradient(-60deg, transparent 0 7px, #d38f45 7px 9px);
+  box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.35), inset -3px 0 0 rgba(150, 90, 30, 0.25); }
+.dbar .col span::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 9px; border-radius: 50%; background: #b8732f; border: 2.5px solid #f6d4a0; box-sizing: border-box; }
+.dbar.best .col span::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 32%; max-height: 42px; background: #6b3a22;
+  border-radius: 10px 10px 45% 55% / 10px 10px 35% 45%; }
+
 .dbar .t { font-size: 12px; font-weight: 600; text-transform: capitalize; }
 @media (max-width: 560px) { .stat .v { font-size: 21px; } .summary p { font-size: 15px; } }
 
@@ -68,13 +75,15 @@
 .wline .grid { stroke: var(--line); stroke-dasharray: 3 4; }
 .wline .tick { font-size: 10px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
 .wline .avg { stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 6 5; }
-.wline .line { fill: none; stroke: var(--accent-deep); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-.wline .line.now { stroke-dasharray: 2 6; }
+.wline .jam { fill: none; stroke: #c8102e; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.wline .jam.now { opacity: 0.45; }
+.wline .jam-shine { fill: none; stroke: #ff8fa3; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
 .wline .pt { cursor: pointer; outline: none; }
 .wline .hit { fill: transparent; }
-.wline .dot { fill: var(--surface); stroke: var(--accent-deep); stroke-width: 2.5; transition: r 0.15s; }
-.wline .pt.best .dot { fill: var(--accent-deep); }
-.wline .pt.on .dot { fill: var(--ink); stroke: var(--surface); stroke-width: 2; }
+.wline .dot { fill: #c8102e; stroke: #fff6f8; stroke-width: 1.8; transition: r 0.15s; }
+.wline .pt.best .dot { fill: #8f0a22; }
+.wline .pt.cur .dot { fill: #e88a9b; }
+.wline .pt.on .dot { fill: #fff6f8; stroke: #c8102e; stroke-width: 3; }
 .wline .pt:focus-visible .dot { stroke: var(--ink); stroke-width: 3; }
 .wline .val { font-size: 10px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
 .wline .xl { font-size: 10.5px; font-weight: 700; fill: var(--ink); }
@@ -86,11 +95,9 @@
 .torta-plate svg { width: 100%; height: auto; display: block; overflow: visible; }
 .torta .plate { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 2 4; }
 .torta .slice { cursor: pointer; outline: none; transition: transform 0.2s ease; }
-.torta .slice path, .torta .slice rect, .torta .slice circle { stroke: none; }
 .torta .slice .base { stroke: var(--surface); stroke-width: 2.4; stroke-linejoin: round; }
 .torta .slice:not(.on) { opacity: 0.92; }
 .torta .cherry { pointer-events: none; }
-.torta .slice .cherry path { stroke: #4f8a3a; }
 .torta .slice:focus-visible .base { stroke: #3d2417; stroke-width: 2; }
 .torta .pct { pointer-events: none; }
 .torta .pct rect { fill: #fffaf0; }

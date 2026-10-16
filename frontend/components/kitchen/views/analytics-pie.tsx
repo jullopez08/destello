@@ -3,22 +3,24 @@
 import { useState } from "react"
 import { money } from "@/lib/kitchen/format"
 import type { Seller } from "@/lib/kitchen/analytics"
-import { Cherry, REST_TOPPING, SliceDrawing, TOPPINGS } from "./pie-patterns"
-import type { Topping } from "./pie-patterns"
+import { Cherry, SliceDrawing } from "./pie-patterns"
 
 // «¿Qué es lo que más vendes?» como una torta vista desde arriba: cada tajada es
 // qué parte de la plata dejó cada cosa. Sin lista de colores: al tocar una
-// tajada, el centro dice qué es, su porcentaje y cuánto dejó. Las 5 primeras
-// llevan cada una su cobertura (chispas, glaseado, confeti, espiral de canela,
-// lunares) y el resto va junto en «Lo demás» con migas.
-type Slice = { name: string; sales: number; units: number; share: number; topping: Topping; start: number; end: number }
+// tajada, el centro dice qué es, su porcentaje y cuánto dejó. Cada cosa vendida
+// es una tajada de dona con su propio glaseado (hasta 9; si hay más, el resto
+// va junto en «Lo demás»).
+
+const MAX = 9
+type Slice = { name: string; sales: number; units: number; share: number; start: number; end: number }
 
 function slices(list: Seller[]): Slice[] {
-  const top = list.slice(0, 5).map((s, i) => ({ ...s, topping: TOPPINGS[i] }))
-  const rest = list.slice(5).filter((s) => s.sales > 0)
-  const parts: Omit<Slice, "start" | "end">[] = top.map(({ name, sales, units, share, topping }) => ({ name, sales, units, share, topping }))
+  const sold = list.filter((s) => s.sales > 0)
+  const keep = sold.length > MAX + 1 ? MAX : sold.length
+  const rest = sold.slice(keep)
+  const parts: Omit<Slice, "start" | "end">[] = sold.slice(0, keep).map(({ name, sales, units, share }) => ({ name, sales, units, share }))
   if (rest.length) {
-    parts.push({ name: `Lo demás (${rest.length} cosas)`, sales: rest.reduce((a, s) => a + s.sales, 0), units: rest.reduce((a, s) => a + s.units, 0), share: rest.reduce((a, s) => a + s.share, 0), topping: REST_TOPPING })
+    parts.push({ name: `Lo demás (${rest.length} cosas)`, sales: rest.reduce((a, s) => a + s.sales, 0), units: rest.reduce((a, s) => a + s.units, 0), share: rest.reduce((a, s) => a + s.share, 0) })
   }
   // Dónde empieza y termina cada tajada (en radianes, desde arriba).
   let at = 0
@@ -54,11 +56,11 @@ export function SellerPie({ list }: { list: Seller[] }) {
                 onMouseEnter={() => setSel(i)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(i)}
               >
-                <SliceDrawing t={p.topping} start={p.start} end={p.end} />
+                <SliceDrawing i={i} start={p.start} end={p.end} />
                 {i === sel ? <Cherry angle={mid} /> : null}
                 {p.share >= 0.07 ? (
                   // El porcentaje va en una etiqueta crema para leerse sobre la cobertura.
-                  <g transform={`translate(${100 + 63 * Math.sin(mid)} ${100 - 63 * Math.cos(mid)})`} className="pct">
+                  <g transform={`translate(${100 + 68 * Math.sin(mid)} ${100 - 68 * Math.cos(mid)})`} className="pct">
                     <rect x="-15" y="-9" width="30" height="18" rx="9" />
                     <text y="4" textAnchor="middle">{Math.round(p.share * 100)}%</text>
                   </g>

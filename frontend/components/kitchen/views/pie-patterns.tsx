@@ -1,23 +1,34 @@
-// Tajadas de la torta de Analítica dibujadas como un pastel plano (estilo
-// dibujo): bizcocho, una franja de relleno y glaseado que chorrea por encima,
-// con decoraciones sencillas. Solo colores lisos: sin degradados, sombras ni
-// filtros, que en el celular se ven pixelados y cuestan más de dibujar.
+// La torta de Analítica dibujada como una dona glaseada (estilo dibujo, colores
+// lisos): la masa dorada asoma en las orillas, cada tajada tiene su glaseado de
+// borde ondulado y hilos de glaseado cruzados en un color que contrasta.
+// Cada cosa vendida lleva un color distinto; si hay más que colores en la
+// lista, se inventan más sin repetir (vuelta por el círculo de colores).
 
-export type Topping = { id: string; icing: string; cake: string; filling: string; decor: string[]; kind: "chips" | "sprinkles" | "dots" | "none" }
-
-export const TOPPINGS: Topping[] = [
-  { id: "chocolate", icing: "#6b3a22", cake: "#f2b673", filling: "#fff3d6", decor: ["#fff3d6"], kind: "chips" },
-  { id: "fresa", icing: "#f48fb1", cake: "#fbe3c8", filling: "#e8567f", decor: ["#fff6f8"], kind: "dots" },
-  { id: "confeti", icing: "#b39ddb", cake: "#f6d7a7", filling: "#fff6f8", decor: ["#ffd23f", "#fff6f8", "#8fd3b0", "#f48fb1"], kind: "sprinkles" },
-  { id: "canela", icing: "#fff3d6", cake: "#d9a066", filling: "#8a5a3c", decor: ["#a0662f"], kind: "chips" },
-  { id: "menta", icing: "#8fd3b0", cake: "#6b3a22", filling: "#fff3d6", decor: ["#fff6f8", "#6b3a22"], kind: "dots" },
-]
-export const REST_TOPPING: Topping = { id: "migas", icing: "#eadfc8", cake: "#d8c4a0", filling: "#fff3d6", decor: ["#b8925f"], kind: "none" }
-
-export const R = 92 // borde de la torta
+export const R = 92 // borde de la dona
 export const IN = 52 // hueco del centro
-const ICE = 76 // donde empieza el glaseado
-const FILL = 63 // franja de relleno
+const DOUGH = "#e9b86e"
+const DOUGH_RIM = "#d79a4a"
+
+// Glaseados: color de la cobertura y color de los hilos que van encima.
+const GLAZES: [string, string][] = [
+  ["#f06292", "#fff6f8"], // fresa
+  ["#6b3a22", "#fff3d6"], // chocolate
+  ["#fff3d6", "#6b3a22"], // vainilla
+  ["#b39ddb", "#fff6f8"], // lavanda
+  ["#8fd3b0", "#6b3a22"], // menta
+  ["#ffd23f", "#c2334f"], // limón
+  ["#7fc4e8", "#fff6f8"], // cielo
+  ["#c2334f", "#fff3d6"], // frambuesa
+  ["#f6a96c", "#6b3a22"], // durazno
+  ["#c98642", "#fff3d6"], // caramelo
+]
+
+// Color de cada tajada según su lugar: nunca se repite.
+export function glazeFor(i: number): [string, string] {
+  if (i < GLAZES.length) return GLAZES[i]
+  const hue = Math.round((i * 137.5) % 360)
+  return [`hsl(${hue} 70% 72%)`, "#fff6f8"]
+}
 
 const at = (a: number, r: number) => `${(100 + r * Math.sin(a)).toFixed(2)} ${(100 - r * Math.cos(a)).toFixed(2)}`
 
@@ -27,41 +38,35 @@ export function ringPath(start: number, end: number, outer = R, inner = IN) {
   return `M${at(start, outer)} A${outer} ${outer} 0 ${large} 1 ${at(end, outer)} L${at(end, inner)} A${inner} ${inner} 0 ${large} 0 ${at(start, inner)} Z`
 }
 
-// Glaseado: el borde de afuera es la orilla de la torta y el de adentro
-// chorrea en gotas redondas.
-function icingPath(start: number, end: number) {
-  const steps = Math.max(8, Math.ceil((end - start) / 0.02))
-  const drip = (a: number) => ICE - 7 * Math.pow(Math.max(0, Math.sin(a * 11)), 3)
-  const inner = Array.from({ length: steps + 1 }, (_, i) => end - ((end - start) * i) / steps).map((a) => `L${at(a, drip(a))}`)
-  const large = end - start > Math.PI ? 1 : 0
-  return `M${at(start, R)} A${R} ${R} 0 ${large} 1 ${at(end, R)} ${inner.join(" ")} Z`
+// Glaseado con orillas onduladas por dentro y por fuera, como en una dona.
+function glazePath(start: number, end: number) {
+  const steps = Math.max(6, Math.ceil((end - start) / 0.03))
+  const angles = Array.from({ length: steps + 1 }, (_, i) => start + ((end - start) * i) / steps)
+  const outer = angles.map((a) => at(a, 86 + 2.2 * Math.sin(a * 13)))
+  const inner = [...angles].reverse().map((a) => at(a, 58 + 2 * Math.sin(a * 11 + 1)))
+  return `M${outer.join(" L")} L${inner.join(" L")} Z`
 }
 
-// Decoraciones repartidas por el glaseado, siempre en el mismo lugar.
-function decorations(t: Topping, start: number, end: number) {
-  if (t.kind === "none") return null
-  const n = Math.max(1, Math.floor((end - start) / 0.17))
-  return Array.from({ length: n }, (_, i) => {
-    const a = start + ((end - start) * (i + 0.5)) / n
-    const r = i % 2 ? 84 : 88
-    const [x, y] = [100 + r * Math.sin(a), 100 - r * Math.cos(a)]
-    const color = t.decor[i % t.decor.length]
-    if (t.kind === "sprinkles") {
-      return <rect key={i} x={x - 3.5} y={y - 1.2} width="7" height="2.4" rx="1.2" fill={color} transform={`rotate(${(i * 67) % 180} ${x} ${y})`} />
-    }
-    if (t.kind === "chips") return <path key={i} d={`M${x - 2.2} ${y + 1.4} q2.2 -4.6 4.4 0 z`} fill={color} />
-    return <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 2.2 : 1.5} fill={color} />
-  })
-}
+// Hilos de glaseado: zigzag que cruza toda la dona; cada tajada lo recorta.
+const DRIZZLE = Array.from({ length: 12 }, (_, i) => {
+  const y = -10 + i * 20
+  return `M-20 ${y} q20 -9 40 -1 t40 0 t40 -1 t40 0 t40 0 t40 0`
+}).join(" ")
 
-// Una tajada completa: bizcocho, relleno, glaseado y decoración.
-export function SliceDrawing({ t, start, end }: { t: Topping; start: number; end: number }) {
+export function SliceDrawing({ i, start, end }: { i: number; start: number; end: number }) {
+  const [glaze, drizzle] = glazeFor(i)
+  const clip = `dona-clip-${i}`
   return (
     <>
-      <path d={ringPath(start, end)} fill={t.cake} className="base" />
-      <path d={ringPath(start, end, FILL + 2.5, FILL - 2.5)} fill={t.filling} />
-      <path d={icingPath(start, end)} fill={t.icing} />
-      {decorations(t, start, end)}
+      <path d={ringPath(start, end)} fill={DOUGH} className="base" />
+      <path d={ringPath(start, end, R, R - 3)} fill={DOUGH_RIM} />
+      <clipPath id={clip}>
+        <path d={glazePath(start, end)} />
+      </clipPath>
+      <path d={glazePath(start, end)} fill={glaze} />
+      <g clipPath={`url(#${clip})`}>
+        <path d={DRIZZLE} transform="rotate(-20 100 100)" fill="none" stroke={drizzle} strokeWidth="2.4" strokeLinecap="round" />
+      </g>
     </>
   )
 }
