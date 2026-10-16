@@ -83,14 +83,14 @@ export function ProductsView() {
                       <b>{pr.name}</b>
                       <div className="small muted">{KIND_LABEL[pr.kind]}{pr.active ? "" : " · Pausada"}</div>
                     </td>
-                    <td className="small c-full" data-label="Qué lleva">
+                    <td className="small c-full c-first">
                       {main}
                       <div className="muted">{sub}</div>
                     </td>
-                    <td className="r num" data-label="Precio"><b>{priceLabel(pr)}</b></td>
+                    <td className="r num c-hero" data-label="Precio"><b>{priceLabel(pr)}</b></td>
                     <td className="r num" data-label="Costo">{money(c)}</td>
                     <td className="r num" data-label="Margen">{fmtN(presentationMargin(pr, rules) * 100)} %</td>
-                    <td data-label="Estado">
+                    <td className="c-badge" data-label="Estado">
                       <span className={`chip ${h.kind === "ok" ? "good" : h.kind}`}>{h.label}</span>
                       {h.suggested ? <div className="small muted" style={{ marginTop: 4 }}>Sugerido {money(h.suggested)}</div> : null}
                     </td>

@@ -15,7 +15,7 @@ export function Trend({ now, before }: { now: number; before: number }) {
   const c = change(now, before)
   if (c === null) return <span className="trend flat">Sin datos de antes para comparar</span>
   if (c === 0) return <span className="trend flat">Igual que antes</span>
-  return <span className={`trend ${c > 0 ? "up" : "down"}`}>{c > 0 ? "▲" : "▼"} {Math.abs(c)} % {c > 0 ? "más" : "menos"} que antes</span>
+  return <span className={`trend ${c > 0 ? "up" : "down"}`}>{c > 0 ? "▲" : "▼"} {Math.abs(c)} % {c > 0 ? "más" : "menos"}</span>
 }
 
 // Resumen en una frase: las últimas 4 semanas frente a las 4 anteriores, con fechas.

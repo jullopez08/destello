@@ -17,11 +17,34 @@
   .tbl.cardify td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
   .tbl.cardify td.c-title, .tbl.cardify td.c-full, .tbl.cardify td.c-actions, .tbl.cardify td.c-num { grid-column: 1 / -1; }
   .tbl.cardify td.c-title b { font-size: 17px; }
-  .tbl.cardify td.c-num { font-size: 12px; margin-bottom: -8px; }
+  .tbl.cardify td.c-num { font-size: 12px; margin-bottom: -8px; min-height: 26px; }
   .tbl.cardify td.c-num::before { content: "Pedido #"; }
   .tbl.cardify td.c-actions { padding-top: 10px; border-top: 1px dashed var(--line); }
   .tbl.cardify td.c-actions:empty { display: none; }
   .tbl.cardify td .bar { min-width: 0; }
+  /* Orden de lectura (decisión de Julieth, 2026-10-16): nombre y estado arriba, un dato
+     grande, luego lo demás de a dos y al final lo secundario. Así se lee de un vistazo.
+     c-badge: el estado arriba a la derecha, sin etiqueta. c-first: justo debajo del nombre. c-hero: el dato que más importa,
+     grande. c-end: valor alineado a la derecha (el total). c-last: va de último.
+     c-soft: texto secundario más suave. */
+  .tbl.cardify tr { position: relative; }
+  .tbl.cardify td.c-title { padding-right: 118px; }
+  .tbl.cardify td.c-num + td.c-title { padding-right: 0; }
+  .tbl.cardify td.c-badge { position: absolute; top: 14px; right: 16px; max-width: 112px; text-align: right; }
+  .tbl.cardify td.c-badge::before { display: none; }
+  .tbl.cardify td.c-badge .chip { white-space: normal; text-align: center; line-height: 1.25; }
+  .tbl.cardify td.c-first { order: 1; }
+  .tbl.cardify td.c-hero { grid-column: 1 / -1; order: 2; }
+  .tbl.cardify td.c-hero, .tbl.cardify td.c-hero b, .tbl.cardify td.c-hero .num { font-size: 22px; font-weight: 700; line-height: 1.15; }
+  .tbl.cardify td.c-hero .bar { margin-top: 8px !important; height: 8px; }
+  .tbl.cardify td:not(.c-title):not(.c-num):not(.c-hero):not(.c-first) { order: 3; }
+  .tbl.cardify td.c-last { order: 4; }
+  .tbl.cardify td.c-actions { order: 5; }
+  .tbl.cardify td.c-end { text-align: right; }
+  .tbl.cardify td.c-end b { font-size: 18px; }
+  .tbl.cardify td.c-soft { color: var(--ink-2); }
+  .tbl.cardify td[data-label]::before { font-size: 10.5px; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 3px; }
+  .tbl.cardify td.c-hero[data-label]::before { font-size: 10.5px; font-weight: 600; }
 }
 
 /* ---------- Celular: barra de abajo y "Más" ---------- */

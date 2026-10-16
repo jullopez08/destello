@@ -40,7 +40,7 @@ export function PurchasesView() {
                     <div className="avatar" style={{ background: `var(--${p?.color ?? "banana"})` }}>{initials(p?.name ?? "?")}</div>
                     <div>
                       <b>{p?.name ?? "Proveedor eliminado"}</b>
-                      <div className="small muted">{dateLabel(c.date, data.today)} · {longDate(c.date)}</div>
+                      <div className="small muted">{/^\d/.test(dateLabel(c.date, data.today)) ? longDate(c.date) : `${dateLabel(c.date, data.today)} · ${longDate(c.date)}`}</div>
                     </div>
                   </div>
                   <b className="num">{money(c.lines.reduce((a, l) => a + l.total, 0))}</b>

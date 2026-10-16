@@ -54,8 +54,8 @@ export function SuppliesView({ tab, setTab, query, setQuery }: { tab: SupplyTab;
                       <b>{s.name}</b>
                       <div className="small muted">{s.category === "PACKAGING" ? "Empaque" : "Ingrediente"} · mínimo {qty(s.min, s.kind)}</div>
                     </td>
-                    <td className="small" data-label="Proveedor">{byId(data.suppliers, s.supplierId)?.name ?? "—"}</td>
-                    <td data-label="Existencia">
+                    <td className="small c-full c-last" data-label="Proveedor">{byId(data.suppliers, s.supplierId)?.name ?? "—"}</td>
+                    <td className="c-hero" data-label="Existencia">
                       <div className="num" style={{ fontWeight: 700 }}>{qty(s.stock, s.kind)}</div>
                       <div className={`bar ${k}`} style={{ marginTop: 4 }}>
                         <span style={{ width: `${Math.min(100, (r / 3) * 100)}%` }} />
@@ -63,7 +63,7 @@ export function SuppliesView({ tab, setTab, query, setQuery }: { tab: SupplyTab;
                     </td>
                     <td className="r num" data-label="Costo promedio">{costLabel(s)}</td>
                     <td className="r num" data-label="Valor">{money(Math.max(0, s.stock) * s.cost)}</td>
-                    <td data-label="Estado">{s.min <= 0 ? <span className="chip warn">Ponle un mínimo</span> : r < 1 ? <span className="chip bad">Comprar ya</span> : r < 1.3 ? <span className="chip warn">Casi en el mínimo</span> : <span className="chip good">Bien</span>}</td>
+                    <td className="c-badge" data-label="Estado">{s.min <= 0 ? <span className="chip warn">Ponle un mínimo</span> : r < 1 ? <span className="chip bad">Comprar ya</span> : r < 1.3 ? <span className="chip warn">Casi en el mínimo</span> : <span className="chip good">Bien</span>}</td>
                   </tr>
                 )
               })}
