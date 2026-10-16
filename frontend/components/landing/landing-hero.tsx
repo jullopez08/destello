@@ -14,6 +14,7 @@ export function LandingNav() {
       <nav aria-label="Secciones">
         <a href="#como-funciona" className="only-desktop">Cómo funciona</a>
         <a href="#precios" className="only-desktop">Precios</a>
+        <a href="#descargar" className="only-desktop">Descargar</a>
         <Link href="/access" className="btn ghost sm">Entrar</Link>
       </nav>
     </header>

@@ -47,6 +47,10 @@
 .lp-plan li { padding-left: 26px; position: relative; }
 .lp-plan li::before { content: "✓"; position: absolute; left: 0; font-weight: 700; }
 .lp-install ol { list-style: decimal; }
+.lp-install { display: flex; flex-direction: column; gap: 12px; }
+.lp-install-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lp-sub { font-size: 16px; color: var(--ink-2); max-width: 60ch; }
+.lp-soon { opacity: 0.6; cursor: default; box-shadow: none; }
 .lp-install li::marker { font-weight: 700; }
 .lp-price { font-family: var(--display); font-size: 34px; line-height: 1.1; }
 .lp-plan-soon { border-style: dashed; }

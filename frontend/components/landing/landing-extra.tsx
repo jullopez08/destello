@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
 import { Icon } from "@/components/ui/icon"
-import { contactHref, RESTAURANT_MESSAGE, TRIAL_MESSAGE } from "@/lib/contact"
+import { ANDROID_APK_URL, contactHref, RESTAURANT_MESSAGE, TRIAL_MESSAGE } from "@/lib/contact"
 
 // ── Página de presentación: restaurantes (pronto), instalar, preguntas, contacto y pie ──
 
@@ -24,28 +24,48 @@ export function LandingRestaurants() {
   )
 }
 
+/** Descarga directa (sin Play Store ni App Store, decisión de Julieth): APK en Android, la web instalada en iPhone. */
 export function LandingInstall() {
   return (
-    <section className="lp-section">
-      <span className="eyebrow">En tu celular</span>
-      <h2>Tenlo a un toque, como una app.</h2>
+    <section className="lp-section" id="descargar">
+      <span className="eyebrow">Descarga la app</span>
+      <h2>Tenlo a un toque en tu celular.</h2>
+      <p className="lp-sub">Destello no está en Play Store ni en App Store: lo descargas directo desde aquí.</p>
       <div className="lp-grid2">
-        <article className="card lp-install">
-          <h3>iPhone</h3>
+        <article className="card c-banana lp-install">
+          <div className="lp-install-head">
+            <h3>Android</h3>
+            <span className="chip white">Archivo .apk</span>
+          </div>
+          {ANDROID_APK_URL ? (
+            <a className="btn primary block" href={ANDROID_APK_URL} download>
+              <Icon name="download" />
+              Descargar Destello para Android
+            </a>
+          ) : (
+            <span className="btn primary block lp-soon" aria-disabled="true">
+              <Icon name="download" />
+              Descarga muy pronto
+            </span>
+          )}
           <ol>
-            <li>Abre Destello en Safari.</li>
+            <li>Toca <b>Descargar</b> y abre el archivo cuando termine.</li>
+            <li>Si Android pregunta, elige <b>Permitir de esta fuente</b> (solo la primera vez).</li>
+            <li>Toca <b>Instalar</b> y busca la galleta de Destello en tu pantalla.</li>
+          </ol>
+          <p className="small muted">Mientras tanto: abre Destello en Chrome, toca <b>⋮</b> y elige <b>Instalar app</b>.</p>
+        </article>
+        <article className="card lp-install">
+          <div className="lp-install-head">
+            <h3>iPhone</h3>
+            <span className="chip">Desde Safari</span>
+          </div>
+          <p>Apple no deja instalar apps fuera de la App Store, así que en iPhone Destello se agrega a tu pantalla de inicio y funciona igual que una app.</p>
+          <ol>
+            <li>Abre Destello en <b>Safari</b>.</li>
             <li>Toca <b>Compartir</b> (el cuadro con la flecha hacia arriba).</li>
             <li>Elige <b>Agregar a pantalla de inicio</b>.</li>
           </ol>
-        </article>
-        <article className="card lp-install">
-          <h3>Android</h3>
-          <ol>
-            <li>Abre Destello en Chrome.</li>
-            <li>Toca el menú <b>⋮</b> de arriba a la derecha.</li>
-            <li>Elige <b>Instalar app</b> o <b>Agregar a la pantalla principal</b>.</li>
-          </ol>
-          <p className="small muted">Pronto también podrás descargarla desde aquí.</p>
         </article>
       </div>
     </section>
