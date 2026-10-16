@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
+import { Icon } from "@/components/ui/icon"
 import { contactHref, TRIAL_MESSAGE } from "@/lib/contact"
 
 // ── Página de presentación: barra de arriba y portada ──
@@ -14,8 +15,12 @@ export function LandingNav() {
       <nav aria-label="Secciones">
         <a href="#como-funciona" className="only-desktop">Cómo funciona</a>
         <a href="#precios" className="only-desktop">Precios</a>
-        <a href="#descargar" className="only-desktop">Descargar</a>
+        {/* Secundario: quien ya tiene cuenta. Principal: quien llega a conocer Destello. */}
         <Link href="/access" className="btn ghost sm">Entrar</Link>
+        <a href="#descargar" className="btn primary sm">
+          <Icon name="download" />
+          Descargar
+        </a>
       </nav>
     </header>
   )
