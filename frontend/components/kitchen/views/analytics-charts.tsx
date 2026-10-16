@@ -49,17 +49,6 @@ export function Stat({ label, value, hint, now, before, beforeText }: { label: s
   )
 }
 
-// Barquillo de cada día, cada uno de un sabor: [masa, rayas]. Domingo primero (getDay).
-const WAFERS: [string, string][] = [
-  ["#efc27f", "#d38f45"], // domingo: vainilla
-  ["#f6a5c0", "#e06d93"], // lunes: fresa
-  ["#c9b6ea", "#9a80cf"], // martes: lavanda
-  ["#a8dfc2", "#6fb892"], // miércoles: menta
-  ["#a6d4f0", "#6aaed8"], // jueves: cielo
-  ["#ffe17a", "#e0b52c"], // viernes: limón
-  ["#f8bf8f", "#e08d4f"], // sábado: durazno
-]
-
 // Pedidos por día de producción: ayuda a saber qué días habrá más trabajo.
 export function WeekdayBars({ counts }: { counts: number[] }) {
   const order = [1, 2, 3, 4, 5, 6, 0]
@@ -69,7 +58,7 @@ export function WeekdayBars({ counts }: { counts: number[] }) {
     <>
       <div className="dbars" role="list" aria-label="Pedidos por día de la semana">
         {order.map((d) => (
-          <div className={`dbar${d === top && counts[d] ? " best" : ""}`} role="listitem" key={d} style={{ "--wafer": WAFERS[d][0], "--stripe": WAFERS[d][1] } as React.CSSProperties}>
+          <div className={`dbar${d === top && counts[d] ? " best" : ""}`} role="listitem" key={d}>
             <span className="n num">{counts[d]}</span>
             <div className="col"><span style={{ height: `${(counts[d] / max) * 100}%` }} /></div>
             <span className="t">{DAYS[d].slice(0, 3)}</span>
