@@ -3,8 +3,9 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
+import { PasswordInput } from "@/components/ui/password-input"
 import { ToastProvider } from "@/components/ui/toast"
-import { api, errorMessage } from "@/lib/api"
+import { api, ApiError, errorMessage } from "@/lib/api"
 import { isSuperAdmin, SessionProvider, useSession } from "@/lib/session"
 import { KitchenApp } from "@/components/kitchen/kitchen-app"
 import { SuperAdminApp } from "@/components/super-admin/super-admin-app"
@@ -66,7 +67,8 @@ function LoginScreen() {
         setMode("sent")
       }
     } catch (err) {
-      setError(errorMessage(err))
+      // 401 al entrar: un mensaje claro en vez de "Credenciales incorrectas".
+      setError(err instanceof ApiError && err.status === 401 && mode === "login" ? "El correo o la contraseña no coinciden. Revísalos e intenta de nuevo." : errorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -89,12 +91,12 @@ function LoginScreen() {
             <p className="muted">{mode === "login" ? "Con el correo y la contraseña de tu negocio." : "Te enviamos un link a tu correo para crear una contraseña nueva."}</p>
             <label className="f">
               Correo
-              <input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint={mode === "login" ? "next" : "send"} placeholder="tu@correo.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </label>
             {mode === "login" ? (
               <label className="f">
                 Contraseña
-                <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <PasswordInput autoComplete="current-password" enterKeyHint="go" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </label>
             ) : null}
             {error ? <div className="err" role="alert">{error}</div> : null}
@@ -113,6 +115,13 @@ function LoginScreen() {
     </div>
   )
 }
+
+const DOCS = [
+  ["/terminos", "Términos y condiciones"],
+  ["/privacidad", "Política de privacidad"],
+  ["/cookies", "Política de cookies"],
+  ["/reembolsos", "Política de reembolsos"],
+] as const
 
 // Primer ingreso de la dueña: acepta los términos antes de ver el panel.
 function TermsScreen() {
@@ -141,11 +150,13 @@ function TermsScreen() {
         >
           <h2>Bienvenida, {user?.name.split(" ")[0]}</h2>
           <p className="muted">Antes de empezar con {user?.organizationName}, lee y acepta los documentos que explican cómo funciona Destello y cómo cuidamos tus datos y los de tus clientes.</p>
-          <div className="card stack" style={{ gap: 6, padding: 16 }}>
-            <Link href="/terminos" target="_blank">Términos y condiciones</Link>
-            <Link href="/privacidad" target="_blank">Política de privacidad</Link>
-            <Link href="/cookies" target="_blank">Política de cookies</Link>
-            <Link href="/reembolsos" target="_blank">Política de reembolsos</Link>
+          <div className="card doc-links">
+            {DOCS.map(([href, name]) => (
+              <Link key={href} href={href} target="_blank">
+                {name}
+                <span aria-hidden="true">›</span>
+              </Link>
+            ))}
           </div>
           <label className="row small" style={{ gap: 10, flexWrap: "nowrap", alignItems: "flex-start" }}>
             <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} style={{ width: 20, height: 20, accentColor: "var(--accent-deep)", flex: "none", marginTop: 2 }} />
