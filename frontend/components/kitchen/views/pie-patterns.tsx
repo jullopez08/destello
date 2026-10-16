@@ -1,78 +1,79 @@
-// Coberturas de repostería para las tajadas de la torta de Analítica, en el
-// estilo de las galletas del panel (.cookie): sin contornos duros, con el borde
-// más tostado que el centro, sombra suave y decoraciones redondas y gorditas.
-// Cada tajada tiene su base (degradado del centro al borde) y su decoración.
+// Tajadas de la torta de Analítica dibujadas como un pastel plano (estilo
+// dibujo): bizcocho, una franja de relleno y glaseado que chorrea por encima,
+// con decoraciones sencillas. Solo colores lisos: sin degradados, sombras ni
+// filtros, que en el celular se ven pixelados y cuestan más de dibujar.
 
-export type Topping = { id: string; base: string; light: string; rim: string; decor: "chips" | "glaze" | "sprinkles" | "rings" | "dots" | "crumbs" }
+export type Topping = { id: string; icing: string; cake: string; filling: string; decor: string[]; kind: "chips" | "sprinkles" | "dots" | "none" }
 
 export const TOPPINGS: Topping[] = [
-  { id: "chispas", base: "#f2a565", light: "#f8c08a", rim: "#d9843f", decor: "chips" },
-  { id: "fresa", base: "#f48fb1", light: "#f9b3cb", rim: "#de6d93", decor: "glaze" },
-  { id: "confeti", base: "#b39ddb", light: "#cdbdea", rim: "#9479c6", decor: "sprinkles" },
-  { id: "canela", base: "#f4d6a8", light: "#f8e4c4", rim: "#d9ae6e", decor: "rings" },
-  { id: "menta", base: "#8fd3b0", light: "#b3e3c9", rim: "#69bb92", decor: "dots" },
+  { id: "chocolate", icing: "#6b3a22", cake: "#f2b673", filling: "#fff3d6", decor: ["#fff3d6"], kind: "chips" },
+  { id: "fresa", icing: "#f48fb1", cake: "#fbe3c8", filling: "#e8567f", decor: ["#fff6f8"], kind: "dots" },
+  { id: "confeti", icing: "#b39ddb", cake: "#f6d7a7", filling: "#fff6f8", decor: ["#ffd23f", "#fff6f8", "#8fd3b0", "#f48fb1"], kind: "sprinkles" },
+  { id: "canela", icing: "#fff3d6", cake: "#d9a066", filling: "#8a5a3c", decor: ["#a0662f"], kind: "chips" },
+  { id: "menta", icing: "#8fd3b0", cake: "#6b3a22", filling: "#fff3d6", decor: ["#fff6f8", "#6b3a22"], kind: "dots" },
 ]
-export const REST_TOPPING: Topping = { id: "migas", base: "#eadfc8", light: "#f3ebdb", rim: "#d3c19d", decor: "crumbs" }
+export const REST_TOPPING: Topping = { id: "migas", icing: "#eadfc8", cake: "#d8c4a0", filling: "#fff3d6", decor: ["#b8925f"], kind: "none" }
 
-// Degradado de horno: claro hacia el centro de la torta, tostado en el borde.
-function Baked({ t }: { t: Topping }) {
+export const R = 92 // borde de la torta
+export const IN = 52 // hueco del centro
+const ICE = 76 // donde empieza el glaseado
+const FILL = 63 // franja de relleno
+
+const at = (a: number, r: number) => `${(100 + r * Math.sin(a)).toFixed(2)} ${(100 - r * Math.cos(a)).toFixed(2)}`
+
+export function ringPath(start: number, end: number, outer = R, inner = IN) {
+  if (end - start >= Math.PI * 2 - 1e-6) end = start + Math.PI * 2 - 1e-4
+  const large = end - start > Math.PI ? 1 : 0
+  return `M${at(start, outer)} A${outer} ${outer} 0 ${large} 1 ${at(end, outer)} L${at(end, inner)} A${inner} ${inner} 0 ${large} 0 ${at(start, inner)} Z`
+}
+
+// Glaseado: el borde de afuera es la orilla de la torta y el de adentro
+// chorrea en gotas redondas.
+function icingPath(start: number, end: number) {
+  const steps = Math.max(8, Math.ceil((end - start) / 0.02))
+  const drip = (a: number) => ICE - 7 * Math.pow(Math.max(0, Math.sin(a * 11)), 3)
+  const inner = Array.from({ length: steps + 1 }, (_, i) => end - ((end - start) * i) / steps).map((a) => `L${at(a, drip(a))}`)
+  const large = end - start > Math.PI ? 1 : 0
+  return `M${at(start, R)} A${R} ${R} 0 ${large} 1 ${at(end, R)} ${inner.join(" ")} Z`
+}
+
+// Decoraciones repartidas por el glaseado, siempre en el mismo lugar.
+function decorations(t: Topping, start: number, end: number) {
+  if (t.kind === "none") return null
+  const n = Math.max(1, Math.floor((end - start) / 0.17))
+  return Array.from({ length: n }, (_, i) => {
+    const a = start + ((end - start) * (i + 0.5)) / n
+    const r = i % 2 ? 84 : 88
+    const [x, y] = [100 + r * Math.sin(a), 100 - r * Math.cos(a)]
+    const color = t.decor[i % t.decor.length]
+    if (t.kind === "sprinkles") {
+      return <rect key={i} x={x - 3.5} y={y - 1.2} width="7" height="2.4" rx="1.2" fill={color} transform={`rotate(${(i * 67) % 180} ${x} ${y})`} />
+    }
+    if (t.kind === "chips") return <path key={i} d={`M${x - 2.2} ${y + 1.4} q2.2 -4.6 4.4 0 z`} fill={color} />
+    return <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 2.2 : 1.5} fill={color} />
+  })
+}
+
+// Una tajada completa: bizcocho, relleno, glaseado y decoración.
+export function SliceDrawing({ t, start, end }: { t: Topping; start: number; end: number }) {
   return (
-    <radialGradient id={`torta-base-${t.id}`} cx="100" cy="100" r="94" gradientUnits="userSpaceOnUse">
-      <stop offset="0.55" stopColor={t.light} />
-      <stop offset="0.8" stopColor={t.base} />
-      <stop offset="1" stopColor={t.rim} />
-    </radialGradient>
+    <>
+      <path d={ringPath(start, end)} fill={t.cake} className="base" />
+      <path d={ringPath(start, end, FILL + 2.5, FILL - 2.5)} fill={t.filling} />
+      <path d={icingPath(start, end)} fill={t.icing} />
+      {decorations(t, start, end)}
+    </>
   )
 }
 
-export function PiePatterns() {
+// Cereza encima de la tajada que se toca.
+export function Cherry({ angle }: { angle: number }) {
+  const [x, y] = [100 + 86 * Math.sin(angle), 100 - 86 * Math.cos(angle)]
   return (
-    <defs>
-      {[...TOPPINGS, REST_TOPPING].map((t) => <Baked key={t.id} t={t} />)}
-
-      {/* Chispas de chocolate gorditas con su brillo, como la galleta clásica */}
-      <pattern id="torta-decor-chips" width="26" height="26" patternUnits="userSpaceOnUse">
-        <circle cx="6" cy="7" r="3" fill="#5a3220" />
-        <circle cx="5" cy="6" r="0.9" fill="#8a5a3c" />
-        <circle cx="18" cy="15" r="3.4" fill="#5a3220" />
-        <circle cx="17" cy="14" r="1" fill="#8a5a3c" />
-        <circle cx="8" cy="21" r="2.4" fill="#5a3220" />
-      </pattern>
-
-      {/* Glaseado: hilos de crema que caen en zigzag suave */}
-      <pattern id="torta-decor-glaze" width="28" height="18" patternUnits="userSpaceOnUse">
-        <path d="M0 6 q7 -6 14 0 t14 0" fill="none" stroke="#fff6f8" strokeWidth="3" strokeLinecap="round" opacity="0.9" />
-        <circle cx="21" cy="14" r="1.6" fill="#fff6f8" opacity="0.9" />
-        <circle cx="6" cy="15" r="1.1" fill="#c2334f" opacity="0.5" />
-      </pattern>
-
-      {/* Chispitas de colores redonditas, pocas y grandes */}
-      <pattern id="torta-decor-sprinkles" width="24" height="24" patternUnits="userSpaceOnUse">
-        <rect x="3" y="4" width="8" height="3" rx="1.5" fill="#ffd23f" transform="rotate(35 7 5.5)" />
-        <rect x="14" y="9" width="8" height="3" rx="1.5" fill="#fff6f8" transform="rotate(-30 18 10.5)" />
-        <rect x="5" y="16" width="8" height="3" rx="1.5" fill="#f48fb1" transform="rotate(-55 9 17.5)" />
-        <circle cx="19" cy="20" r="1.6" fill="#8fd3b0" />
-      </pattern>
-
-      {/* Lunares de crema con un punto de chocolate */}
-      <pattern id="torta-decor-dots" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="5" cy="5" r="3.2" fill="#fffaf0" />
-        <circle cx="15" cy="15" r="3.2" fill="#fffaf0" />
-        <circle cx="15" cy="5" r="1.3" fill="#5a3220" />
-        <circle cx="5" cy="15" r="1.3" fill="#5a3220" />
-      </pattern>
-
-      {/* Migas sueltas */}
-      <pattern id="torta-decor-crumbs" width="16" height="16" patternUnits="userSpaceOnUse">
-        <circle cx="4" cy="4" r="1.4" fill="#b8925f" />
-        <circle cx="11" cy="9" r="1" fill="#b8925f" />
-        <circle cx="6" cy="13" r="1.2" fill="#c9a77a" />
-      </pattern>
-
-      {/* Sombra de la torta sobre el plato */}
-      <filter id="torta-sombra" x="-10%" y="-10%" width="120%" height="125%">
-        <feDropShadow dx="0" dy="3" stdDeviation="2.5" floodColor="#784e14" floodOpacity="0.22" />
-      </filter>
-    </defs>
+    <g className="cherry">
+      <path d={`M${x} ${y - 4} q2 -7 7 -9`} fill="none" stroke="#4f8a3a" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx={x} cy={y} r="5.6" fill="#d62f4b" />
+      <circle cx={x - 1.8} cy={y - 1.8} r="1.6" fill="#ff9aab" />
+    </g>
   )
 }
