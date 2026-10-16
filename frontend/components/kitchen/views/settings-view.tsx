@@ -23,6 +23,9 @@ export function SettingsView() {
   const st = data.settings
   const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays })
   const [saving, setSaving] = useState(false)
+  // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
+  const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
+  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -102,7 +105,7 @@ export function SettingsView() {
             <p className="small muted" style={{ marginTop: 6 }}>Toca los días que no produces ni entregas.</p>
           </div>
           <div className="save-bar">
-            <button className="btn primary" type="submit" disabled={saving}>{saving ? "Guardando…" : "Guardar cambios"}</button>
+            <button className="btn primary" type="submit" disabled={saving || !dirty}>{saving ? "Guardando…" : dirty ? "Guardar cambios" : "Sin cambios por guardar"}</button>
           </div>
         </form>
 
