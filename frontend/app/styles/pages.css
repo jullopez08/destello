@@ -82,3 +82,12 @@
 .vchart .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; }
 .vchart .sw.best { background: var(--accent-deep); }
 .vchart .sw.avg { height: 0; border-top: 2px dotted var(--ink); border-radius: 0; width: 18px; }
+.pie { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); gap: 16px; align-items: center; margin-top: 12px; }
+.pie svg { width: 100%; height: auto; display: block; }
+.pie-pct { font-size: 13px; font-weight: 800; fill: #3d2417; }
+.pie-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pie-legend li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 0 8px; align-items: center; }
+.pie-legend i { width: 14px; height: 14px; border-radius: 4px; }
+.pie-legend .t { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.pie-legend .small { grid-column: 2 / -1; }
+@media (max-width: 560px) { .pie { grid-template-columns: 1fr; justify-items: center; } .pie svg { max-width: 230px; } .pie-legend { width: 100%; } }

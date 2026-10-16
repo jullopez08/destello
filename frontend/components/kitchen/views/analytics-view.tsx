@@ -6,6 +6,7 @@ import { analytics } from "@/lib/kitchen/analytics"
 import { money } from "@/lib/kitchen/format"
 import { Empty, PageHead } from "../shared"
 import { SellerBars, Stat, Summary, WeekBars, WeekdayBars } from "./analytics-charts"
+import { SellerPie } from "./analytics-pie"
 
 // ── Analítica: cómo van las ventas, qué se vende y qué no deja ganancia ──
 
@@ -51,8 +52,13 @@ export function AnalyticsView() {
         </div>
         <div className="card">
           <h2>¿Qué es lo que más vendes?</h2>
-          <p className="small muted">Las 5 cosas que más plata te dieron en las últimas 8 semanas.</p>
-          {sold.length ? <SellerBars list={sold.slice(0, 5)} /> : <Empty>Todavía no hay ventas.</Empty>}
+          <p className="small muted">Qué parte de la plata vendida en las últimas 8 semanas dejó cada cosa.</p>
+          {sold.length ? <SellerPie list={sold} /> : <Empty>Todavía no hay ventas.</Empty>}
+          {sold.length ? (
+            <p className="conclusion">
+              <b>{sold[0].name}</b> es lo que más vendes: deja el <b>{Math.round(sold[0].share * 100)}&nbsp;%</b> de tu plata.
+            </p>
+          ) : null}
         </div>
         <div className="card">
           <h2>¿Qué casi no se vende?</h2>
