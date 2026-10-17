@@ -56,7 +56,7 @@ export function TodayView() {
         <div className="card">
           <div className="row between">
             <h2>Producción de hoy</h2>
-            <a className="btn ghost sm" href="#produccion">Ver lista completa</a>
+            <a className="btn ghost sm" href="#produccion">Ver lista</a>
           </div>
           {plan.doughRows.length ? (
             <div className="list">

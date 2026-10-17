@@ -29,7 +29,10 @@
 .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(61, 36, 23, 0.15); display: inline-block; }
 
 /* ---------- Páginas legales ---------- */
-.legal { max-width: 820px; margin: 0 auto; padding: 32px 16px 80px; }
+.legal { max-width: 820px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(80px + env(safe-area-inset-bottom, 0px)); }
+/* Arriba: la marca (lleva a la presentación) y "Volver", fijos al bajar: en la app instalada no hay botón atrás. */
+.legal-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; background: var(--bg); border-bottom: 1px solid var(--line); }
+.legal-back svg { width: 16px; height: 16px; }
 .legal h1 { margin: 18px 0 6px; }
 .legal h2 { margin: 28px 0 10px; font-size: 22px; }
 .legal p, .legal li { line-height: 1.7; margin: 0 0 10px; }
@@ -210,3 +213,4 @@
 .home-link { display: inline-block; transition: transform 0.18s ease; transform-origin: left bottom; -webkit-tap-highlight-color: transparent; }
 .home-link:hover, .home-link:focus-visible { transform: scale(1.04) rotate(-1.5deg); }
 .home-link:active { transform: scale(0.96); }
+.legal-top .home-link { display: inline-flex; align-items: center; }
