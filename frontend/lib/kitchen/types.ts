@@ -14,6 +14,8 @@ export interface KitchenSettings {
   targetMargin: number
   palette: string
   logoUrl: string | null
+  /** false: el panel solo muestra los primeros pasos (setup-view) */
+  setupDone: boolean
 }
 
 export interface BankAccount { id: string; bank: string; type: string; number: string; owner: string }
@@ -44,6 +46,8 @@ export interface Supply {
 export interface Purchase { id: string; date: string; supplierId: string | null; lines: { supplyId: string; qty: number; total: number }[] }
 export interface Recipe { id: string; name: string; yieldGrams: number; color: CardColor; items: { supplyId: string; qty: number }[] }
 export interface DoughLot { id: string; recipeId: string; grams: number; left: number; madeOn: string; expiresOn: string }
+/** Masa botada: gramos, lo que costó (pesos) y el día */
+export interface DoughWaste { id: string; recipeId: string; grams: number; cost: number; date: string }
 
 export interface Product {
   id: string
@@ -134,7 +138,9 @@ export interface KitchenSnapshot {
   supplies: Supply[]
   purchases: Purchase[]
   recipes: Recipe[]
+  /** toda la masa guardada, también la vencida (las reglas solo usan la que sirve) */
   lots: DoughLot[]
+  waste: DoughWaste[]
   products: Product[]
   presentations: Presentation[]
   orders: Order[]

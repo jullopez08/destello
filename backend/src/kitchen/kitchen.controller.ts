@@ -63,6 +63,12 @@ export class KitchenController {
     return this.settings.updateSettings(requireOrganization(user), dto);
   }
 
+  @Post('setup/complete')
+  @HttpCode(200)
+  completeSetup(@CurrentUser() user: CurrentUserData) {
+    return this.settings.completeSetup(requireOrganization(user));
+  }
+
   @Post('accounts')
   addAccount(@CurrentUser() user: CurrentUserData, @Body() dto: CreateBankAccountDto) {
     return this.settings.addAccount(requireOrganization(user), dto);
@@ -141,6 +147,12 @@ export class KitchenController {
   @Post('lots')
   createLot(@CurrentUser() user: CurrentUserData, @Body() dto: CreateLotDto) {
     return this.recipeBook.createLot(requireOrganization(user), dto);
+  }
+
+  @Post('lots/:id/discard')
+  @HttpCode(200)
+  discardLot(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.recipeBook.discardLot(requireOrganization(user), id);
   }
 
   @Post('products')

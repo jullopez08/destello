@@ -8,6 +8,7 @@ import type { Order } from "@/lib/kitchen/types"
 import { Empty, Kpi, PageHead, useModal } from "../shared"
 import { OrderForm } from "../forms/order-forms"
 import { VoiceCard, VoiceToggle } from "../voice-listener"
+import { LotAlerts } from "./lot-alerts"
 import { useSession } from "@/lib/session"
 
 function greeting() {
@@ -46,6 +47,7 @@ export function TodayView() {
       <div className="only-mobile" style={{ marginBottom: 14 }}>
         <VoiceCard />
       </div>
+      <LotAlerts />
       <div className="grid g4">
         <Kpi v={todays.length} l="Pedidos para hoy" s={`${pend.length} por producir`} c="c-accent" href="#pedidos" />
         <Kpi v={money(sales)} l="Ventas de hoy" s="Sin contar domicilios" c="c-strawberry" />

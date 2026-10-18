@@ -6,6 +6,7 @@ import { byId, useKitchen } from "@/lib/kitchen/store"
 import { addDays } from "@/lib/kitchen/rules"
 import type { CookieLook, Edition } from "@/lib/kitchen/types"
 import { ColorSeg, Eyebrow, Field, Seg, useModal } from "../shared"
+import { HELP } from "@/lib/kitchen/help"
 
 // ── Edición especial ──
 
@@ -38,14 +39,14 @@ export function EditionForm() {
         close()
       }}
     >
-      <Field label="Nombre"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Día de la madre" required /></Field>
-      <Field label="Descripción"><textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Qué trae y por qué es especial" /></Field>
+      <Field label="Nombre" help={HELP.editionName}><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Día de la madre" required /></Field>
+      <Field label="Descripción" help={HELP.editionDescription}><textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Qué trae y por qué es especial" /></Field>
       <div className="fields">
-        <Field label="Desde"><input type="date" value={startDate} onChange={(e) => setStart(e.target.value)} required /></Field>
-        <Field label="Hasta"><input type="date" value={endDate} onChange={(e) => setEnd(e.target.value)} required /></Field>
+        <Field label="Desde" help={HELP.editionDates}><input type="date" value={startDate} onChange={(e) => setStart(e.target.value)} required /></Field>
+        <Field label="Hasta" help={HELP.editionDates}><input type="date" value={endDate} onChange={(e) => setEnd(e.target.value)} required /></Field>
       </div>
       <div>
-        <Eyebrow>Qué se vende</Eyebrow>
+        <Eyebrow help={HELP.editionSells}>Qué se vende</Eyebrow>
         <div className="seg">
           {data.presentations.map((p) => (
             <label key={p.id}>
@@ -65,11 +66,11 @@ export function EditionForm() {
         </div>
       </div>
       <div>
-        <Eyebrow>Figura</Eyebrow>
+        <Eyebrow help={HELP.productLook}>Figura</Eyebrow>
         <Seg name="look" value={look} onChange={setLook} options={[["star", "Dorada"], ["pump", "Calabaza"], ["", "Clásica"], ["choco", "Chocolate"]]} />
       </div>
       <div>
-        <Eyebrow>Color</Eyebrow>
+        <Eyebrow help={HELP.recipeColor}>Color</Eyebrow>
         <ColorSeg name="color" value={color} onChange={setColor} />
       </div>
     </Modal>

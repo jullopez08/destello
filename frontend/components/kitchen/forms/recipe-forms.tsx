@@ -6,9 +6,11 @@ import { byId, useKitchen } from "@/lib/kitchen/store"
 import { consumedAmount, recipeCostPerGram } from "@/lib/kitchen/rules"
 import { grams, money, qty } from "@/lib/kitchen/format"
 import type { Recipe } from "@/lib/kitchen/types"
-import { ColorSeg, Eyebrow, Field, LinesEditor, toNumber, useModal } from "../shared"
+import { ColorSeg, Eyebrow, Field, HelpTip, LinesEditor, toNumber, useModal } from "../shared"
 import type { QtyRow } from "./supply-rows"
 import { blankQty, SupplySelect, qtyRows } from "./supply-rows"
+import { QuickSupply } from "./quick-supply"
+import { HELP } from "@/lib/kitchen/help"
 
 // ── Receta: ingredientes de una tanda y cuántos gramos de masa rinde ──
 
@@ -21,6 +23,11 @@ export function RecipeForm({ recipe, initialName = "", title, onCreated }: { rec
   const [yieldGrams, setYield] = useState(recipe ? String(recipe.yieldGrams) : "")
   const [color, setColor] = useState<string>(recipe?.color ?? "banana")
   const [rows, setRows] = useState<QtyRow[]>(recipe?.items.map((i) => ({ supplyId: i.supplyId, qty: String(i.qty) })) ?? [blankQty()])
+  // Una cocina nueva no tiene insumos: el ingrediente se crea aquí y queda en la primera línea vacía.
+  const addIngredient = (supplyId: string) => {
+    const i = rows.findIndex((r) => !r.supplyId)
+    setRows(i < 0 ? [...rows, { supplyId, qty: "" }] : rows.map((r, j) => (j === i ? { ...r, supplyId } : r)))
+  }
   const items = qtyRows(rows).filter((i) => i.qty > 0)
   const y = toNumber(yieldGrams)
   const costPerKg = items.length && y > 0 ? money(recipeCostPerGram({ items, yieldGrams: y }, data.supplies) * 1000) + " por kg" : "—"
@@ -48,10 +55,10 @@ export function RecipeForm({ recipe, initialName = "", title, onCreated }: { rec
       }}
     >
       <div className="fields">
-        <Field label="Nombre"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Masa de avena y pasas" required /></Field>
-        <Field label="Rinde (gramos de masa)"><input type="number" min="1" value={yieldGrams} onChange={(e) => setYield(e.target.value)} required /></Field>
+        <Field label="Nombre" help={HELP.recipeName}><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Masa de avena y pasas" required /></Field>
+        <Field label="Rinde (gramos de masa)" help={HELP.recipeYield}><input type="number" min="1" value={yieldGrams} onChange={(e) => setYield(e.target.value)} required /></Field>
       </div>
-      <div className="eyebrow">Ingredientes por tanda (g, ml o und)</div>
+      <div className="eyebrow">Ingredientes por tanda (g, ml o und)<HelpTip text={HELP.recipeItems} /></div>
       <LinesEditor
         rows={rows}
         setRows={setRows}
@@ -65,12 +72,13 @@ export function RecipeForm({ recipe, initialName = "", title, onCreated }: { rec
           </>
         )}
       />
+      <QuickSupply onAdded={(s) => addIngredient(s.id)} />
       <div className="callout c-banana row between">
         <span>Costo de la masa</span>
         <b className="num">{costPerKg}</b>
       </div>
       <div>
-        <Eyebrow>Color</Eyebrow>
+        <Eyebrow help={HELP.recipeColor}>Color</Eyebrow>
         <ColorSeg name="color" value={color} onChange={setColor} />
       </div>
     </Modal>
@@ -103,15 +111,15 @@ export function LotForm({ recipeId }: { recipeId?: string }) {
       }}
     >
       <div className="fields">
-        <Field label="Receta">
+        <Field label="Receta" help={HELP.lotRecipe}>
           <select value={rid} onChange={(e) => setRid(e.target.value)}>
             {list.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </Field>
-        <Field label="Tandas" hint={recipe ? `1 tanda = la receta completa una vez = ${grams(recipe.yieldGrams)}. Media tanda: 0,5.` : "1 tanda = la receta completa una vez."}>
+        <Field label="Tandas" help={HELP.lotBatches} hint={recipe ? `1 tanda = la receta completa una vez = ${grams(recipe.yieldGrams)}. Media tanda: 0,5.` : "1 tanda = la receta completa una vez."}>
           <input type="number" min="0.25" step="0.25" value={batches} onChange={(e) => setBatches(e.target.value)} />
         </Field>
-        <Field label="Días que dura"><input type="number" min="1" value={days} onChange={(e) => setDays(e.target.value)} /></Field>
+        <Field label="Días que dura" help={HELP.lotDays}><input type="number" min="1" value={days} onChange={(e) => setDays(e.target.value)} /></Field>
       </div>
       {recipe ? (
         <div>

@@ -25,6 +25,7 @@ import { ProductsView } from "./views/products-view"
 import { EditionsView } from "./views/editions-view"
 import { AnalyticsView } from "./views/analytics-view"
 import { SettingsView } from "./views/settings-view"
+import { SetupView } from "./views/setup-view"
 
 // Navegación por #hash, como el diseño: cada sección tiene su enlace.
 function subscribeHash(cb: () => void) {
@@ -99,6 +100,15 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
     window.addEventListener("hashchange", onHash)
     return () => window.removeEventListener("hashchange", onHash)
   }, [])
+
+  // Negocio nuevo: primero los primeros pasos, sin menú ni otras secciones.
+  if (!data.settings.setupDone) {
+    return (
+      <Shell page="hoy" locked cutoff={data.settings.orderCutoff} today={data.today}>
+        <SetupView />
+      </Shell>
+    )
+  }
 
   const view = {
     hoy: <TodayView />,

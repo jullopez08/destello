@@ -7,45 +7,20 @@ import { api, errorMessage } from "@/lib/api"
 import { useSession } from "@/lib/session"
 import { PALETTES } from "@/lib/palettes"
 import { useKitchen } from "@/lib/kitchen/store"
-import { DAYS, initials, phoneInput } from "@/lib/kitchen/format"
-import { Eyebrow, Field, PageHead } from "../shared"
+import { initials } from "@/lib/kitchen/format"
+import { Eyebrow, PageHead } from "../shared"
+import { BusinessForm } from "../forms/business-form"
 import { AccountsCard, CouriersCard, MyAccountCard, WhatsappCard } from "./settings-lists"
-
-// Lunes primero, como se lee la semana; DAYS empieza en domingo (getDay).
-const WEEK = [1, 2, 3, 4, 5, 6, 0]
 
 // ── Configuración ──
 
 export function SettingsView() {
-  const { data, mutate, act } = useKitchen()
+  const { data, act } = useKitchen()
   const { user, setUser } = useSession()
   const toast = useToast()
   const st = data.settings
-  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays })
-  const [saving, setSaving] = useState(false)
-  // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
-  const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
-  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-
-  async function saveBusiness(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    try {
-      await mutate(
-        "/settings",
-        "PATCH",
-        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)) },
-        "Configuración guardada",
-      )
-      setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name }))
-    } catch (err) {
-      toast(errorMessage(err), true)
-    } finally {
-      setSaving(false)
-    }
-  }
 
   async function branding(patch: { palette?: string; logoUrl?: string | null }) {
     try {
@@ -77,37 +52,10 @@ export function SettingsView() {
     <>
       <PageHead title="Configuración" sub="Los datos de tu negocio, cómo se ve tu panel y tu cuenta." />
       <div className="grid g2 settings">
-        <form className="card stack" onSubmit={saveBusiness}>
+        <div className="card stack">
           <h2 style={{ margin: 0 }}>El negocio</h2>
-          <div className="fields">
-            <Field label="Nombre"><input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required /></Field>
-            <Field label="WhatsApp del negocio"><input value={f.whatsapp} onChange={(e) => setF({ ...f, whatsapp: phoneInput(e.target.value) })} inputMode="tel" placeholder="300 000 0000" /></Field>
-            <Field label="Hora de corte de pedidos" hint="Después de esta hora, el pedido pasa al siguiente día.">
-              <input type="time" value={f.orderCutoff} onChange={(e) => setF({ ...f, orderCutoff: e.target.value })} required />
-            </Field>
-            <Field label="Margen que buscas (%)"><input type="number" min="5" max="90" value={f.targetMargin} onChange={(e) => setF({ ...f, targetMargin: e.target.value })} required /></Field>
-          </div>
-          <div>
-            <Eyebrow>Días cerrados</Eyebrow>
-            <div className="days" role="group" aria-label="Días cerrados">
-              {WEEK.map((i) => (
-                <label key={i} title={DAYS[i]}>
-                  <input
-                    type="checkbox"
-                    checked={f.closedDays.includes(i)}
-                    onChange={(e) => setF({ ...f, closedDays: e.target.checked ? [...f.closedDays, i] : f.closedDays.filter((x) => x !== i) })}
-                    aria-label={DAYS[i]}
-                  />
-                  <span>{DAYS[i].slice(0, 3)}</span>
-                </label>
-              ))}
-            </div>
-            <p className="small muted" style={{ marginTop: 6 }}>Toca los días que no produces ni entregas.</p>
-          </div>
-          <div className="save-bar">
-            <button className="btn primary" type="submit" disabled={saving || !dirty}>{saving ? "Guardando…" : dirty ? "Guardar cambios" : "Sin cambios por guardar"}</button>
-          </div>
-        </form>
+          <BusinessForm />
+        </div>
 
         <AccountsCard />
         <CouriersCard />

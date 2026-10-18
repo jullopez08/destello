@@ -7,10 +7,11 @@ import { Icon } from "@/components/ui/icon"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { unitOf } from "@/lib/kitchen/format"
 import type { CookieLook, Product } from "@/lib/kitchen/types"
-import { Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
+import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import { RecipePicker } from "./recipe-picker"
 import { RecipeForm } from "./recipe-forms"
 import { QuickSupply } from "./quick-supply"
+import { HELP } from "@/lib/kitchen/help"
 
 // Extra por unidad: un insumo («s:id», relleno comprado, capacillo) o una
 // receta propia («r:id», relleno hecho, en gramos).
@@ -61,17 +62,17 @@ export function ProductForm({ product }: { product?: Product }) {
         close()
       }}
     >
-      <Field label="Nombre"><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Galleta de avena" required /></Field>
+      <Field label="Nombre" help={HELP.productName}><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Galleta de avena" required /></Field>
       <div>
-        <Eyebrow>Cómo se produce</Eyebrow>
+        <Eyebrow help={HELP.productMode}>Cómo se produce</Eyebrow>
         <Seg name="mode" value={mode} onChange={setMode} options={[["LOT", "Con lote de masa"], ["ON_DEMAND", "Solo sobre pedido"]]} />
       </div>
       <div>
-        <Eyebrow>Masa</Eyebrow>
+        <Eyebrow help={HELP.productRecipe}>Masa</Eyebrow>
         <RecipePicker value={recipeId} onChange={setRecipeId} />
       </div>
-      <Field label="Gramos de masa por unidad" hint="Solo para la cocina. El cliente no lo ve."><input type="number" min="1" value={g} onChange={(e) => setG(e.target.value)} required /></Field>
-      <div className="eyebrow">Rellenos y extras por unidad, opcional</div>
+      <Field label="Gramos de masa por unidad" help={HELP.productGrams} hint="Solo para la cocina. El cliente no lo ve."><input type="number" min="1" value={g} onChange={(e) => setG(e.target.value)} required /></Field>
+      <div className="eyebrow">Rellenos y extras por unidad, opcional<HelpTip text={HELP.productExtras} /></div>
       <div className="small muted">Relleno comprado o capacillo: un insumo. Relleno que preparas tú (arequipe, ganache): su receta, en gramos.</div>
       <LinesEditor
         rows={extras}
@@ -107,7 +108,7 @@ export function ProductForm({ product }: { product?: Product }) {
       </div>
       <QuickSupply onAdded={(s) => addExtra(`s:${s.id}`)} />
       <div>
-        <Eyebrow>Figura</Eyebrow>
+        <Eyebrow help={HELP.productLook}>Figura</Eyebrow>
         <div className="seg">
           {LOOKS.map(([k, t]) => (
             <label key={k || "classic"}>

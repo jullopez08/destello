@@ -8,6 +8,7 @@ import { Empty, PageHead } from "../shared"
 import { Stat, Summary, WeekdayBars } from "./analytics-charts"
 import { WeekLine } from "./analytics-line"
 import { SellerPie } from "./analytics-pie"
+import { DoughCards } from "./analytics-dough"
 
 // ── Analítica: cómo van las ventas, qué se vende y qué no deja ganancia ──
 
@@ -108,6 +109,7 @@ export function AnalyticsView() {
           )}
           <p className="small muted" style={{ marginTop: 10 }}>El precio sugerido busca que te quede el {data.settings.targetMargin} % de lo que cobras. Lo cambias en Configuración.</p>
         </div>
+        <DoughCards least={least} />
       </div>
     </>
   )

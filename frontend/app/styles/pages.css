@@ -214,3 +214,19 @@
 .home-link:hover, .home-link:focus-visible { transform: scale(1.04) rotate(-1.5deg); }
 .home-link:active { transform: scale(0.96); }
 .legal-top .home-link { display: inline-flex; align-items: center; }
+
+/* Primeros pasos (setup-view.tsx) */
+.setup-progress { margin-bottom: 16px; }
+.setup-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.setup-num { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink-2); background: var(--surface); font-weight: 800; }
+.setup-step.done .setup-num { background: var(--mint); border-color: transparent; }
+.setup-finish { margin-top: 18px; }
+.setup-finish .btn { min-width: 220px; }
+
+/* Avisos de masa en Hoy (lot-alerts.tsx) */
+.lot-alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.lot-alert { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.lot-alert > span { flex: 1 1 220px; min-width: 0; }
+/* Analítica de la masa (analytics-dough.tsx) */
+.dough-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.dough-pending { display: inline-flex; margin-top: 14px; }

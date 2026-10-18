@@ -31,7 +31,7 @@ export class KitchenSnapshotService {
     const today = toIsoDate(new Date());
     const since = addDays(today, -70);
 
-    const [organization, accounts, couriers, suppliers, supplies, purchases, recipes, lots, products, presentations, orders, editions, checks] =
+    const [organization, accounts, couriers, suppliers, supplies, purchases, recipes, lots, waste, products, presentations, orders, editions, checks] =
       await Promise.all([
         db.organization.findUnique({ where: { id: organizationId } }),
         db.bankAccount.findMany({ where: { organizationId }, orderBy: { createdAt: 'asc' } }),
@@ -41,6 +41,7 @@ export class KitchenSnapshotService {
         db.purchase.findMany({ where: { organizationId }, include: { lines: true }, orderBy: [{ date: 'desc' }, { createdAt: 'desc' }] }),
         db.recipe.findMany({ where: { organizationId }, include: { items: true }, orderBy: { createdAt: 'asc' } }),
         db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 } }, orderBy: { expiresOn: 'asc' } }),
+        db.doughWaste.findMany({ where: { organizationId, date: { gte: since } }, orderBy: { date: 'desc' } }),
         db.product.findMany({ where: { organizationId }, include: { extras: true }, orderBy: { createdAt: 'asc' } }),
         db.presentation.findMany({ where: { organizationId }, include: PRESENTATION_INCLUDE, orderBy: { createdAt: 'asc' } }),
         db.order.findMany({
@@ -73,6 +74,8 @@ export class KitchenSnapshotService {
         targetMargin: organization.targetMargin,
         palette: organization.palette,
         logoUrl: organization.logoUrl,
+        /** false: el panel solo muestra los primeros pasos */
+        setupDone: organization.setupCompletedAt !== null,
       },
       accounts: accounts.map(({ id, bank, type, number, owner }) => ({ id, bank, type, number, owner })),
       couriers: couriers.map(({ id, name, phone, position }) => ({ id, name, phone, position })),
@@ -92,6 +95,8 @@ export class KitchenSnapshotService {
         items: r.items.map(({ supplyId, qty }) => ({ supplyId, qty })),
       })),
       lots: lots.map(({ id, recipeId, grams, left, madeOn, expiresOn }) => ({ id, recipeId, grams, left, madeOn, expiresOn })),
+      /** Masa botada en los últimos 70 días (Analítica) */
+      waste: waste.map(({ id, recipeId, grams, cost, date }) => ({ id, recipeId, grams, cost, date })),
       products: products.map((p) => ({
         id: p.id,
         name: p.name,
@@ -151,11 +156,13 @@ export class KitchenSnapshotService {
 
   // Lo que necesitan las reglas (sin pedidos ni proveedores), leído dentro de
   // la misma transacción que va a descontar inventario.
+  // La masa vencida no entra: no se cuenta ni se gasta (usableLots).
   async ruleData(organizationId: string, db: Db): Promise<KitchenRuleData> {
+    const today = toIsoDate(new Date());
     const [supplies, recipes, lots, products, presentations] = await Promise.all([
       db.supply.findMany({ where: { organizationId } }),
       db.recipe.findMany({ where: { organizationId }, include: { items: true } }),
-      db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 } }, orderBy: { expiresOn: 'asc' } }),
+      db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 }, expiresOn: { gt: today } }, orderBy: { expiresOn: 'asc' } }),
       db.product.findMany({ where: { organizationId }, include: { extras: true } }),
       db.presentation.findMany({ where: { organizationId }, include: PRESENTATION_INCLUDE }),
     ]);

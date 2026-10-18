@@ -2,10 +2,12 @@
 
 import { Icon } from "@/components/ui/icon"
 import { byId, useKitchen } from "@/lib/kitchen/store"
-import { recipeCostPerGram, addDays } from "@/lib/kitchen/rules"
+import { recipeCostPerGram } from "@/lib/kitchen/rules"
+import { lotState } from "@/lib/kitchen/lots"
 import { dateLabel, grams, money, qty } from "@/lib/kitchen/format"
 import { Empty, PageHead, useModal } from "../shared"
 import { LotForm, RecipeForm } from "../forms/recipe-forms"
+import { DiscardLotForm } from "./lot-alerts"
 
 // ── Recetas y masas ──
 
@@ -32,12 +34,12 @@ export function RecipesView() {
         <div className="grid g3" style={{ marginBottom: 26 }}>
           {lots.map((l) => {
             const r = byId(data.recipes, l.recipeId)
-            const soon = l.expiresOn <= addDays(data.today, 1)
+            const st = lotState(l, data.today)
             return (
               <div className="card" key={l.id}>
                 <div className="row between">
                   <b>{r?.name}</b>
-                  {soon ? <span className="chip warn">Usar pronto</span> : <span className="chip good">Fresca</span>}
+                  <span className={`chip ${st.expired ? "bad" : st.warn ? "warn" : "good"}`}>{st.label}</span>
                 </div>
                 <div className="kpi" style={{ marginTop: 10 }}>
                   <span className="v">{grams(l.left)}</span>
@@ -47,6 +49,13 @@ export function RecipesView() {
                 </div>
                 <div className="bar" style={{ marginTop: 10 }}>
                   <span style={{ width: `${(l.left / l.grams) * 100}%` }} />
+                </div>
+                {st.expired ? <p className="small" style={{ margin: "10px 0 0" }}>Ya no se cuenta en la producción. Bótala para sacarla de la masa guardada.</p> : null}
+                <div className="row" style={{ marginTop: 10, justifyContent: "flex-end" }}>
+                  <button type="button" className={`btn ${st.expired ? "soft" : "ghost"} sm`} onClick={() => open(<DiscardLotForm lot={l} />)}>
+                    <Icon name="trash" />
+                    Botar masa
+                  </button>
                 </div>
               </div>
             )

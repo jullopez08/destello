@@ -5,8 +5,9 @@ import { Modal, FormError } from "@/components/ui/modal"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { bigUnitOf, money, unitOf } from "@/lib/kitchen/format"
 import type { SupplyKind } from "@/lib/kitchen/rules"
-import { Field, LinesEditor, toNumber, useModal } from "../shared"
+import { Field, HelpTip, LinesEditor, toNumber, useModal } from "../shared"
 import { QuickSupply } from "./quick-supply"
+import { HELP } from "@/lib/kitchen/help"
 
 // ── Compra: sube la existencia y recalcula el costo promedio ──
 
@@ -46,15 +47,15 @@ export function PurchaseForm() {
       }}
     >
       <div className="fields">
-        <Field label="Proveedor">
+        <Field label="Proveedor" help={HELP.purchaseSupplier}>
           <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} required>
             <option value="">Elige un proveedor</option>
             {data.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </Field>
-        <Field label="Fecha"><input type="date" value={date} max={data.today} onChange={(e) => setDate(e.target.value)} required /></Field>
+        <Field label="Fecha" help={HELP.purchaseDate}><input type="date" value={date} max={data.today} onChange={(e) => setDate(e.target.value)} required /></Field>
       </div>
-      <div className="eyebrow">Insumos comprados</div>
+      <div className="eyebrow">Insumos comprados<HelpTip text={HELP.purchaseLines} /></div>
       <LinesEditor
         rows={rows}
         setRows={setRows}

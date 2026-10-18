@@ -6,8 +6,9 @@ import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/k
 import { linePrice, productionPlan } from "@/lib/kitchen/rules"
 import { dateLabel, longDate, money, phoneInput } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
-import { Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
+import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import { blankOrderRow, OrderRowPicker, type OrderRow } from "./order-row"
+import { HELP } from "@/lib/kitchen/help"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
 
@@ -75,10 +76,10 @@ export function OrderForm() {
       }}
     >
       <div className="fields">
-        <Field label="Cliente"><input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nombre" required /></Field>
-        <Field label="WhatsApp"><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" /></Field>
+        <Field label="Cliente" help={HELP.orderCustomer}><input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nombre" required /></Field>
+        <Field label="WhatsApp" help={HELP.orderPhone}><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" /></Field>
       </div>
-      <div className="eyebrow">Qué pidió</div>
+      <div className="eyebrow">Qué pidió<HelpTip text={HELP.orderLines} /></div>
       <LinesEditor
         rows={rows}
         setRows={setRows}
@@ -89,18 +90,18 @@ export function OrderForm() {
       />
       <div className="fields">
         <div>
-          <Eyebrow>Entrega</Eyebrow>
+          <Eyebrow help={HELP.orderDelivery}>Entrega</Eyebrow>
           <Seg name="delivery" value={delivery} onChange={setDelivery} options={[["DELIVERY", "Domicilio"], ["PICKUP", "Recoge en cocina"]]} />
         </div>
         <div>
-          <Eyebrow>Pago</Eyebrow>
+          <Eyebrow help={HELP.orderPayment}>Pago</Eyebrow>
           <Seg name="payment" value={payment} onChange={setPayment} options={[["TRANSFER", "Transferencia"], ["CASH", "Efectivo"]]} />
         </div>
       </div>
       {dom ? (
         <div className="fields">
-          <Field label="Dirección"><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle, número, apto" /></Field>
-          <Field label="Domicilio cotizado ($)"><input type="number" min="0" step="500" value={fee} onChange={(e) => setFee(e.target.value)} /></Field>
+          <Field label="Dirección" help={HELP.orderAddress}><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle, número, apto" /></Field>
+          <Field label="Domicilio cotizado ($)" help={HELP.orderFee}><input type="number" min="0" step="500" value={fee} onChange={(e) => setFee(e.target.value)} /></Field>
         </div>
       ) : null}
       {lines.length ? (

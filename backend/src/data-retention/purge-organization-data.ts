@@ -26,6 +26,7 @@ export async function purgeOrganizationData(
   await tx.productExtra.deleteMany({ where: { product: { organizationId } } });
   await tx.product.deleteMany({ where: { organizationId } });
   await tx.doughLot.deleteMany({ where: { organizationId } });
+  await tx.doughWaste.deleteMany({ where: { organizationId } });
   await tx.recipeItem.deleteMany({ where: { recipe: { organizationId } } });
   await tx.recipe.deleteMany({ where: { organizationId } });
   await tx.purchaseLine.deleteMany({ where: { purchase: { organizationId } } });
