@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
+import { LegalBack } from "./legal-back"
 
 // Datos de la titular (persona natural; no es una empresa).
 export const OWNER = {
@@ -15,10 +16,13 @@ export const LEGAL_UPDATED = "2026-10-11"
 export function LegalPage({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="legal">
-      <Link href="/access" className="row" style={{ textDecoration: "none", gap: 10 }}>
-        <Cookie size={34} />
-        <b style={{ fontFamily: "var(--display)", fontSize: 24, fontWeight: 400 }}>Destello</b>
-      </Link>
+      <div className="legal-top">
+        <Link href="/" className="row home-link" style={{ textDecoration: "none", gap: 10 }} title="Ir a la página de Destello">
+          <Cookie size={34} />
+          <b style={{ fontFamily: "var(--display)", fontSize: 24, fontWeight: 400 }}>Destello</b>
+        </Link>
+        <LegalBack />
+      </div>
       <h1>{title}</h1>
       <p className="small muted">
         Última actualización:{" "}

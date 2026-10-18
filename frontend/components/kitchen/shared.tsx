@@ -113,20 +113,49 @@ export function Seg<T extends string>({ value, options, onChange, name, column }
   )
 }
 
-export function Field({ label, hint, children }: { label: React.ReactNode; hint?: string; children: React.ReactNode }) {
+/**
+ * "?" al lado del nombre de un campo: al tocarlo se abre debajo qué es y para qué sirve
+ * (textos en lib/kitchen/help.ts). Va dentro del <label>, así que no enfoca el campo.
+ */
+export function HelpTip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button"
+        className="help-btn"
+        aria-label="¿Qué es esto?"
+        aria-expanded={open}
+        onClick={(e) => {
+          e.preventDefault()
+          setOpen(!open)
+        }}
+      >
+        ?
+      </button>
+      {open ? <span className="help-tip" role="note">{text}</span> : null}
+    </>
+  )
+}
+
+export function Field({ label, hint, help, children }: { label: React.ReactNode; hint?: string; help?: string; children: React.ReactNode }) {
   return (
     <label className="f">
-      {label}
+      <span className="f-label">
+        {label}
+        {help ? <HelpTip text={help} /> : null}
+      </span>
       {children}
       {hint ? <span className="h">{hint}</span> : null}
     </label>
   )
 }
 
-export function Eyebrow({ children }: { children: React.ReactNode }) {
+export function Eyebrow({ children, help }: { children: React.ReactNode; help?: string }) {
   return (
     <div className="eyebrow" style={{ marginBottom: 6 }}>
       {children}
+      {help ? <HelpTip text={help} /> : null}
     </div>
   )
 }

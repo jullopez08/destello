@@ -7,8 +7,9 @@ import { averageCostAfterPurchase, toIsoDate } from './kitchen-rules';
 import { CreatePurchaseDto, SupplierDto, SupplyDto } from './dto/kitchen.dto';
 
 // Proveedores, insumos y compras de la empresa de la sesión.
-// Un empaque (caja, bolsa, sticker) siempre se cuenta por unidad.
-function assertPackagingByUnit(dto: SupplyDto) {
+// Un empaque (caja, bolsa, sticker) siempre se cuenta por unidad. Un ingrediente
+// puede ir por peso, volumen o unidad (los huevos se compran y se usan por unidad).
+export function assertPackagingByUnit(dto: Pick<SupplyDto, 'category' | 'kind'>) {
   if (dto.category === 'PACKAGING' && dto.kind !== 'UNIT') {
     throw new BadRequestException('Un empaque se cuenta por unidad.');
   }

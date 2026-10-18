@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { CreateBankAccountDto, CreateCourierDto, UpdateKitchenSettingsDto } from './dto/kitchen.dto';
+import { setupMissing } from './kitchen-setup';
 
 // Mismo valor que BREB_TYPE en frontend/components/kitchen/forms/settings-forms.tsx
 export const BREB_TYPE = 'Llave Bre-B';
@@ -23,6 +24,22 @@ export class KitchenSettingsService {
         ...(dto.whatsapp !== undefined ? { whatsapp: dto.whatsapp.trim() || null } : {}),
       },
     });
+    return this.snapshot.load(organizationId);
+  }
+
+  // Cierra los primeros pasos: solo si de verdad están los cuatro (no basta con que el panel lo diga).
+  async completeSetup(organizationId: string) {
+    const [organization, recipes, brebKeys, couriers] = await Promise.all([
+      this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { whatsapp: true, setupCompletedAt: true } }),
+      this.prisma.recipe.count({ where: { organizationId } }),
+      this.prisma.bankAccount.count({ where: { organizationId, type: BREB_TYPE } }),
+      this.prisma.courier.count({ where: { organizationId } }),
+    ]);
+    const missing = setupMissing({ whatsapp: organization.whatsapp, recipes, brebKeys, couriers });
+    if (missing.length) throw new BadRequestException(`Te falta ${missing.join(', ')}.`);
+    if (!organization.setupCompletedAt) {
+      await this.prisma.organization.update({ where: { id: organizationId }, data: { setupCompletedAt: new Date() } });
+    }
     return this.snapshot.load(organizationId);
   }
 

@@ -10,6 +10,7 @@ import type { Supplier, Supply } from "@/lib/kitchen/types"
 import { ColorSeg, Eyebrow, Field, Seg, toNumber, useModal } from "../shared"
 import { ConfirmForm } from "./confirm-form"
 import { SupplyPicker } from "./supply-picker"
+import { HELP } from "@/lib/kitchen/help"
 
 // ── Proveedor ──
 
@@ -42,19 +43,19 @@ export function SupplierForm({ supplier }: { supplier?: Supplier }) {
       }}
     >
       <div className="fields">
-        <Field label="Nombre del proveedor"><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Harinas El Trigal" required /></Field>
-        <Field label="Persona de contacto"><input value={f.contact} onChange={(e) => set({ contact: e.target.value })} placeholder="Ej. Marta López" /></Field>
-        <Field label="Teléfono o WhatsApp"><input value={f.phone} onChange={(e) => set({ phone: phoneInput(e.target.value) })} inputMode="tel" placeholder="300 000 0000" /></Field>
-        <Field label="Correo"><input type="email" value={f.email} onChange={(e) => set({ email: e.target.value })} placeholder="ventas@proveedor.co" /></Field>
+        <Field label="Nombre del proveedor" help={HELP.supplierName}><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Harinas El Trigal" required /></Field>
+        <Field label="Persona de contacto" help={HELP.supplierContact}><input value={f.contact} onChange={(e) => set({ contact: e.target.value })} placeholder="Ej. Marta López" /></Field>
+        <Field label="Teléfono o WhatsApp" help={HELP.supplierPhone}><input value={f.phone} onChange={(e) => set({ phone: phoneInput(e.target.value) })} inputMode="tel" placeholder="300 000 0000" /></Field>
+        <Field label="Correo" help={HELP.supplierEmail}><input type="email" value={f.email} onChange={(e) => set({ email: e.target.value })} placeholder="ventas@proveedor.co" /></Field>
       </div>
-      <Field label="Dirección"><input value={f.address} onChange={(e) => set({ address: e.target.value })} /></Field>
+      <Field label="Dirección" help={HELP.supplierAddress}><input value={f.address} onChange={(e) => set({ address: e.target.value })} /></Field>
       <div>
-        <Eyebrow>Qué le compras</Eyebrow>
+        <Eyebrow help={HELP.supplierSells}>Qué le compras</Eyebrow>
         <SupplyPicker value={sells} onChange={setSells} supplierId={supplier?.id} supplierName={f.name.trim() || undefined} />
       </div>
-      <Field label="Notas"><textarea value={f.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Días de entrega, pedido mínimo, descuentos…" /></Field>
+      <Field label="Notas" help={HELP.supplierNotes}><textarea value={f.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Días de entrega, pedido mínimo, descuentos…" /></Field>
       <div>
-        <Eyebrow>Color de la tarjeta</Eyebrow>
+        <Eyebrow help={HELP.supplierColor}>Color de la tarjeta</Eyebrow>
         <ColorSeg name="color" value={f.color} onChange={(color) => set({ color: color as Supplier["color"] })} />
       </div>
     </Modal>
@@ -109,27 +110,27 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
         close()
       }}
     >
-      <Field label="Nombre"><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Nueces picadas" required /></Field>
+      <Field label="Nombre" help={HELP.supplyName}><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Nueces picadas" required /></Field>
       <div>
-        <Eyebrow>Tipo</Eyebrow>
+        <Eyebrow help={HELP.supplyCategory}>Tipo</Eyebrow>
         <Seg name="category" value={f.category} onChange={pickCategory} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
       </div>
       {f.category === "PACKAGING" ? (
         <p className="small muted">Los empaques se cuentan por unidad.</p>
       ) : (
         <div>
-          <Eyebrow>Cómo se mide</Eyebrow>
+          <Eyebrow help={HELP.supplyKind}>Cómo se mide</Eyebrow>
           <Seg name="kind" value={f.kind} onChange={(kind) => set({ kind })} options={[["MASS", "Por peso"], ["VOLUME", "Por volumen"], ["UNIT", "Por unidad"]]} />
         </div>
       )}
       <div className="fields">
-        <Field label={`Lo que tienes ahora (${u})`} hint="Antes de esta compra. Si no tienes nada, déjalo en 0.">
+        <Field label={`Lo que tienes ahora (${u})`} help={HELP.supplyStock} hint="Antes de esta compra. Si no tienes nada, déjalo en 0.">
           <input type="number" min="0" step="any" value={f.stock} onChange={(e) => set({ stock: e.target.value })} placeholder={`0 ${u}`} />
         </Field>
-        <Field label={`Mínimo para alertar (${u})`} hint="Cuando baje de aquí, Destello te avisa.">
+        <Field label={`Mínimo para alertar (${u})`} help={HELP.supplyMin} hint="Cuando baje de aquí, Destello te avisa.">
           <input type="number" min="0" step="any" value={f.min} onChange={(e) => set({ min: e.target.value })} placeholder={`0 ${u}`} />
         </Field>
-        <Field label="Proveedor">
+        <Field label="Proveedor" help={HELP.supplySupplier}>
           <select value={f.supplierId} onChange={(e) => set({ supplierId: e.target.value })}>
             <option value="">Sin proveedor</option>
             {data.suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -139,8 +140,8 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
       <div>
         <Eyebrow>Precio de compra</Eyebrow>
         <div className="fields">
-          <Field label="Cuánto pagaste en total ($)"><input type="number" min="0" step="100" value={f.paid} onChange={(e) => set({ paid: e.target.value })} placeholder="Ej. 12000" /></Field>
-          <Field label={`Cantidad total que compraste (${u})`}><input type="number" min="0" step="any" value={f.paidQty} onChange={(e) => set({ paidQty: e.target.value })} placeholder={f.kind === "UNIT" ? "Ej. 50" : "Ej. 3"} /></Field>
+          <Field label="Cuánto pagaste en total ($)" help={HELP.supplyPaid}><input type="number" min="0" step="100" value={f.paid} onChange={(e) => set({ paid: e.target.value })} placeholder="Ej. 12000" /></Field>
+          <Field label={`Cantidad total que compraste (${u})`} help={HELP.supplyPaidQty}><input type="number" min="0" step="any" value={f.paidQty} onChange={(e) => set({ paidQty: e.target.value })} placeholder={f.kind === "UNIT" ? "Ej. 50" : "Ej. 3"} /></Field>
         </div>
         <p className="small muted" style={{ marginTop: 6 }}>
           {perBig !== null ? `Sale a ${money(perBig)} por ${PER[f.kind]}. Las compras lo van ajustando solas.` : "Si no lo sabes, déjalo vacío: la primera compra lo llena."}

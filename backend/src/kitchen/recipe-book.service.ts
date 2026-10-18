@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { assertSupplies, own } from './ownership';
-import { addDays, consumedAmount, toIsoDate } from './kitchen-rules';
+import { addDays, consumedAmount, recipeCostPerGram, toIsoDate } from './kitchen-rules';
 import { CreateLotDto, ProductDto, RecipeDto } from './dto/kitchen.dto';
 
 // Recetas, lotes de masa y productos de la empresa de la sesión
@@ -76,6 +76,21 @@ export class RecipeBookService {
       await tx.doughLot.create({
         data: { organizationId, recipeId: recipe.id, grams, left: grams, madeOn: today, expiresOn: addDays(today, dto.days) },
       });
+    });
+    return this.snapshot.load(organizationId);
+  }
+
+  // Botar masa (vencida o dañada): sale de la masa guardada y queda como pérdida
+  // en Analítica, con lo que costó según el costo de hoy de los insumos.
+  async discardLot(organizationId: string, id: string) {
+    await this.prisma.$transaction(async (tx) => {
+      const lot = await own(tx.doughLot.findUnique({ where: { id }, include: { recipe: { include: { items: true } } } }), organizationId, 'Masa no encontrada.');
+      const supplies = await tx.supply.findMany({ where: { organizationId } });
+      const cost = Math.round(recipeCostPerGram(lot.recipe, supplies) * lot.left);
+      await tx.doughWaste.create({
+        data: { organizationId, recipeId: lot.recipeId, grams: lot.left, cost, date: toIsoDate(new Date()), expiresOn: lot.expiresOn },
+      });
+      await tx.doughLot.delete({ where: { id } });
     });
     return this.snapshot.load(organizationId);
   }

@@ -33,6 +33,9 @@ model Organization {
   /// Margen que busca la dueña (%), para el precio sugerido
   targetMargin    Int     @default(50)
   nextOrderNumber Int     @default(1001)
+  /// Cuándo terminó los primeros pasos (negocio, receta, llave Bre-B y repartidor).
+  /// Mientras sea null, el panel solo muestra los primeros pasos.
+  setupCompletedAt DateTime?
 
   /// Cuándo se borran todos los datos de la empresa (6 meses después de quedar inactiva).
   /// Lo fija y lo limpia DataRetentionCron cada día.
@@ -51,6 +54,7 @@ model Organization {
   purchases        Purchase[]
   recipes          Recipe[]
   doughLots        DoughLot[]
+  doughWaste       DoughWaste[]
   products         Product[]
   presentations    Presentation[]
   orders           Order[]
@@ -302,6 +306,7 @@ model Recipe {
   organization Organization @relation(fields: [organizationId], references: [id])
   items        RecipeItem[]
   lots         DoughLot[]
+  waste        DoughWaste[]
   products     Product[]
   extras       ProductExtra[]
 
@@ -334,6 +339,26 @@ model DoughLot {
   recipe       Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+}
+
+/// Masa botada (vencida o dañada): lo que se perdió, para Analítica.
+model DoughWaste {
+  id             String   @id @default(cuid())
+  organizationId String
+  recipeId       String
+  grams          Float
+  /// Lo que costó esa masa, en pesos, con el costo de los insumos al botarla
+  cost           Int
+  /// AAAA-MM-DD en que se botó
+  date           String
+  /// AAAA-MM-DD en que vencía (si se botó antes, es más adelante que date)
+  expiresOn      String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  recipe       Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, date])
 }
 
 enum ProductionMode {

@@ -78,6 +78,12 @@ tr.click:hover td { background: var(--bg); }
 .list .it:first-child { border-top: 0; padding-top: 0; }
 .list .it > div { min-width: 0; }
 .empty { padding: 28px; text-align: center; color: var(--ink-2); border: 2px dashed var(--line); border-radius: 18px; }
+/* Dentro de una tarjeta, "no hay nada" es una línea suave, no un recuadro grande. */
+.card .empty { padding: 12px 14px; font-size: 14px; border: 0; border-radius: 14px; background: var(--bg); }
+/* Encabezado de tarjeta (título + botón): en una sola fila y con aire antes del contenido. */
+.card > .row.between:first-child { flex-wrap: nowrap; margin-bottom: 12px; }
+.card > .row.between:first-child > h2 { margin: 0; min-width: 0; }
+.card > .row.between:first-child > .btn { flex: none; }
 
 /* ---------- Galletas dibujadas ---------- */
 .cookie { width: var(--s, 54px); height: var(--s, 54px); border-radius: 50%; flex: none; position: relative; display: inline-block;
@@ -88,6 +94,9 @@ tr.click:hover td { background: var(--bg); }
 .cookie.bread { border-radius: 46% 46% 40% 40%; background: radial-gradient(circle at 50% 30%, #f3c27d, #c9853b 75%); }
 .cookie.pump { background: radial-gradient(circle at 50% 50%, #ff9f43 0 60%, #e77f1f 72%); }
 .cookie.star { background: radial-gradient(circle at 50% 50%, #fff2b3 0 55%, #f2c94c 72%); }
+/* Para otros negocios (página de presentación): pizza de domicilio y plato de restaurante. */
+.cookie.pizza { background: radial-gradient(circle at 34% 36%, #d8452f 0 7%, transparent 8%), radial-gradient(circle at 64% 32%, #d8452f 0 6%, transparent 7%), radial-gradient(circle at 58% 64%, #d8452f 0 7%, transparent 8%), radial-gradient(circle at 32% 66%, #d8452f 0 5%, transparent 6%), radial-gradient(circle at 50% 50%, #ffd36b 0 56%, #e9a64a 60% 72%); }
+.cookie.plate { background: radial-gradient(circle at 42% 44%, #8cc56a 0 12%, transparent 13%), radial-gradient(circle at 58% 56%, #e9784f 0 13%, transparent 14%), radial-gradient(circle at 46% 60%, #f3c96b 0 9%, transparent 10%), radial-gradient(circle at 50% 50%, #ffffff 0 44%, #efe6d8 46% 48%, #ffffff 50% 66%, #e8dccb 72%); }
 
 /* ---------- Ventanas ---------- */
 /* Ventana: solo el cuerpo hace scroll (antes también el velo y la página de atrás: doble scroll y un hueco al deslizar). */
@@ -100,6 +109,13 @@ tr.click:hover td { background: var(--bg); }
 .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
 label.f { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 700; min-width: 0; }
 label.f span.h { font-weight: 400; color: var(--ink-2); font-size: 12px; }
+/* "?" de ayuda al lado del nombre del campo (HelpTip): borde fino café, fondo crema */
+.f-label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.help-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: 6px; vertical-align: middle; border-radius: 50%; border: 1.5px solid var(--ink-2); background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 800; line-height: 1; letter-spacing: 0; text-transform: none; cursor: pointer; flex: none; position: relative; }
+.f-label .help-btn { margin-left: 0; }
+.help-btn::after { content: ""; position: absolute; inset: -10px; }
+.help-btn[aria-expanded="true"] { background: var(--accent-soft); }
+.help-tip { display: block; flex-basis: 100%; margin-top: 4px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--banana); color: var(--ink); font-size: 12.5px; font-weight: 400; line-height: 1.45; letter-spacing: 0; text-transform: none; }
 .f input, .f select, .f textarea, .line input, .line select { border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; width: 100%; min-width: 0; font-weight: 400; }
 .f textarea { min-height: 70px; resize: vertical; }
 .f input:focus, .f select:focus, .f textarea:focus, .line input:focus, .line select:focus { outline: none; border-color: var(--accent-deep); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-deep) 30%, transparent); }

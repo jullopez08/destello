@@ -8,6 +8,7 @@ import { errorMessage } from "@/lib/api"
 import type { SupplyKind } from "@/lib/kitchen/rules"
 import type { Supply } from "@/lib/kitchen/types"
 import { Eyebrow, Field, Seg } from "../shared"
+import { HELP } from "@/lib/kitchen/help"
 
 // "¿No está? Insumo nuevo" dentro de Proveedor y Compra: se crea con solo el
 // nombre y cómo se mide, sin salir del formulario. La existencia, el costo y
@@ -74,7 +75,7 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
           <Icon name="x" />
         </button>
       </div>
-      <Field label="Nombre">
+      <Field label="Nombre" help={HELP.supplyName}>
         <input
           value={name}
           autoFocus
@@ -90,14 +91,14 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
         />
       </Field>
       <div>
-        <Eyebrow>Es un</Eyebrow>
+        <Eyebrow help={HELP.supplyCategory}>Es un</Eyebrow>
         <Seg name="quick-category" value={category} onChange={pickCategory} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
       </div>
       {category === "PACKAGING" ? (
         <p className="small muted">Los empaques se cuentan por unidad.</p>
       ) : (
         <div>
-          <Eyebrow>¿Cómo se mide?</Eyebrow>
+          <Eyebrow help={HELP.supplyKind}>¿Cómo se mide?</Eyebrow>
           <Seg name="quick-kind" value={kind} onChange={setKind} options={[["MASS", "Peso (kg)"], ["VOLUME", "Volumen (L)"], ["UNIT", "Unidad"]]} />
         </div>
       )}

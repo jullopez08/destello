@@ -6,10 +6,11 @@ import { byId, useKitchen } from "@/lib/kitchen/store"
 import { cheapestSize, presentationCost, presentationHealth, presentationMargin } from "@/lib/kitchen/rules"
 import { fmtN, money } from "@/lib/kitchen/format"
 import type { Presentation, SaleKind } from "@/lib/kitchen/types"
-import { Eyebrow, Field, LinesEditor, Seg, toNumber, useModal } from "../shared"
+import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import type { QtyRow } from "./supply-rows"
 import { blankQty, SupplySelect, qtyRows } from "./supply-rows"
 import { blankSize, SizeRows, sizeRows, type SizeRow } from "./presentation-sizes"
+import { HELP } from "@/lib/kitchen/help"
 
 // ── Lo que se vende: caja armada, por unidad o sabor y tamaño ──
 // El precio ya incluye el empaque. La dueña elige en qué va cada cosa.
@@ -86,22 +87,22 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
       }}
     >
       <div>
-        <Eyebrow>¿Cómo lo vendes?</Eyebrow>
+        <Eyebrow help={HELP.saleKind}>¿Cómo lo vendes?</Eyebrow>
         <Seg name="kind" value={kind} onChange={setKind} options={KINDS} />
         <div className="small muted" style={{ marginTop: 6 }}>{KIND_HELP[kind]}</div>
       </div>
       <div className="fields">
-        <Field label="Nombre">
+        <Field label="Nombre" help={HELP.saleName}>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder={kind === "BOX" ? "Ej. Caja de 9 unidades" : kind === "UNIT" ? "Ej. Galleta rellena" : "Ej. Cheesecake vasco"} required />
         </Field>
         {kind === "SIZES" ? null : (
-          <Field label={kind === "UNIT" ? "Precio por unidad ($)" : "Precio de venta ($)"}>
+          <Field label={kind === "UNIT" ? "Precio por unidad ($)" : "Precio de venta ($)"} help={HELP.salePrice}>
             <input type="number" min="0" step="500" value={price} onChange={(e) => setPrice(e.target.value)} required />
           </Field>
         )}
       </div>
 
-      <div className="eyebrow">{box ? "Qué lleva" : kind === "UNIT" ? "Sabores que puede elegir" : "Sabores (con recargo si cuestan más)"}</div>
+      <div className="eyebrow">{box ? "Qué lleva" : kind === "UNIT" ? "Sabores que puede elegir" : "Sabores (con recargo si cuestan más)"}<HelpTip text={HELP.saleItems} /></div>
       <LinesEditor
         rows={items}
         setRows={setItems}
@@ -124,7 +125,7 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
         <SizeRows rows={sizes} setRows={setSizes} />
       ) : (
         <>
-          <div className="eyebrow">{box ? "Empaque (por cada caja)" : "Empaque de siempre (uno por pedido; en el pedido lo puedes cambiar)"}</div>
+          <div className="eyebrow">{box ? "Empaque (por cada caja)" : "Empaque de siempre (uno por pedido; en el pedido lo puedes cambiar)"}<HelpTip text={HELP.salePack} /></div>
           <LinesEditor
             rows={pack}
             setRows={setPack}

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { api, errorMessage } from "@/lib/api"
 import { useToast } from "@/components/ui/toast"
 import type { KitchenSnapshot, Order, OrderLine } from "./types"
-import { KitchenRuleData, productionPlan } from "./rules"
+import { KitchenRuleData, productionPlan, usableLots } from "./rules"
 
 interface KitchenValue {
   data: KitchenSnapshot
@@ -63,7 +63,8 @@ export function KitchenProvider({ children, fallback }: { children: React.ReactN
       data && {
         supplies: data.supplies,
         recipes: data.recipes,
-        lots: data.lots,
+        // La masa vencida no se cuenta en el plan (como en el backend).
+        lots: usableLots(data.lots, data.today),
         products: data.products,
         presentations: data.presentations,
       },

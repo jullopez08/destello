@@ -5,16 +5,17 @@ import { phoneInput } from "@/lib/kitchen/format"
 import { Modal, FormError } from "@/components/ui/modal"
 import { useKitchen } from "@/lib/kitchen/store"
 import { Field, useModal } from "../shared"
+import { HELP } from "@/lib/kitchen/help"
 
 // Una llave Bre-B se guarda como una cuenta más con este tipo: la llave va en
 // "number". Puede ser celular, correo, cédula o el código del banco; no se
 // valida el formato porque cualquier llave inscrita sirve para transferir.
 export const BREB_TYPE = "Llave Bre-B"
 
-export function AccountForm() {
+export function AccountForm({ initialKind = "bank" }: { initialKind?: "bank" | "breb" }) {
   const { data, mutate } = useKitchen()
   const { close } = useModal()
-  const [kind, setKind] = useState<"bank" | "breb">("bank")
+  const [kind, setKind] = useState<"bank" | "breb">(initialKind)
   const [f, setF] = useState({ bank: "", type: "Ahorros", number: "", owner: data.settings.name })
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }))
   const breb = kind === "breb"
@@ -57,17 +58,17 @@ export function AccountForm() {
         </div>
         {breb ? (
           <>
-            <Field label="Llave"><input value={f.number} onChange={(e) => set({ number: e.target.value })} placeholder="Ej. 3001234567 o tu@correo.com" required /></Field>
-            <Field label="Banco (opcional)"><input value={f.bank} onChange={(e) => set({ bank: e.target.value })} placeholder="Ej. Nequi" /></Field>
+            <Field label="Llave" help={HELP.brebKey}><input value={f.number} onChange={(e) => set({ number: e.target.value })} placeholder="Ej. 3001234567 o tu@correo.com" required /></Field>
+            <Field label="Banco (opcional)" help={HELP.brebBank}><input value={f.bank} onChange={(e) => set({ bank: e.target.value })} placeholder="Ej. Nequi" /></Field>
           </>
         ) : (
           <>
-            <Field label="Banco"><input value={f.bank} onChange={(e) => set({ bank: e.target.value })} placeholder="Ej. Davivienda" required /></Field>
-            <Field label="Tipo"><input value={f.type} onChange={(e) => set({ type: e.target.value })} placeholder="Ahorros" /></Field>
-            <Field label="Número"><input value={f.number} onChange={(e) => set({ number: e.target.value })} required /></Field>
+            <Field label="Banco" help={HELP.accountBank}><input value={f.bank} onChange={(e) => set({ bank: e.target.value })} placeholder="Ej. Davivienda" required /></Field>
+            <Field label="Tipo" help={HELP.accountType}><input value={f.type} onChange={(e) => set({ type: e.target.value })} placeholder="Ahorros" /></Field>
+            <Field label="Número" help={HELP.accountNumber}><input value={f.number} onChange={(e) => set({ number: e.target.value })} required /></Field>
           </>
         )}
-        <Field label="Titular"><input value={f.owner} onChange={(e) => set({ owner: e.target.value })} /></Field>
+        <Field label="Titular" help={HELP.accountOwner}><input value={f.owner} onChange={(e) => set({ owner: e.target.value })} /></Field>
       </div>
     </Modal>
   )
@@ -91,8 +92,8 @@ export function CourierForm() {
       }}
     >
       <div className="fields">
-        <Field label="Nombre"><input value={name} onChange={(e) => setName(e.target.value)} required /></Field>
-        <Field label="WhatsApp"><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" required /></Field>
+        <Field label="Nombre" help={HELP.courierName} hint="Igual a como lo tienes guardado en tu WhatsApp."><input value={name} onChange={(e) => setName(e.target.value)} required /></Field>
+        <Field label="WhatsApp" help={HELP.courierPhone}><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" required /></Field>
       </div>
     </Modal>
   )

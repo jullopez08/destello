@@ -1,7 +1,8 @@
 "use client"
 
 import { useKitchen } from "@/lib/kitchen/store"
-import { LinesEditor, toNumber } from "../shared"
+import { HelpTip, LinesEditor, toNumber } from "../shared"
+import { HELP } from "@/lib/kitchen/help"
 
 // Tamaños de lo que se vende por sabor y tamaño (tortas, cheesecakes): cada uno
 // con sus porciones, su molde, su precio y su empaque. Los gramos de masa por
@@ -30,7 +31,7 @@ export function SizeRows({ rows, setRows }: { rows: SizeRow[]; setRows: (rows: S
 
   return (
     <>
-      <div className="eyebrow">Tamaños (cada uno con su molde y su empaque)</div>
+      <div className="eyebrow">Tamaños (cada uno con su molde y su empaque)<HelpTip text={HELP.saleSizes} /></div>
       <div className="small muted">Arriba: tamaño, porciones y molde. Abajo: precio, gramos de masa por molde (si no lo sabes, déjalo vacío) y empaque.</div>
       <LinesEditor
         rows={rows}

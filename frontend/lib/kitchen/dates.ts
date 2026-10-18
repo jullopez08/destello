@@ -26,3 +26,14 @@ export function productionDateFor(now: Date, cutoff: string, closedDays: number[
   for (let i = 0; i < 7 && closedDays.includes(weekdayOf(day)); i++) day = addDays(day, 1);
   return day;
 }
+
+// Días de `from` a `to` (negativo si `to` ya pasó).
+export function daysBetween(from: string, to: string): number {
+  return Math.round((new Date(`${to}T12:00:00`).getTime() - new Date(`${from}T12:00:00`).getTime()) / 86400000)
+}
+
+// Una masa se usa hasta el día antes de `expiresOn`: hecha el lunes con 4 días,
+// vence el viernes y se usa de lunes a jueves. La vencida no se cuenta ni se gasta.
+export function usableLots<T extends { expiresOn: string }>(lots: T[], today: string): T[] {
+  return lots.filter((l) => l.expiresOn > today)
+}

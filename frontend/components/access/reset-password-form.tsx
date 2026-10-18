@@ -34,7 +34,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <section className="art">
         <div>
           <div className="eyebrow" style={{ color: "inherit", opacity: 0.7 }}>Panel de la cocina</div>
-          <h1 style={{ marginTop: 10 }}>Destello</h1>
+          <h1 style={{ marginTop: 10 }}><Link href="/" className="home-link" title="Ir a la página de Destello">Destello</Link></h1>
           <p>Crea una contraseña nueva. Al guardarla se cierran todas las sesiones abiertas de tu cuenta.</p>
         </div>
         <div className="plate" aria-hidden="true">
