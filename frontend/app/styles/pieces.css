@@ -129,6 +129,10 @@ label.f span.h { font-weight: 400; color: var(--ink-2); font-size: 12px; }
 .lines { display: flex; flex-direction: column; gap: 8px; }
 .line { display: grid; gap: 8px; align-items: center; grid-template-columns: minmax(0, 1fr) 110px 36px; }
 .line.k-purchase { grid-template-columns: minmax(0, 1fr) 90px 80px 120px 36px; }
+/* Fecha de vencimiento de la compra: en su propia fila, debajo (después del botón de quitar) */
+.line.k-purchase .exp { order: 1; grid-column: 1 / -2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 13px; font-weight: 700; }
+.line.k-purchase .exp input { width: auto; flex: 0 1 180px; }
+.line.k-purchase .exp .help-tip { margin-top: 0; }
 .line.k-order { align-items: start; }
 .order-pick { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .line.k-flavor { grid-template-columns: minmax(0, 1fr) 36px; }
@@ -140,3 +144,5 @@ label.f span.h { font-weight: 400; color: var(--ink-2); font-size: 12px; }
 
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--surface); color: var(--ink); border: 2px solid var(--accent-deep); padding: 12px 20px; border-radius: 999px; font-weight: 600; z-index: 60; box-shadow: var(--shadow); max-width: calc(100% - 32px); text-align: center; }
 .toast.error { border-color: #ee8aa0; background: #fff4f6; }
+/* Revisar vencimientos: nombre a la izquierda, Sí / No a la derecha */
+.perishable-list .it { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; }

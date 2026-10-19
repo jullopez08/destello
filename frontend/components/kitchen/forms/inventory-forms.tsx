@@ -11,6 +11,7 @@ import { ColorSeg, Eyebrow, Field, Seg, toNumber, useModal } from "../shared"
 import { ConfirmForm } from "./confirm-form"
 import { SupplyPicker } from "./supply-picker"
 import { HELP } from "@/lib/kitchen/help"
+import { perishableByDefault } from "@/lib/kitchen/batches"
 
 // ── Proveedor ──
 
@@ -82,13 +83,19 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
     paid: supply ? String(Math.round(supply.cost * factorOf(kind0))) : "",
     paidQty: supply ? "1" : "",
     supplierId: supply?.supplierId ?? "",
+    perishable: supply?.perishable ?? false,
+    // Solo al crear: cuándo vence lo que ya tiene (queda como su primer lote).
+    expiresOn: "",
   })
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }))
+  // En un insumo nuevo, «¿Tiene fecha de vencimiento?» sigue al nombre hasta que la dueña lo toque.
+  const [auto, setAuto] = useState(!supply)
+  const suggest = (name: string, category: Supply["category"]) => (auto ? { perishable: perishableByDefault(name, category) } : {})
   const u = bigUnitOf(f.kind)
   const paid = toNumber(f.paid), paidQty = toNumber(f.paidQty)
   const perBig = paid >= 0 && paidQty > 0 ? paid / paidQty : null
   // Un empaque siempre se cuenta por unidad.
-  const pickCategory = (category: "INGREDIENT" | "PACKAGING") => set(category === "PACKAGING" ? { category, kind: "UNIT" } : { category })
+  const pickCategory = (category: "INGREDIENT" | "PACKAGING") => set(category === "PACKAGING" ? { category, kind: "UNIT", perishable: false } : { category, ...suggest(f.name, category) })
 
   return (
     <Modal
@@ -104,13 +111,24 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
         if (!noPrice && perBig === null) throw new FormError(`Escribe cuánto pagaste y por cuántos ${u}.`)
         const m = factorOf(f.kind)
         const cost = noPrice ? 0 : perBig! / m
-        const body = { name: f.name.trim(), kind: f.kind, category: f.category, stock: stock * m, min: min * m, cost, supplierId: f.supplierId || null }
+        if (!supply && f.perishable && f.expiresOn && f.expiresOn < data.today) throw new FormError("Esa fecha ya pasó: lo que tienes está vencido.")
+        const body = {
+          name: f.name.trim(),
+          kind: f.kind,
+          category: f.category,
+          stock: stock * m,
+          min: min * m,
+          cost,
+          supplierId: f.supplierId || null,
+          perishable: f.perishable,
+          ...(!supply && f.perishable && f.expiresOn ? { expiresOn: f.expiresOn } : {}),
+        }
         if (supply) await mutate(`/supplies/${supply.id}`, "PUT", body, "Insumo actualizado")
         else await mutate("/supplies", "POST", body, "Insumo agregado")
         close()
       }}
     >
-      <Field label="Nombre" help={HELP.supplyName}><input value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Ej. Nueces picadas" required /></Field>
+      <Field label="Nombre" help={HELP.supplyName}><input value={f.name} onChange={(e) => set({ name: e.target.value, ...suggest(e.target.value, f.category) })} placeholder="Ej. Nueces picadas" required /></Field>
       <div>
         <Eyebrow help={HELP.supplyCategory}>Tipo</Eyebrow>
         <Seg name="category" value={f.category} onChange={pickCategory} options={[["INGREDIENT", "Ingrediente"], ["PACKAGING", "Empaque"]]} />
@@ -123,6 +141,20 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
           <Seg name="kind" value={f.kind} onChange={(kind) => set({ kind })} options={[["MASS", "Por peso"], ["VOLUME", "Por volumen"], ["UNIT", "Por unidad"]]} />
         </div>
       )}
+      {f.category === "INGREDIENT" ? (
+        <div>
+          <Eyebrow help={HELP.supplyPerishable}>¿Tiene fecha de vencimiento?</Eyebrow>
+          <Seg
+            name="perishable"
+            value={f.perishable ? "si" : "no"}
+            onChange={(v) => {
+              setAuto(false)
+              set({ perishable: v === "si" })
+            }}
+            options={[["no", "No"], ["si", "Sí, cada compra pide la fecha"]]}
+          />
+        </div>
+      ) : null}
       <div className="fields">
         <Field label={`Lo que tienes ahora (${u})`} help={HELP.supplyStock} hint="Antes de esta compra. Si no tienes nada, déjalo en 0.">
           <input type="number" min="0" step="any" value={f.stock} onChange={(e) => set({ stock: e.target.value })} placeholder={`0 ${u}`} />
@@ -130,6 +162,11 @@ export function SupplyForm({ supply }: { supply?: Supply }) {
         <Field label={`Mínimo para alertar (${u})`} help={HELP.supplyMin} hint="Cuando baje de aquí, Destello te avisa.">
           <input type="number" min="0" step="any" value={f.min} onChange={(e) => set({ min: e.target.value })} placeholder={`0 ${u}`} />
         </Field>
+        {!supply && f.perishable && toNumber(f.stock) > 0 ? (
+          <Field label="Lo que tienes vence el" help={HELP.supplyInitialExpires}>
+            <input type="date" min={data.today} value={f.expiresOn} onChange={(e) => set({ expiresOn: e.target.value })} />
+          </Field>
+        ) : null}
         <Field label="Proveedor" help={HELP.supplySupplier}>
           <select value={f.supplierId} onChange={(e) => set({ supplierId: e.target.value })}>
             <option value="">Sin proveedor</option>

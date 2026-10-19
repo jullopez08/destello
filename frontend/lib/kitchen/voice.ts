@@ -193,7 +193,7 @@ export function answerQuestion(question: string, data: KitchenSnapshot, rules: K
 
   if (/\b(falta|faltan|comprar|compro|insumo|insumos)\b/.test(q)) {
     const short = plan.shortages.map((x) => byId(data.supplies, x.supplyId)?.name.toLowerCase()).filter(Boolean) as string[]
-    const low = data.supplies.filter((s) => s.stock < s.min).map((s) => s.name.toLowerCase())
+    const low = rules.supplies.filter((s) => s.stock < s.min).map((s) => s.name.toLowerCase())
     if (short.length) return `Para producir ${tomorrow ? "mañana" : "hoy"} te falta ${joinList(short)}.`
     return low.length ? `Para producir te alcanza, pero están bajos: ${joinList(low)}.` : "Tienes todos los insumos."
   }

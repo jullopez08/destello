@@ -5,6 +5,7 @@ import { api, errorMessage } from "@/lib/api"
 import { useToast } from "@/components/ui/toast"
 import type { KitchenSnapshot, Order, OrderLine } from "./types"
 import { KitchenRuleData, productionPlan, usableLots } from "./rules"
+import { usableStock } from "./batches"
 
 interface KitchenValue {
   data: KitchenSnapshot
@@ -61,7 +62,8 @@ export function KitchenProvider({ children, fallback }: { children: React.ReactN
   const rules = useMemo<KitchenRuleData | null>(
     () =>
       data && {
-        supplies: data.supplies,
+        // Lo vencido no cuenta como existencia (como en el backend).
+        supplies: data.supplies.map((s) => ({ ...s, stock: usableStock(s.stock, data.supplyBatches.filter((b) => b.supplyId === s.id), data.today) })),
         recipes: data.recipes,
         // La masa vencida no se cuenta en el plan (como en el backend).
         lots: usableLots(data.lots, data.today),

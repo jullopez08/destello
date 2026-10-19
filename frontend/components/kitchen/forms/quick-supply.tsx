@@ -7,6 +7,7 @@ import { useKitchen } from "@/lib/kitchen/store"
 import { errorMessage } from "@/lib/api"
 import type { SupplyKind } from "@/lib/kitchen/rules"
 import type { Supply } from "@/lib/kitchen/types"
+import { perishableByDefault } from "@/lib/kitchen/batches"
 import { Eyebrow, Field, Seg } from "../shared"
 import { HELP } from "@/lib/kitchen/help"
 
@@ -38,6 +39,9 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
   const [name, setName] = useState(initialName)
   const [kind, setKind] = useState<SupplyKind>("MASS")
   const [category, setCategory] = useState<"INGREDIENT" | "PACKAGING">("INGREDIENT")
+  // Sigue al nombre (casi todo ingrediente vence) hasta que la dueña lo toque.
+  const [chosen, setChosen] = useState<boolean | null>(null)
+  const perishable = chosen ?? perishableByDefault(name, category)
   // Un empaque siempre se cuenta por unidad.
   const pickCategory = (c: "INGREDIENT" | "PACKAGING") => {
     setCategory(c)
@@ -52,7 +56,7 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
     setError("")
     try {
       const before = new Set(data.supplies.map((s) => s.id))
-      const next = await mutate("/supplies", "POST", { name: clean, kind: category === "PACKAGING" ? "UNIT" : kind, category, stock: 0, min: 0, cost: 0, supplierId: supplierId || null })
+      const next = await mutate("/supplies", "POST", { name: clean, kind: category === "PACKAGING" ? "UNIT" : kind, category, stock: 0, min: 0, cost: 0, supplierId: supplierId || null, perishable: category === "INGREDIENT" && perishable })
       const added = next.supplies.find((s) => !before.has(s.id))
       toast(`${clean} agregado`)
       if (added) onAdded(added)
@@ -102,6 +106,12 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
           <Seg name="quick-kind" value={kind} onChange={setKind} options={[["MASS", "Peso (kg)"], ["VOLUME", "Volumen (L)"], ["UNIT", "Unidad"]]} />
         </div>
       )}
+      {category === "INGREDIENT" ? (
+        <div>
+          <Eyebrow help={HELP.supplyPerishable}>¿Tiene fecha de vencimiento?</Eyebrow>
+          <Seg name="quick-perishable" value={perishable ? "si" : "no"} onChange={(v) => setChosen(v === "si")} options={[["no", "No"], ["si", "Sí"]]} />
+        </div>
+      ) : null}
       <p className="small muted">Lo que tienes y el costo se llenan solos con la primera compra. El mínimo se lo pones después en Insumos.</p>
       {error ? <div className="err" role="alert">{error}</div> : null}
       <button type="button" className="btn primary" disabled={busy} onClick={() => void add()}>

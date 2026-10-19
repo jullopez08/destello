@@ -5,6 +5,7 @@ import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { consumedAmount, productionDateFor, productionPlan, toIsoDate } from './kitchen-rules';
 import { CreateEditionDto, CreateOrderDto } from './dto/kitchen.dto';
 import { buildOrderLines } from './order-lines';
+import { consumeSupply } from './supply-batches';
 
 @Injectable()
 export class OrdersService {
@@ -126,8 +127,8 @@ export class OrdersService {
 
       for (const need of plan.supplies) {
         const supply = data.supplies.find((s) => s.id === need.supplyId)!;
-        const used = Math.min(supply.stock, consumedAmount(supply.kind, need.need));
-        await tx.supply.update({ where: { id: supply.id }, data: { stock: { decrement: used } } });
+        // supply.stock ya es lo que no está vencido (ruleData)
+        await consumeSupply(tx, supply.id, Math.min(supply.stock, consumedAmount(supply.kind, need.need)), toIsoDate(new Date()));
       }
 
       await tx.doughLot.deleteMany({ where: { organizationId, left: { lte: 0.5 } } });
