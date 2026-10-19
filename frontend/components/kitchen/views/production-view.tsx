@@ -127,7 +127,8 @@ export function ProductionView({ day, setDay }: { day: string | null; setDay: (d
                 )}
                 <div className="list">
                   {[...plan.supplies].sort((a, b) => b.short - a.short).map((x) => {
-                    const s = byId(data.supplies, x.supplyId)!
+                    // Sin lo vencido (rules.supplies)
+                    const s = byId(rules.supplies, x.supplyId)!
                     return (
                       <div className="it" key={x.supplyId}>
                         <span>{s.name}</span>

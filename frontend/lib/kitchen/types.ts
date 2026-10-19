@@ -40,8 +40,15 @@ export interface Supply {
   stock: number
   min: number
   cost: number
+  /** tiene fecha de vencimiento: cada compra pide la fecha y queda como un lote */
+  perishable: boolean
   supplierId: string | null
 }
+
+/** Lo que entró de un insumo con vencimiento y aún queda (también lo vencido). Lo que no está en lotes no tiene fecha. */
+export interface SupplyBatch { id: string; supplyId: string; qty: number; left: number; expiresOn: string; receivedOn: string }
+/** Insumo botado: cantidad, lo que costó (pesos) y el día */
+export interface SupplyWaste { id: string; supplyId: string; qty: number; cost: number; date: string }
 
 export interface Purchase { id: string; date: string; supplierId: string | null; lines: { supplyId: string; qty: number; total: number }[] }
 export interface Recipe { id: string; name: string; yieldGrams: number; color: CardColor; items: { supplyId: string; qty: number }[] }
@@ -135,7 +142,10 @@ export interface KitchenSnapshot {
   accounts: BankAccount[]
   couriers: Courier[]
   suppliers: Supplier[]
+  /** existencia total, también lo vencido (las reglas usan solo lo que sirve) */
   supplies: Supply[]
+  supplyBatches: SupplyBatch[]
+  supplyWaste: SupplyWaste[]
   purchases: Purchase[]
   recipes: Recipe[]
   /** toda la masa guardada, también la vencida (las reglas solo usan la que sirve) */

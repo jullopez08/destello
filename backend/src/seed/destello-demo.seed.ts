@@ -11,6 +11,7 @@
 import { PrismaClient, Role, SubscriptionStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { addDays, toIsoDate } from '../kitchen/kitchen-rules';
+import { perishableByDefault } from '../kitchen/supply-batches';
 import { seedOrdersAndEditions } from './destello-demo-orders.seed';
 
 const prisma = new PrismaClient();
@@ -134,7 +135,7 @@ async function main() {
   ];
   const S: Record<string, string> = {};
   for (const [key, name, kind, category, stock, min, cost, supplierId] of supplyRows) {
-    S[key] = (await prisma.supply.create({ data: { organizationId, name, kind, category, stock, min, cost, supplierId } })).id;
+    S[key] = (await prisma.supply.create({ data: { organizationId, name, kind, category, stock, min, cost, supplierId, perishable: perishableByDefault(name, category) } })).id;
   }
 
   const purchase = (daysAgo: number, supplierId: string, lines: [string, number, number][]) =>

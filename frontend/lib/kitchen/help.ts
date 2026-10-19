@@ -47,6 +47,9 @@ export const HELP = {
   supplierColor: "Solo para reconocer la tarjeta del proveedor.",
   purchaseSupplier: "A quién le compraste.",
   purchaseDate: "El día de la compra.",
+  purchaseExpires: "La fecha que trae el empaque. Destello usa primero lo que vence antes, te avisa 2 días antes y no deja usarlo vencido.",
+  supplyPerishable: "Márcalo en lo que se daña: mantequilla, leche, crema, huevos, frutas. Cada compra te pedirá la fecha de vencimiento y Destello usará primero lo que vence antes. Lo vencido no cuenta para producir.",
+  supplyInitialExpires: "Cuándo vence lo que tienes ahora. Si no lo sabes, déjalo vacío: lo que tienes queda sin fecha.",
   purchaseLines: "Cada insumo con la cantidad y lo que pagaste en total por él. Destello suma a lo que tienes y actualiza el costo.",
 
   // Pedidos

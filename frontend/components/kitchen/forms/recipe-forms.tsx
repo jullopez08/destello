@@ -88,7 +88,7 @@ export function RecipeForm({ recipe, initialName = "", title, onCreated }: { rec
 // ── Lote de masa: descuenta insumos y guarda la masa para los próximos pedidos ──
 
 export function LotForm({ recipeId }: { recipeId?: string }) {
-  const { data, mutate } = useKitchen()
+  const { data, rules, mutate } = useKitchen()
   const { close } = useModal()
   const lotRecipes = data.recipes.filter((r) => data.products.some((p) => p.recipeId === r.id && p.mode === "LOT"))
   const list = lotRecipes.length ? lotRecipes : data.recipes
@@ -126,7 +126,8 @@ export function LotForm({ recipeId }: { recipeId?: string }) {
           <div className="callout c-banana"><b>Salen {grams(recipe.yieldGrams * b)} de masa.</b></div>
           <div className="list small" style={{ marginTop: 10 }}>
             {recipe.items.map((i) => {
-              const s = byId(data.supplies, i.supplyId)!
+              // Sin lo vencido (rules.supplies)
+              const s = byId(rules.supplies, i.supplyId)!
               const n = i.qty * b
               const short = consumedAmount(s.kind, n) > s.stock + 1e-9
               return (

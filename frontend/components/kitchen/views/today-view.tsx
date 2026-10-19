@@ -9,6 +9,7 @@ import { Empty, Kpi, PageHead, useModal } from "../shared"
 import { OrderForm } from "../forms/order-forms"
 import { VoiceCard, VoiceToggle } from "../voice-listener"
 import { LotAlerts } from "./lot-alerts"
+import { SupplyAlerts } from "./supply-batches-view"
 import { useSession } from "@/lib/session"
 
 function greeting() {
@@ -28,7 +29,8 @@ export function TodayView() {
   const pend = todays.filter((o) => o.status === "PENDING" && !o.produced)
   const plan = planFor(rules, pend)
   const boxes = Object.values(plan.boxes).reduce((a, b) => a + b, 0)
-  const low = data.supplies.filter((s) => s.stock < s.min)
+  // Sin lo vencido (rules.supplies)
+  const low = rules.supplies.filter((s) => s.stock < s.min)
   const sales = todays.reduce((a, o) => a + orderSubtotal(o), 0)
   const onWay = data.orders.filter((o) => o.status === "ON_THE_WAY")
   const edition = data.editions.find((e) => e.startDate <= today && e.endDate >= today)
@@ -48,6 +50,7 @@ export function TodayView() {
         <VoiceCard />
       </div>
       <LotAlerts />
+      <SupplyAlerts />
       <div className="grid g4">
         <Kpi v={todays.length} l="Pedidos para hoy" s={`${pend.length} por producir`} c="c-accent" href="#pedidos" />
         <Kpi v={money(sales)} l="Ventas de hoy" s="Sin contar domicilios" c="c-strawberry" />

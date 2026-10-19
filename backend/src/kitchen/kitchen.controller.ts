@@ -18,6 +18,7 @@ import {
   CreateLotDto,
   CreateOrderDto,
   CreatePurchaseDto,
+  SupplyPerishableDto,
   MoveCourierDto,
   PresentationDto,
   ProductDto,
@@ -117,6 +118,11 @@ export class KitchenController {
     return this.inventory.createSupply(requireOrganization(user), dto);
   }
 
+  @Patch('supplies/perishable')
+  setPerishable(@CurrentUser() user: CurrentUserData, @Body() dto: SupplyPerishableDto) {
+    return this.inventory.setPerishable(requireOrganization(user), dto);
+  }
+
   @Put('supplies/:id')
   updateSupply(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: SupplyDto) {
     return this.inventory.updateSupply(requireOrganization(user), id, dto);
@@ -125,6 +131,12 @@ export class KitchenController {
   @Delete('supplies/:id')
   removeSupply(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
     return this.inventory.removeSupply(requireOrganization(user), id);
+  }
+
+  @Post('supply-batches/:id/discard')
+  @HttpCode(200)
+  discardBatch(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.inventory.discardBatch(requireOrganization(user), id);
   }
 
   @Post('purchases')

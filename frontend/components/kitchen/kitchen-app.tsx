@@ -90,11 +90,12 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
     window.scrollTo(0, 0)
   }, [page])
 
-  // Desde Hoy, "Insumos bajos" abre Insumos con la pestaña "Bajos".
+  // Desde Hoy, "Insumos bajos" abre Insumos en "Bajos" y un aviso de vencimiento en "Por vencer".
   useEffect(() => {
     const onHash = () => {
-      if (window.location.hash !== "#insumos/bajos") return
-      setSupplyTab("bajos")
+      const tab = window.location.hash === "#insumos/bajos" ? "bajos" : window.location.hash === "#insumos/vencer" ? "vencer" : null
+      if (!tab) return
+      setSupplyTab(tab)
       history.replaceState(null, "", "#insumos")
     }
     window.addEventListener("hashchange", onHash)

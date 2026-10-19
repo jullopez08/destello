@@ -55,6 +55,8 @@ model Organization {
   recipes          Recipe[]
   doughLots        DoughLot[]
   doughWaste       DoughWaste[]
+  supplyBatches    SupplyBatch[]
+  supplyWaste      SupplyWaste[]
   products         Product[]
   presentations    Presentation[]
   orders           Order[]
@@ -251,6 +253,8 @@ model Supply {
   min            Float          @default(0)
   /// Costo promedio por g, ml o unidad (pesos)
   cost           Float          @default(0)
+  /// Tiene fecha de vencimiento: cada compra pide la fecha y queda como un lote (SupplyBatch)
+  perishable     Boolean        @default(false)
   supplierId     String?
   createdAt      DateTime       @default(now())
 
@@ -262,6 +266,8 @@ model Supply {
   packItems     PresentationPack[]
   sizePacks     PresentationSize[]
   linePacks     OrderLine[]
+  batches       SupplyBatch[]
+  waste         SupplyWaste[]
 
   @@index([organizationId])
 }
@@ -339,6 +345,46 @@ model DoughLot {
   recipe       Recipe       @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+}
+
+/// Lo que entró de un insumo con vencimiento en una compra: cuánto queda y cuándo vence.
+/// Lo que no está en lotes (stock − lotes) no tiene fecha. Reglas en src/kitchen/supply-batches.ts.
+model SupplyBatch {
+  id             String   @id @default(cuid())
+  organizationId String
+  supplyId       String
+  /// g, ml o unidades que entraron y que quedan
+  qty            Float
+  left           Float
+  /// AAAA-MM-DD: se usa hasta ese día
+  expiresOn      String
+  /// AAAA-MM-DD de la compra
+  receivedOn     String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  supply       Supply       @relation(fields: [supplyId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([supplyId])
+}
+
+/// Insumo botado (vencido o dañado): lo que se perdió, para Analítica.
+model SupplyWaste {
+  id             String   @id @default(cuid())
+  organizationId String
+  supplyId       String
+  qty            Float
+  /// pesos, con el costo promedio del insumo al botarlo
+  cost           Int
+  /// AAAA-MM-DD en que se botó
+  date           String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  supply       Supply       @relation(fields: [supplyId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, date])
 }
 
 /// Masa botada (vencida o dañada): lo que se perdió, para Analítica.

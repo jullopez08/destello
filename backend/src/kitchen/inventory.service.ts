@@ -4,7 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { assertSupplier, assertSupplies, own } from './ownership';
 import { averageCostAfterPurchase, toIsoDate } from './kitchen-rules';
-import { CreatePurchaseDto, SupplierDto, SupplyDto } from './dto/kitchen.dto';
+import { CreatePurchaseDto, SupplierDto, SupplyDto, SupplyPerishableDto } from './dto/kitchen.dto';
+import { applyTakes, perishableByDefault, trimBatches } from './supply-batches';
 
 // Proveedores, insumos y compras de la empresa de la sesión.
 // Un empaque (caja, bolsa, sticker) siempre se cuenta por unidad. Un ingrediente
@@ -60,7 +61,22 @@ export class InventoryService {
   async createSupply(organizationId: string, dto: SupplyDto) {
     assertPackagingByUnit(dto);
     if (dto.supplierId) await assertSupplier(this.prisma, organizationId, dto.supplierId);
-    await this.prisma.supply.create({ data: { organizationId, ...dto, supplierId: dto.supplierId || null } });
+    const { expiresOn, ...rest } = dto;
+    // Si no se dice, se propone según el nombre (casi todo ingrediente vence).
+    const data = { ...rest, perishable: rest.perishable ?? perishableByDefault(rest.name, rest.category) };
+    const today = toIsoDate(new Date());
+    if (data.perishable && expiresOn && expiresOn < today) throw new BadRequestException('Esa fecha ya pasó: lo que tienes está vencido.');
+    await this.prisma.supply.create({
+      data: {
+        organizationId,
+        ...data,
+        supplierId: data.supplierId || null,
+        // La existencia inicial de un insumo con vencimiento queda como su primer lote.
+        ...(data.perishable && expiresOn && data.stock > 0
+          ? { batches: { create: { organizationId, qty: data.stock, left: data.stock, expiresOn, receivedOn: today } } }
+          : {}),
+      },
+    });
     return this.snapshot.load(organizationId);
   }
 
@@ -71,7 +87,42 @@ export class InventoryService {
     if (dto.kind !== supply.kind && (await this.supplyInUse(id))) {
       throw new BadRequestException('No se puede cambiar cómo se mide: este insumo ya está en recetas, productos, empaques o compras.');
     }
-    await this.prisma.supply.update({ where: { id }, data: { ...dto, supplierId: dto.supplierId || null } });
+    const { expiresOn: _initial, ...data } = dto;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.supply.update({ where: { id }, data: { ...data, supplierId: data.supplierId || null } });
+      // Sin vencimiento, lo que estaba en lotes pasa a no tener fecha.
+      if (data.perishable === false) await tx.supplyBatch.deleteMany({ where: { supplyId: id } });
+      else await applyTakes(tx, trimBatches(await tx.supplyBatch.findMany({ where: { supplyId: id } }), data.stock));
+    });
+    return this.snapshot.load(organizationId);
+  }
+
+  // «Revisar vencimientos»: marca de una vez cuáles llevan fecha. Un empaque nunca;
+  // al quitar la marca, lo que estaba en lotes pasa a no tener fecha.
+  async setPerishable(organizationId: string, dto: SupplyPerishableDto) {
+    await this.prisma.$transaction(async (tx) => {
+      const supplies = await assertSupplies(tx, organizationId, dto.items.map((i) => i.supplyId));
+      for (const item of dto.items) {
+        const supply = supplies.find((s) => s.id === item.supplyId)!;
+        const perishable = item.perishable && supply.category !== 'PACKAGING';
+        await tx.supply.update({ where: { id: supply.id }, data: { perishable } });
+        if (!perishable) await tx.supplyBatch.deleteMany({ where: { supplyId: supply.id } });
+      }
+    });
+    return this.snapshot.load(organizationId);
+  }
+
+  // Botar lo que queda de un lote (vencido o dañado): baja la existencia y queda como pérdida.
+  async discardBatch(organizationId: string, id: string) {
+    await this.prisma.$transaction(async (tx) => {
+      const batch = await own(tx.supplyBatch.findUnique({ where: { id }, include: { supply: true } }), organizationId, 'Lote no encontrado.');
+      const qty = Math.min(batch.left, batch.supply.stock);
+      await tx.supply.update({ where: { id: batch.supplyId }, data: { stock: { decrement: qty } } });
+      await tx.supplyWaste.create({
+        data: { organizationId, supplyId: batch.supplyId, qty, cost: Math.round(qty * batch.supply.cost), date: toIsoDate(new Date()) },
+      });
+      await tx.supplyBatch.delete({ where: { id } });
+    });
     return this.snapshot.load(organizationId);
   }
 
@@ -87,7 +138,8 @@ export class InventoryService {
   // ── Compras: suben la existencia y recalculan el costo promedio ──
 
   async createPurchase(organizationId: string, dto: CreatePurchaseDto) {
-    if (dto.date > toIsoDate(new Date())) {
+    const today = toIsoDate(new Date());
+    if (dto.date > today) {
       throw new BadRequestException('La fecha de la compra no puede ser futura.');
     }
 
@@ -97,6 +149,13 @@ export class InventoryService {
 
       for (const line of dto.lines) {
         const supply = supplies.find((s) => s.id === line.supplyId)!;
+        if (supply.perishable) {
+          if (!line.expiresOn) throw new BadRequestException(`Escribe cuándo vence ${supply.name}.`);
+          if (line.expiresOn < today) throw new BadRequestException(`${supply.name}: esa fecha ya pasó, está vencido.`);
+          await tx.supplyBatch.create({
+            data: { organizationId, supplyId: supply.id, qty: line.qty, left: line.qty, expiresOn: line.expiresOn, receivedOn: dto.date },
+          });
+        }
         const cost = averageCostAfterPurchase(supply.stock, supply.cost, line.qty, line.total);
         supply.stock += line.qty;
         supply.cost = cost;

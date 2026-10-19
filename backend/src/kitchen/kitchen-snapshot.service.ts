@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CurrentUserData } from '../common/decorators/current-user.decorator';
 import { addDays, KitchenRuleData, productionDateFor, toIsoDate } from './kitchen-rules';
+import { usableStock } from './supply-batches';
 
 type Db = PrismaService | Prisma.TransactionClient;
 
@@ -31,13 +32,15 @@ export class KitchenSnapshotService {
     const today = toIsoDate(new Date());
     const since = addDays(today, -70);
 
-    const [organization, accounts, couriers, suppliers, supplies, purchases, recipes, lots, waste, products, presentations, orders, editions, checks] =
+    const [organization, accounts, couriers, suppliers, supplies, batches, supplyWaste, purchases, recipes, lots, waste, products, presentations, orders, editions, checks] =
       await Promise.all([
         db.organization.findUnique({ where: { id: organizationId } }),
         db.bankAccount.findMany({ where: { organizationId }, orderBy: { createdAt: 'asc' } }),
         db.courier.findMany({ where: { organizationId }, orderBy: { position: 'asc' } }),
         db.supplier.findMany({ where: { organizationId }, orderBy: { name: 'asc' } }),
         db.supply.findMany({ where: { organizationId }, orderBy: { name: 'asc' } }),
+        db.supplyBatch.findMany({ where: { organizationId }, orderBy: { expiresOn: 'asc' } }),
+        db.supplyWaste.findMany({ where: { organizationId, date: { gte: since } }, orderBy: { date: 'desc' } }),
         db.purchase.findMany({ where: { organizationId }, include: { lines: true }, orderBy: [{ date: 'desc' }, { createdAt: 'desc' }] }),
         db.recipe.findMany({ where: { organizationId }, include: { items: true }, orderBy: { createdAt: 'asc' } }),
         db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 } }, orderBy: { expiresOn: 'asc' } }),
@@ -80,7 +83,11 @@ export class KitchenSnapshotService {
       accounts: accounts.map(({ id, bank, type, number, owner }) => ({ id, bank, type, number, owner })),
       couriers: couriers.map(({ id, name, phone, position }) => ({ id, name, phone, position })),
       suppliers: suppliers.map(({ id, name, contact, phone, email, address, notes, color }) => ({ id, name, contact, phone, email, address, notes, color })),
-      supplies: supplies.map(({ id, name, kind, category, stock, min, cost, supplierId }) => ({ id, name, kind, category, stock, min, cost, supplierId })),
+      supplies: supplies.map(({ id, name, kind, category, stock, min, cost, perishable, supplierId }) => ({ id, name, kind, category, stock, min, cost, perishable, supplierId })),
+      /** Lo que entró de cada insumo con vencimiento y aún queda, también lo vencido */
+      supplyBatches: batches.map(({ id, supplyId, qty, left, expiresOn, receivedOn }) => ({ id, supplyId, qty, left, expiresOn, receivedOn })),
+      /** Insumos botados en los últimos 70 días (Analítica) */
+      supplyWaste: supplyWaste.map(({ id, supplyId, qty, cost, date }) => ({ id, supplyId, qty, cost, date })),
       purchases: purchases.map((p) => ({
         id: p.id,
         date: p.date,
@@ -160,7 +167,7 @@ export class KitchenSnapshotService {
   async ruleData(organizationId: string, db: Db): Promise<KitchenRuleData> {
     const today = toIsoDate(new Date());
     const [supplies, recipes, lots, products, presentations] = await Promise.all([
-      db.supply.findMany({ where: { organizationId } }),
+      db.supply.findMany({ where: { organizationId }, include: { batches: true } }),
       db.recipe.findMany({ where: { organizationId }, include: { items: true } }),
       db.doughLot.findMany({ where: { organizationId, left: { gt: 0.5 }, expiresOn: { gt: today } }, orderBy: { expiresOn: 'asc' } }),
       db.product.findMany({ where: { organizationId }, include: { extras: true } }),
@@ -168,7 +175,8 @@ export class KitchenSnapshotService {
     ]);
 
     return {
-      supplies: supplies.map(({ id, name, kind, stock, min, cost }) => ({ id, name, kind, stock, min, cost })),
+      // Lo vencido no cuenta como existencia (supply-batches.ts).
+      supplies: supplies.map(({ id, name, kind, stock, min, cost, batches }) => ({ id, name, kind, stock: usableStock(stock, batches, today), min, cost })),
       recipes: recipes.map((r) => ({ id: r.id, name: r.name, yieldGrams: r.yieldGrams, items: r.items })),
       lots: lots.map(({ id, recipeId, left, expiresOn }) => ({ id, recipeId, left, expiresOn })),
       products: products.map((p) => ({ id: p.id, mode: p.mode, recipeId: p.recipeId, grams: p.grams, extras: p.extras })),

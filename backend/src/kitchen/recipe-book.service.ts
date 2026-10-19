@@ -5,6 +5,7 @@ import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { assertSupplies, own } from './ownership';
 import { addDays, consumedAmount, recipeCostPerGram, toIsoDate } from './kitchen-rules';
 import { CreateLotDto, ProductDto, RecipeDto } from './dto/kitchen.dto';
+import { consumeSupply, usableStock } from './supply-batches';
 
 // Recetas, lotes de masa y productos de la empresa de la sesión
 // (lo que se vende está en PresentationsService).
@@ -54,24 +55,22 @@ export class RecipeBookService {
   async createLot(organizationId: string, dto: CreateLotDto) {
     await this.prisma.$transaction(async (tx) => {
       const recipe = await own(
-        tx.recipe.findUnique({ where: { id: dto.recipeId }, include: { items: { include: { supply: true } } } }),
+        tx.recipe.findUnique({ where: { id: dto.recipeId }, include: { items: { include: { supply: { include: { batches: true } } } } } }),
         organizationId,
         'Receta no encontrada.',
       );
 
-      const short = recipe.items.filter((i) => consumedAmount(i.supply.kind, i.qty * dto.batches) > i.supply.stock + 1e-9);
+      // Lo vencido no cuenta: si solo queda vencido, no alcanza.
+      const today = toIsoDate(new Date());
+      const short = recipe.items.filter((i) => consumedAmount(i.supply.kind, i.qty * dto.batches) > usableStock(i.supply.stock, i.supply.batches, today) + 1e-9);
       if (short.length) {
-        throw new BadRequestException(`No alcanza: ${short.map((i) => i.supply.name).join(', ')}.`);
+        throw new BadRequestException(`No alcanza: ${short.map((i) => i.supply.name).join(', ')}. Si tienes pero está vencido, bótalo en Insumos.`);
       }
 
       for (const item of recipe.items) {
-        await tx.supply.update({
-          where: { id: item.supplyId },
-          data: { stock: { decrement: consumedAmount(item.supply.kind, item.qty * dto.batches) } },
-        });
+        await consumeSupply(tx, item.supplyId, consumedAmount(item.supply.kind, item.qty * dto.batches), today);
       }
 
-      const today = toIsoDate(new Date());
       const grams = recipe.yieldGrams * dto.batches;
       await tx.doughLot.create({
         data: { organizationId, recipeId: recipe.id, grams, left: grams, madeOn: today, expiresOn: addDays(today, dto.days) },

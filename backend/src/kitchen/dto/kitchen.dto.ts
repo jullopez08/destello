@@ -91,12 +91,29 @@ export class SupplyDto {
   /** por g, ml o und */
   @IsNumber() @Min(0) cost!: number;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() supplierId?: string | null;
+  /** Tiene fecha de vencimiento (cada compra pide la fecha) */
+  @IsOptional() @IsBoolean() perishable?: boolean;
+  /** Solo al crear: cuándo vence la existencia inicial de un insumo con vencimiento */
+  @IsOptional() @Matches(ISO_DATE) expiresOn?: string;
+}
+
+/** «Revisar vencimientos»: varios insumos a la vez */
+export class SupplyPerishableItemDto {
+  @IsString() @IsNotEmpty() supplyId!: string;
+  @IsBoolean() perishable!: boolean;
+}
+
+export class SupplyPerishableDto {
+  @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => SupplyPerishableItemDto)
+  items!: SupplyPerishableItemDto[];
 }
 
 export class PurchaseLineDto {
   @IsString() @IsNotEmpty() supplyId!: string;
   @IsNumber() @Min(0.0001) qty!: number;
   @IsInt() @Min(0) total!: number;
+  /** Obligatoria si el insumo tiene vencimiento */
+  @IsOptional() @Matches(ISO_DATE) expiresOn?: string;
 }
 
 export class CreatePurchaseDto {

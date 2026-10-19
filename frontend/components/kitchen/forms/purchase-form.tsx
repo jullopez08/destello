@@ -12,8 +12,9 @@ import { HELP } from "@/lib/kitchen/help"
 // ── Compra: sube la existencia y recalcula el costo promedio ──
 
 const UNIT_F: Record<string, [SupplyKind, number]> = { kg: ["MASS", 1000], g: ["MASS", 1], l: ["VOLUME", 1000], ml: ["VOLUME", 1], und: ["UNIT", 1] }
-type PurchaseRow = { supplyId: string; qty: string; unit: string; total: string }
-const blankPurchase = (): PurchaseRow => ({ supplyId: "", qty: "", unit: "kg", total: "" })
+// expiresOn: solo para insumos con vencimiento (cada compra queda como un lote con su fecha).
+type PurchaseRow = { supplyId: string; qty: string; unit: string; total: string; expiresOn: string }
+const blankPurchase = (): PurchaseRow => ({ supplyId: "", qty: "", unit: "kg", total: "", expiresOn: "" })
 
 export function PurchaseForm() {
   const { data, mutate } = useKitchen()
@@ -40,7 +41,9 @@ export function PurchaseForm() {
           const q = toNumber(r.qty), t = toNumber(r.total)
           if (!(q > 0) || !(t >= 0)) throw new FormError(`Escribe cantidad y total de ${s.name}.`)
           if (k !== s.kind) throw new FormError(`${s.name} se mide en ${unitOf(s.kind)}. Cambia la unidad.`)
-          return { supplyId: s.id, qty: q * m, total: Math.round(t) }
+          if (s.perishable && !r.expiresOn) throw new FormError(`Escribe cuándo vence ${s.name}.`)
+          if (s.perishable && r.expiresOn < data.today) throw new FormError(`${s.name}: esa fecha ya pasó, está vencido.`)
+          return { supplyId: s.id, qty: q * m, total: Math.round(t), ...(s.perishable ? { expiresOn: r.expiresOn } : {}) }
         })
         await mutate("/purchases", "POST", { supplierId, date, lines: out }, "Compra registrada. Existencias actualizadas")
         close()
@@ -80,6 +83,13 @@ export function PurchaseForm() {
               {Object.keys(UNIT_F).map((u) => <option key={u}>{u}</option>)}
             </select>
             <input aria-label="Total pagado" type="number" min="0" step="100" placeholder="Total $" value={r.total} onChange={(e) => update({ total: e.target.value })} />
+            {byId(data.supplies, r.supplyId)?.perishable ? (
+              <label className="exp">
+                <span>Vence el</span>
+                <input type="date" min={data.today} value={r.expiresOn} onChange={(e) => update({ expiresOn: e.target.value })} aria-label="Fecha de vencimiento" required />
+                <HelpTip text={HELP.purchaseExpires} />
+              </label>
+            ) : null}
           </>
         )}
       />
