@@ -84,7 +84,7 @@ export function SettingsView() {
               ) : (
                 <div className="avatar" style={{ width: 64, height: 64, fontSize: 20, background: "var(--accent-soft)" }}>{initials(st.name)}</div>
               )}
-              <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])} />
               <button className="btn soft sm" type="button" onClick={() => fileRef.current?.click()} disabled={uploading}>
                 <Icon name="upload" />
                 {uploading ? "Subiendo…" : user?.logoUrl ? "Cambiar logo" : "Subir logo"}

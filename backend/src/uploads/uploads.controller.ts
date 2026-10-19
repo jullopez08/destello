@@ -13,6 +13,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { UploadsService } from './uploads.service';
+import { isAllowedImage, LOGO_MIME_TYPES } from './image-signature';
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -28,9 +29,9 @@ export class UploadsController {
       storage: memoryStorage(),
       limits: { fileSize: MAX_SIZE_BYTES },
       fileFilter: (_req, file, cb) => {
-        if (!file.mimetype.startsWith('image/')) {
+        if (!LOGO_MIME_TYPES.includes(file.mimetype)) {
           return cb(
-            new BadRequestException('Solo se permiten archivos de imagen.'),
+            new BadRequestException('El logo debe ser una imagen PNG, JPG o WebP.'),
             false,
           );
         }
@@ -43,6 +44,9 @@ export class UploadsController {
   ): Promise<{ url: string }> {
     if (!file) {
       throw new BadRequestException('No se recibió ningún archivo.');
+    }
+    if (!isAllowedImage(file.buffer)) {
+      throw new BadRequestException('El logo debe ser una imagen PNG, JPG o WebP.');
     }
     const url = await this.uploadsService.uploadLogo(file.buffer);
     return { url };

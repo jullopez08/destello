@@ -84,9 +84,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       select: {
         sessionsInvalidatedAt: true,
         roles: true,
+        organizationId: true,
         termsAcceptedAt: true,
       },
     });
+
+    // Usuario borrado: su token sigue firmado y sin vencer, pero ya no vale.
+    if (!user) throw new UnauthorizedException('Sesión inválida.');
 
     // payload.iat is whole seconds (JWT spec — NumericDate has no sub-second
     // precision), but sessionsInvalidatedAt is a millisecond-precision Date.
@@ -100,7 +104,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // (logout → login within ~1s, e.g. on the login screen after logging
     // out) is treated as valid instead of being spuriously rejected as an
     // "expired session" one request later.
-    const invalidatedAtSec = user?.sessionsInvalidatedAt
+    const invalidatedAtSec = user.sessionsInvalidatedAt
       ? Math.floor(user.sessionsInvalidatedAt.getTime() / 1000)
       : null;
 
@@ -109,7 +113,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     if (
-      user &&
       hasRole(user, Role.ADMIN) &&
       !hasRole(user, Role.SUPER_ADMIN) &&
       !user.termsAcceptedAt &&
@@ -126,8 +129,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       userId: payload.sub,
       email: payload.email,
-      roles: payload.roles,
-      organizationId: payload.organizationId,
+      // De la BD, no del token: quitar un rol o mover a alguien de empresa
+      // vale desde la siguiente llamada, sin esperar a que venza el token.
+      roles: user.roles,
+      organizationId: user.organizationId,
       // Lets AuthController.me() tell the frontend exactly when THIS token
       // expires (ms epoch), so it can schedule a live logout timer instead
       // of guessing a fixed TTL that could drift from the real one.

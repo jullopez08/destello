@@ -10,6 +10,6 @@ export function contactHref(message: string): string {
 export const TRIAL_MESSAGE = "Hola, quiero probar Destello gratis en mi negocio."
 export const RESTAURANT_MESSAGE = "Hola, tengo un restaurante con mesas y quiero saber cuándo estará Destello para restaurantes."
 
-// Archivo de Android (APK, hecho con Capacitor en la Fase 9). Sin Play Store por decisión de Julieth:
+// Archivo de Android (APK, hecho con Capacitor en la Fase 10). Sin Play Store por decisión de Julieth:
 // se descarga desde la página de presentación. Mientras no exista, el botón dice "Muy pronto".
 export const ANDROID_APK_URL = process.env.NEXT_PUBLIC_ANDROID_APK_URL ?? ""

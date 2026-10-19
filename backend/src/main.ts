@@ -37,6 +37,8 @@ async function bootstrap() {
   // hole. See the trust-proxy investigation this session for the full
   // reasoning and the proxy-addr-level test that verifies this depth
   // against a given hop count before trusting it.
+  // Destello (2026-10-19): el 2 viene del montaje de aggendarme; se revisa al
+  // desplegar en Railway (Fase 4) según cuántos saltos haya de verdad.
   app.getHttpAdapter().getInstance().set('trust proxy', 2);
 
   // First middleware registered, so these headers land on every response —
@@ -89,7 +91,7 @@ async function bootstrap() {
   // Local dev (.env): FRONTEND_URL=http://localhost:3000 (already set).
   // Production (Railway): set FRONTEND_URL=https://aggendarme.com — no
   // localhost, no ngrok, just the real domain.
-  const allowedOrigins = (configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000')
+  const allowedOrigins = (configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3100')
     .split(',')
     // Same trailing-slash normalization already applied to this same
     // FRONTEND_URL value in password-reset.service.ts and
@@ -125,6 +127,6 @@ async function bootstrap() {
   // request ever showing up in this app's logs — consistent with the IPv4
   // path having nothing listening on it. Binding IPv4 explicitly removes
   // the dependency on that implicit kernel behavior entirely.
-  await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 3101, '0.0.0.0');
 }
 bootstrap();
