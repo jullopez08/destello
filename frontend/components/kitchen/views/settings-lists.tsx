@@ -98,7 +98,7 @@ export function CouriersCard() {
 }
 
 /**
- * Lugar de la conexión con WhatsApp (Fase 6). Hoy no hay conexión: la dueña responde
+ * Lugar de la conexión con WhatsApp (Fase 7). Hoy no hay conexión: la dueña responde
  * desde su celular y registra los pedidos a mano. Cuando llegue el bot, aquí se conecta el número.
  */
 export function WhatsappCard() {
