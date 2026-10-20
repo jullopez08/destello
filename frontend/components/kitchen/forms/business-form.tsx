@@ -7,7 +7,7 @@ import { useSession } from "@/lib/session"
 import { useKitchen } from "@/lib/kitchen/store"
 import { HELP } from "@/lib/kitchen/help"
 import { DAYS, phoneInput } from "@/lib/kitchen/format"
-import { Eyebrow, Field } from "../shared"
+import { Eyebrow, Field, Seg } from "../shared"
 
 // Lunes primero, como se lee la semana; DAYS empieza en domingo (getDay).
 const WEEK = [1, 2, 3, 4, 5, 6, 0]
@@ -19,11 +19,11 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
   const { setUser } = useSession()
   const toast = useToast()
   const st = data.settings
-  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays })
+  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables })
   const [saving, setSaving] = useState(false)
   // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
   const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
-  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays
+  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
@@ -33,10 +33,10 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
       await mutate(
         "/settings",
         "PATCH",
-        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)) },
+        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables },
         setup ? "Negocio listo" : "Configuración guardada",
       )
-      setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name }))
+      setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name, servesTables: f.servesTables }))
       onSaved?.()
     } catch (err) {
       toast(errorMessage(err), true)
@@ -56,6 +56,10 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
           <input type="time" value={f.orderCutoff} onChange={(e) => setF({ ...f, orderCutoff: e.target.value })} required />
         </Field>
         <Field label="Margen que buscas (%)" help={HELP.businessMargin}><input type="number" min="5" max="90" value={f.targetMargin} onChange={(e) => setF({ ...f, targetMargin: e.target.value })} required /></Field>
+      </div>
+      <div>
+        <Eyebrow help={HELP.businessTables}>¿Atiendes clientes en mesas?</Eyebrow>
+        <Seg name="serves-tables" value={f.servesTables ? "si" : "no"} onChange={(v) => setF({ ...f, servesTables: v === "si" })} options={[["no", "No"], ["si", "Sí"]]} />
       </div>
       <div>
         <Eyebrow help={HELP.businessClosed}>Días cerrados</Eyebrow>

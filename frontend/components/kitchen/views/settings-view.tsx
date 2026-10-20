@@ -66,7 +66,7 @@ export function SettingsView() {
 
         <AccountsCard />
         <CouriersCard />
-        {user?.businessType === "RESTAURANT" ? <TeamCard /> : null}
+        <TeamCard />
         <WhatsappCard />
         <div className="card stack">
           <h2 style={{ margin: 0 }}>Tu marca</h2>

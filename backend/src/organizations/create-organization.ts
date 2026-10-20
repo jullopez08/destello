@@ -1,4 +1,4 @@
-import { BusinessType, Plan, Prisma, Role, SubscriptionStatus } from '@prisma/client';
+import { Plan, Prisma, Role, SubscriptionStatus } from '@prisma/client';
 import { randomBytes } from 'crypto';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -7,7 +7,8 @@ export interface NewOrganization {
   name: string;
   slug: string;
   palette?: string;
-  businessType?: BusinessType;
+  /** ¿Atiende clientes en mesas? (enciende mesas y meseros) */
+  servesTables?: boolean;
   whatsapp?: string;
   approvalPending?: boolean;
   plan: Plan;
@@ -23,7 +24,7 @@ export async function createOrganizationWithOwner(tx: Prisma.TransactionClient, 
       name: input.name,
       slug: input.slug,
       palette: input.palette ?? 'vainilla',
-      businessType: input.businessType ?? BusinessType.PRODUCTION,
+      servesTables: input.servesTables ?? false,
       whatsapp: input.whatsapp,
       approvalPending: input.approvalPending ?? false,
     },

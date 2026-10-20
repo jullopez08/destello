@@ -14,6 +14,8 @@ export interface KitchenSettings {
   targetMargin: number
   palette: string
   logoUrl: string | null
+  /** "¿Atiendes clientes en mesas?": enciende mesas y meseros */
+  servesTables: boolean
   /** false: el panel solo muestra los primeros pasos (setup-view) */
   setupDone: boolean
 }

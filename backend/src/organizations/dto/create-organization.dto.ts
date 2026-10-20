@@ -1,5 +1,4 @@
-import { BusinessType } from '@prisma/client';
-import { IsEmail, IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { PALETTES } from '../palettes';
 
 // El super admin crea la empresa, su suscripción y la cuenta de la dueña en un
@@ -25,8 +24,8 @@ export class CreateOrganizationDto {
   palette?: string;
 
   @IsOptional()
-  @IsEnum(BusinessType)
-  businessType?: BusinessType;
+  @IsBoolean()
+  servesTables?: boolean;
 
   @IsString()
   @IsNotEmpty()

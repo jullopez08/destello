@@ -43,6 +43,10 @@ export class UpdateKitchenSettingsDto {
 
   @IsOptional() @IsInt() @Min(5) @Max(90)
   targetMargin?: number;
+
+  /** "¿Atiendes clientes en mesas?": enciende mesas y meseros */
+  @IsOptional() @IsBoolean()
+  servesTables?: boolean;
 }
 
 // Cuenta bancaria o llave Bre-B (type "Llave Bre-B", la llave en number y el

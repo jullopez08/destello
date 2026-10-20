@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon"
 import { useToast } from "@/components/ui/toast"
 import { api, errorMessage } from "@/lib/api"
 import { HELP } from "@/lib/kitchen/help"
+import { useSession } from "@/lib/session"
 import { HelpTip, useModal } from "../shared"
 import { InviteView, NewPinForm, ROLE_NAME, StaffConfirm, StaffForm, type Created, type StaffMember } from "../forms/team-forms"
 
@@ -14,6 +15,8 @@ const seen = (iso: string) => new Date(iso).toLocaleDateString("es-CO", { day: "
 // que amarra su aparato; desde aquí se desconecta un aparato o se quita a alguien (Julieth eligió esta forma, 2026-10-19).
 export function TeamCard() {
   const { open, push } = useModal()
+  // La pantalla de cocina es para todos; los meseros, solo si atiende en mesas.
+  const tables = !!useSession().user?.servesTables
   const toast = useToast()
   const [list, setList] = useState<StaffMember[] | null>(null)
 
@@ -65,7 +68,7 @@ export function TeamCard() {
       <div className="row between">
         <h2 style={{ margin: 0 }}>Tu equipo <HelpTip text={HELP.staffTeam} /></h2>
       </div>
-      <p className="small muted" style={{ margin: 0 }}>Meseros y pantallas de cocina.</p>
+      <p className="small muted" style={{ margin: 0 }}>{tables ? "Meseros y pantallas de cocina." : "Pantallas de cocina. Los meseros salen si atiendes en mesas."}</p>
       {list === null ? <p className="small muted">Cargando…</p> : null}
       {list?.length ? (
         <div className="list">
@@ -101,10 +104,12 @@ export function TeamCard() {
         <p className="small muted" style={{ margin: 0 }}>Aún no tienes a nadie.</p>
       ) : null}
       <div className="row">
-        <button type="button" className="btn soft sm" onClick={() => open(<StaffForm role="WAITER" onDone={created} />)}>
-          <Icon name="plus" />
-          Mesero
-        </button>
+        {tables ? (
+          <button type="button" className="btn soft sm" onClick={() => open(<StaffForm role="WAITER" onDone={created} />)}>
+            <Icon name="plus" />
+            Mesero
+          </button>
+        ) : null}
         <button type="button" className="btn soft sm" onClick={() => open(<StaffForm role="KITCHEN" onDone={created} />)}>
           <Icon name="plus" />
           Pantalla de cocina
