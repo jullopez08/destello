@@ -2,15 +2,20 @@ import { Cookie } from "@/components/ui/cookie"
 import { Icon } from "@/components/ui/icon"
 import { contactHref, RESTAURANT_MESSAGE } from "@/lib/contact"
 
-// ── Página de presentación: tipos de negocio, el problema, cómo funciona y la voz ──
+// ── Página de presentación: para quién es, el problema, cómo funciona y la voz ──
 // Tarjetas tipo "sabor" (referencia OLIPOP): un círculo ilustrado, un título y una sola frase.
 // Los ejemplos cuadran con el panel (caja x9: cuesta $3.850, se vende en $20.000 → 81 %).
 
+// Julieth (2026-10-19): pastelería, repostería, panadería o cocina oculta son lo mismo para Destello (lo usa quien
+// maneja la cocina). Lo único que cambia es si atiende en mesas: por eso son dos tarjetas, no cuatro tipos de negocio.
 const SEGMENTS = [
-  { look: "choco", color: "c-banana", title: "Pastelerías y reposterías", text: "Cajas, tortas por tamaño y ediciones de temporada." },
-  { look: "bread", color: "c-peach", title: "Panaderías", text: "Masas por lote y lo que sale del horno cada día." },
-  { look: "pizza", color: "c-strawberry", title: "Cocinas ocultas y domicilios", text: "Pedidos del día, repartidores y el costo de cada plato." },
-  { look: "plate", color: "c-lilac", title: "Restaurantes con mesas", text: "Comandas con reloj para que ninguna mesa espere.", soon: true },
+  {
+    look: "choco",
+    color: "c-banana",
+    title: "Para cualquier cocina",
+    text: "Pastelería, panadería o cocina oculta: pedidos, domicilios y producción.",
+  },
+  { look: "plate", color: "c-lilac", title: "Si además atiendes en mesas", text: "Meseros con su celular y comandas con reloj.", soon: true },
 ]
 
 export function LandingSegments() {
@@ -18,7 +23,7 @@ export function LandingSegments() {
     <section className="lp-section lp-center">
       <span className="eyebrow">Para quién es</span>
       <h2>Hecho para cocinas como la tuya.</h2>
-      <div className="lp-flavors">
+      <div className="lp-flavors two">
         {SEGMENTS.map((s) => (
           <article className={`card ${s.color} lp-flavor`} key={s.title}>
             <Cookie look={s.look} size={88} />

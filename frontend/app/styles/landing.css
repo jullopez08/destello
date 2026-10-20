@@ -96,6 +96,7 @@
   .lp-hero { grid-template-columns: 1.1fr 0.9fr; align-items: center; margin-top: 24px; padding: 64px 56px; gap: 48px; }
   .lp-section { padding-top: 88px; }
   .lp-flavors { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .lp-flavors.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; margin-inline: auto; }
   .lp-flavor { padding: 28px 18px; }
   .lp-grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lp-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }

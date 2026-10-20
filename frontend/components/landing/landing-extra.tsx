@@ -54,9 +54,11 @@ export function LandingInstall() {
 }
 
 const FAQ = [
-  ["¿Mis clientas tienen que instalar algo?", "No. Te siguen escribiendo a tu WhatsApp de siempre; tú anotas el pedido en Destello."],
-  ["¿Sirve para mi tipo de negocio?", "Sí, si produces con recetas: pastelerías, panaderías, cocinas ocultas y comidas a domicilio. Para restaurantes con mesas, muy pronto."],
-  ["¿Necesito computador?", "No. Todo el panel funciona en el celular. Si tienes computador, también lo puedes usar ahí."],
+  // Julieth (2026-10-19): las respuestas cuentan lo que hace Destello de verdad (asistente que toma pedidos, cocina con
+  // su tablet, meseros con su celular). Lo que aún no está dice «muy pronto».
+  ["¿Mis clientas tienen que instalar algo?", "No. Te siguen escribiendo a tu WhatsApp de siempre. Muy pronto, el asistente de Destello les contesta, toma el pedido y lo pasa solo a tu cocina."],
+  ["¿Sirve para mi tipo de negocio?", "Sí, para cualquier negocio que cocine: pastelería, panadería, repostería, cocina oculta o restaurante. Todos tienen pedidos, domicilios, recetas y el costo de cada cosa. Si atiendes en mesas, se suman los meseros y las comandas."],
+  ["¿Necesito computador?", "No, todo funciona en el celular. Para la cocina lo ideal es una tablet del negocio que se quede ahí (un celular del negocio también sirve). Los meseros usan su propio celular o tablets del negocio."],
   ["¿Qué pasa con mis datos?", "Son de tu negocio y no se los compartimos a nadie. Si dejas de usar Destello, los guardamos 6 meses por si vuelves y luego se borran."],
   ["¿Y si se me olvida pagar?", "Te avisamos antes de que venza y tienes un día de gracia. Tus datos no se pierden: el panel solo queda en pausa hasta que pagues."],
 ] as const
