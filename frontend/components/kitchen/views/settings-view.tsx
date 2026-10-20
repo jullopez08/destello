@@ -13,6 +13,7 @@ import { Eyebrow, PageHead } from "../shared"
 import { BusinessForm } from "../forms/business-form"
 import { AccountsCard, CouriersCard, MyAccountCard, WhatsappCard } from "./settings-lists"
 import { TeamCard } from "./team-card"
+import { TablesCard } from "./tables-card"
 
 // ── Configuración ──
 
@@ -66,6 +67,7 @@ export function SettingsView() {
 
         <AccountsCard />
         <CouriersCard />
+        {user?.servesTables ? <TablesCard /> : null}
         <TeamCard />
         <WhatsappCard />
         <div className="card stack">

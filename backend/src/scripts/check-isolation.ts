@@ -129,6 +129,12 @@ async function main() {
     if (m.devices[0]) list.push([`Desconectar el aparato de ${m.name}`, 'DELETE', `/kitchen/staff/${m.id}/devices/${m.devices[0].id}`]);
     list.push([`Quitar a ${m.name} (otro restaurante)`, 'DELETE', `/kitchen/staff/${m.id}`]);
   }
+  const tables = lucia ? (await call(lucia, 'GET', '/kitchen/tables')).body : [];
+  for (const t of Array.isArray(tables) ? tables.slice(0, 1) : []) {
+    list.push([`Renombrar ${t.name} (otro restaurante)`, 'PATCH', `/kitchen/tables/${t.id}`, { name: 'x' }]);
+    list.push([`Quitar ${t.name} (otro restaurante)`, 'DELETE', `/kitchen/tables/${t.id}`]);
+  }
+  list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);
 
   let failures = 0;
   for (const [label, method, path, body] of list) {

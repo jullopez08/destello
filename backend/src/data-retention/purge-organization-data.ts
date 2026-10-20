@@ -14,6 +14,10 @@ export async function purgeOrganizationData(
   organizationId: string,
 ) {
   // ── Cocina: de lo que más depende a lo que menos ──
+  // Restaurante: comandas (sus líneas en cascada), mesas abiertas y mesas, antes que el equipo.
+  await tx.kitchenTicket.deleteMany({ where: { organizationId } });
+  await tx.tableSession.deleteMany({ where: { organizationId } });
+  await tx.diningTable.deleteMany({ where: { organizationId } });
   // Equipo del restaurante: sus enlaces y aparatos se borran en cascada.
   await tx.staffMember.deleteMany({ where: { organizationId } });
   await tx.productionCheck.deleteMany({ where: { organizationId } });

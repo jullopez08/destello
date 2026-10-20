@@ -14,30 +14,30 @@ datasource db {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Organization {
-  id      String  @id @default(cuid())
-  name    String
+  id              String  @id @default(cuid())
+  name            String
   /// Identificador para URLs (p. ej. "cocina-destello")
-  slug    String  @unique
-  active  Boolean @default(true)
+  slug            String  @unique
+  active          Boolean @default(true)
   /// Logo subido a Cloudinary
-  logoUrl String?
+  logoUrl         String?
   /// Paleta del panel elegida por la dueña: vainilla | fresa | lavanda | menta | durazno | cielo
-  palette String  @default("vainilla")
+  palette         String  @default("vainilla")
   /// "¿Atiendes clientes en mesas?" (Julieth, 2026-10-19): enciende mesas y meseros. Pastelería, panadería,
   /// cocina oculta o restaurante da igual: todas tienen pedidos, domicilios, recetas y pantalla de cocina.
-  servesTables     Boolean      @default(false)
+  servesTables    Boolean @default(false)
   /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
-  approvalPending  Boolean      @default(false)
+  approvalPending Boolean @default(false)
 
   // Datos de la cocina (Configuración)
-  whatsapp        String?
+  whatsapp         String?
   /// "HH:mm": los pedidos tomados después pasan al siguiente día de producción
-  orderCutoff     String  @default("12:00")
+  orderCutoff      String    @default("12:00")
   /// Días en que el negocio está cerrado (no produce ni entrega), 0 = domingo … 6 = sábado
-  closedDays      Int[]   @default([0])
+  closedDays       Int[]     @default([0])
   /// Margen que busca la dueña (%), para el precio sugerido
-  targetMargin    Int     @default(50)
-  nextOrderNumber Int     @default(1001)
+  targetMargin     Int       @default(50)
+  nextOrderNumber  Int       @default(1001)
   /// Cuándo terminó los primeros pasos (negocio, receta, llave Bre-B y repartidor).
   /// Mientras sea null, el panel solo muestra los primeros pasos.
   setupCompletedAt DateTime?
@@ -52,6 +52,9 @@ model Organization {
 
   users            User[]
   staff            StaffMember[]
+  tables           DiningTable[]
+  tableSessions    TableSession[]
+  kitchenTickets   KitchenTicket[]
   subscription     Subscription?
   bankAccounts     BankAccount[]
   couriers         Courier[]
@@ -77,6 +80,89 @@ enum StaffRole {
   KITCHEN
 }
 
+// ── Restaurante (Fase 3, `feature/mesas-comanda`, 2026-10-19) ──
+// Mesa → se abre (TableSession, con su mesero) → cada "Enviar a cocina" es una comanda (KitchenTicket) con sus
+// líneas del mismo catálogo de "Lo que vendes" y el precio del momento. Listo (cocina) y cerrar mesa vienen después.
+
+model DiningTable {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  position       Int
+  createdAt      DateTime @default(now())
+
+  organization Organization   @relation(fields: [organizationId], references: [id])
+  sessions     TableSession[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+enum TableSessionStatus {
+  OPEN
+  CLOSED
+}
+
+model TableSession {
+  id             String             @id @default(cuid())
+  organizationId String
+  tableId        String
+  /// Mesero que la abrió (null si la abrió la dueña)
+  waiterId       String?
+  status         TableSessionStatus @default(OPEN)
+  openedAt       DateTime           @default(now())
+  closedAt       DateTime?
+
+  organization Organization    @relation(fields: [organizationId], references: [id])
+  table        DiningTable     @relation(fields: [tableId], references: [id])
+  waiter       StaffMember?    @relation(fields: [waiterId], references: [id], onDelete: SetNull)
+  tickets      KitchenTicket[]
+
+  @@index([organizationId, status])
+}
+
+enum KitchenTicketStatus {
+  /// En cocina
+  SENT
+  /// La cocina lo terminó (descuenta insumos)
+  READY
+  /// El mesero lo llevó a la mesa
+  SERVED
+}
+
+model KitchenTicket {
+  id             String              @id @default(cuid())
+  organizationId String
+  sessionId      String
+  number         Int
+  status         KitchenTicketStatus @default(SENT)
+  sentAt         DateTime            @default(now())
+  readyAt        DateTime?
+  servedAt       DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  session      TableSession @relation(fields: [sessionId], references: [id])
+  lines        TicketLine[]
+
+  @@index([organizationId, status])
+}
+
+model TicketLine {
+  id             String  @id @default(cuid())
+  ticketId       String
+  presentationId String
+  productId      String?
+  sizeId         String?
+  qty            Int
+  /// Precio de cada una al pedirla (pesos)
+  unitPrice      Int
+  /// "Sin cebolla", "término medio"…
+  note           String?
+
+  ticket       KitchenTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  presentation Presentation  @relation(fields: [presentationId], references: [id])
+}
+
 model StaffMember {
   id             String    @id @default(cuid())
   organizationId String
@@ -86,9 +172,10 @@ model StaffMember {
   pinHash        String?
   createdAt      DateTime  @default(now())
 
-  organization Organization  @relation(fields: [organizationId], references: [id])
+  organization Organization   @relation(fields: [organizationId], references: [id])
   devices      StaffDevice[]
   invites      StaffInvite[]
+  sessions     TableSession[]
 
   @@index([organizationId])
 }
@@ -123,8 +210,8 @@ model StaffDevice {
 /// Inscripción por la página (POST /signup/start) esperando el código del correo.
 /// Al verificarlo se crea la empresa y se borra la solicitud.
 model SignupRequest {
-  id            String       @id @default(cuid())
-  email         String       @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   ownerName     String
   /// Ya cifrada con bcrypt
   passwordHash  String
@@ -136,8 +223,8 @@ model SignupRequest {
   /// sha256 del código de 6 dígitos
   codeHash      String
   codeExpiresAt DateTime
-  attempts      Int          @default(0)
-  createdAt     DateTime     @default(now())
+  attempts      Int      @default(0)
+  createdAt     DateTime @default(now())
 }
 
 enum Role {
@@ -394,7 +481,7 @@ model Recipe {
   color          String   @default("banana")
   createdAt      DateTime @default(now())
 
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization Organization   @relation(fields: [organizationId], references: [id])
   items        RecipeItem[]
   lots         DoughLot[]
   waste        DoughWaste[]
@@ -559,6 +646,7 @@ model Presentation {
   pack         PresentationPack[]
   sizes        PresentationSize[]
   orderLines   OrderLine[]
+  ticketLines  TicketLine[]
   editions     EditionPresentation[]
 
   @@index([organizationId])
@@ -655,7 +743,7 @@ model Order {
 }
 
 model OrderLine {
-  id             String @id @default(cuid())
+  id             String  @id @default(cuid())
   orderId        String
   presentationId String
   qty            Int

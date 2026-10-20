@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Cookie } from "@/components/ui/cookie"
 import { api, ApiError, errorMessage } from "@/lib/api"
 import { applyPalette } from "@/lib/palettes"
+import { WaiterFloor } from "./waiter-floor"
 
 interface Profile { name: string; role: "WAITER" | "KITCHEN"; organizationName: string; palette: string | null }
 type State = { kind: "loading" } | { kind: "nodevice"; message: string } | { kind: "pin"; profile: Profile } | { kind: "in"; profile: Profile }
@@ -44,7 +45,9 @@ export function StaffApp() {
   if (state.kind === "loading") return <Screen><p className="muted">Cargando…</p></Screen>
   if (state.kind === "nodevice") return <Screen><h2>Destello</h2><p className="muted">{state.message}</p></Screen>
   if (state.kind === "pin") return <PinPad profile={state.profile} onIn={(profile) => setState({ kind: "in", profile })} />
-  return <StaffHome profile={state.profile} onOut={() => setState({ kind: "pin", profile: state.profile })} />
+  const out = () => setState({ kind: "pin", profile: state.profile })
+  if (state.profile.role === "WAITER") return <WaiterFloor name={state.profile.name} organizationName={state.profile.organizationName} onOut={out} />
+  return <StaffHome profile={state.profile} onOut={out} />
 }
 
 function Screen({ children }: { children: React.ReactNode }) {
