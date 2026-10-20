@@ -55,8 +55,9 @@ export function InviteView({ member, url, pin }: { member: StaffMember; url: str
   const toast = useToast()
   const text = `Hola ${member.name}, este es tu enlace para entrar a la ${member.role === "WAITER" ? "app de meseros" : "pantalla de cocina"}. Ábrelo en ${member.role === "WAITER" ? "tu celular" : "la tablet de la cocina"}: ${url}${pin ? `
 Tu PIN es ${pin}. No se lo compartas a nadie.` : ""}`
-  // En pruebas locales el panel abierto en localhost da enlaces que solo sirven en este computador.
-  const local = /\/\/(localhost|127\.0\.0\.1)/.test(url)
+  // Solo para nosotros, probando en local: el panel abierto en localhost da enlaces que solo sirven en este
+  // computador. En producción nunca sale (Julieth, 2026-10-19).
+  const local = process.env.NODE_ENV !== "production" && /\/\/(localhost|127\.0\.0\.1)/.test(url)
   return (
     <Modal title={`Enlace de ${member.name}`} sub="Sirve una sola vez y vence en 48 horas." submit="Listo" hideCancel onClose={close} onSubmit={close}>
       {pin ? <PinBox name={member.name} pin={pin} /> : null}
