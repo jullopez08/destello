@@ -12,5 +12,6 @@ import { OrdersService } from './orders.service';
   imports: [PrismaModule],
   controllers: [KitchenController],
   providers: [KitchenSnapshotService, KitchenSettingsService, InventoryService, RecipeBookService, PresentationsService, OrdersService],
+  exports: [KitchenSnapshotService],
 })
 export class KitchenModule {}

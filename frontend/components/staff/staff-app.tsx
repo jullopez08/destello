@@ -6,6 +6,7 @@ import { Cookie } from "@/components/ui/cookie"
 import { api, ApiError, errorMessage } from "@/lib/api"
 import { applyPalette } from "@/lib/palettes"
 import { WaiterFloor } from "./waiter-floor"
+import { KitchenScreen } from "./kitchen-screen"
 
 interface Profile { name: string; role: "WAITER" | "KITCHEN"; organizationName: string; palette: string | null }
 type State = { kind: "loading" } | { kind: "nodevice"; message: string } | { kind: "pin"; profile: Profile } | { kind: "in"; profile: Profile }
@@ -47,7 +48,7 @@ export function StaffApp() {
   if (state.kind === "pin") return <PinPad profile={state.profile} onIn={(profile) => setState({ kind: "in", profile })} />
   const out = () => setState({ kind: "pin", profile: state.profile })
   if (state.profile.role === "WAITER") return <WaiterFloor name={state.profile.name} organizationName={state.profile.organizationName} onOut={out} />
-  return <StaffHome profile={state.profile} onOut={out} />
+  return <KitchenScreen name={state.profile.name} organizationName={state.profile.organizationName} />
 }
 
 function Screen({ children }: { children: React.ReactNode }) {
@@ -101,25 +102,6 @@ function PinPad({ profile, onIn }: { profile: Profile; onIn: (p: Profile) => voi
           ),
         )}
       </div>
-    </Screen>
-  )
-}
-
-function StaffHome({ profile, onOut }: { profile: Profile; onOut: () => void }) {
-  const waiter = profile.role === "WAITER"
-  return (
-    <Screen>
-      <div className="small muted">{profile.organizationName}</div>
-      <h2>{waiter ? `Hola, ${profile.name}` : profile.name}</h2>
-      <div className="callout c-lilac">
-        <b>{waiter ? "Tus mesas" : "Pedidos de la cocina"}</b>
-        <p style={{ margin: "4px 0 0" }}>{waiter ? "Muy pronto tomas aquí las comandas de tus mesas." : "Muy pronto llegan aquí los pedidos con su reloj."}</p>
-      </div>
-      {waiter ? (
-        <button type="button" className="btn ghost" onClick={async () => { await api("/staff/logout", { method: "POST" }).catch(() => {}); onOut() }}>
-          Cerrar turno
-        </button>
-      ) : null}
     </Screen>
   )
 }

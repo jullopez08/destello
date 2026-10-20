@@ -77,6 +77,8 @@ export class KitchenSnapshotService {
         targetMargin: organization.targetMargin,
         palette: organization.palette,
         servesTables: organization.servesTables,
+        kitchenNormalMin: organization.kitchenNormalMin,
+        kitchenMaxMin: organization.kitchenMaxMin,
         logoUrl: organization.logoUrl,
         /** false: el panel solo muestra los primeros pasos */
         setupDone: organization.setupCompletedAt !== null,

@@ -45,3 +45,13 @@
 .ticket.late { background: var(--strawberry); }
 .ticket-tip { margin: 4px 0 0; font-weight: 600; }
 .floor select, .floor input { border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px; width: 100%; min-width: 0; font-size: 16px; }
+
+/* Pantalla de cocina (tablet) */
+.kitchen-board { max-width: 1200px; margin: 0 auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 32px; display: flex; flex-direction: column; gap: 14px; }
+.kitchen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.kitchen-clock { font-size: 22px; font-weight: 800; }
+.kitchen-line { font-size: 17px; }
+.kitchen-note { font-size: 14px; font-weight: 700; padding: 4px 8px; margin-top: 2px; border-radius: 8px; background: var(--banana); }
+.ready-alert { display: flex; flex-direction: column; gap: 4px; }
+.ready-alert .linkbtn { align-self: flex-start; font-size: 15px; font-weight: 700; text-decoration: none; color: var(--ink); }
+.back-hint { text-align: center; margin-top: 8px; overflow-wrap: anywhere; }
