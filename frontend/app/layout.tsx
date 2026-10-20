@@ -21,6 +21,9 @@ export const viewport: Viewport = {
   themeColor: "#fff7e6",
   // Ocupa toda la pantalla del celular; la barra de abajo respeta la zona segura (env(safe-area-inset-*)).
   viewportFit: "cover",
+  // Con el teclado abierto la página se achica (no se desliza hacia arriba): las ventanas que suben desde
+  // abajo quedan encima del teclado con Cancelar y Guardar completos (Android; el iPhone lo maneja solo).
+  interactiveWidget: "resizes-content",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

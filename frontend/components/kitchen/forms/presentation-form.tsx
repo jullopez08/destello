@@ -11,6 +11,7 @@ import type { QtyRow } from "./supply-rows"
 import { blankQty, SupplySelect, qtyRows } from "./supply-rows"
 import { blankSize, SizeRows, sizeRows, type SizeRow } from "./presentation-sizes"
 import { HELP } from "@/lib/kitchen/help"
+import { MoneyInput } from "@/components/ui/money-input"
 
 // ── Lo que se vende: caja armada, por unidad o sabor y tamaño ──
 // El precio ya incluye el empaque. La dueña elige en qué va cada cosa.
@@ -65,7 +66,8 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
       onClose={close}
       onSubmit={async () => {
         if (!name.trim()) throw new FormError("Escribe el nombre.")
-        if (kind !== "SIZES" && !(toNumber(price) > 0)) throw new FormError("Escribe el precio.")
+        if (kind !== "SIZES" && !(toNumber(price) > 0)) throw new FormError("Escribe el precio: no puede quedar en 0.")
+        if (pack.some((p) => p.supplyId && !(toNumber(p.qty) > 0))) throw new FormError("Escribe cuántos lleva de cada empaque.")
         if (!chosen.length) throw new FormError(box ? "Agrega qué productos lleva." : "Elige al menos un sabor.")
         if (box && chosen.some((i) => !(toNumber(i.units) >= 1))) throw new FormError("Escribe cuántas unidades lleva de cada producto.")
         if (!box && new Set(chosen.map((i) => i.productId)).size !== chosen.length) throw new FormError("Hay un sabor repetido.")
@@ -97,7 +99,7 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
         </Field>
         {kind === "SIZES" ? null : (
           <Field label={kind === "UNIT" ? "Precio por unidad ($)" : "Precio de venta ($)"} help={HELP.salePrice}>
-            <input type="number" min="0" step="500" value={price} onChange={(e) => setPrice(e.target.value)} required />
+            <MoneyInput value={price} onChange={(v) => setPrice(v)} required />
           </Field>
         )}
       </div>
@@ -116,7 +118,7 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
               {data.products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             {box ? <input aria-label="Unidades" type="number" min="1" step="1" placeholder="Unidades" value={r.units} onChange={(e) => update({ units: e.target.value })} /> : null}
-            {kind === "SIZES" ? <input aria-label="Recargo" type="number" min="0" step="500" placeholder="Recargo $" value={r.surcharge} onChange={(e) => update({ surcharge: e.target.value })} /> : null}
+            {kind === "SIZES" ? <MoneyInput aria-label="Recargo" placeholder="Recargo 0,00" value={r.surcharge} onChange={(v) => update({ surcharge: v })} /> : null}
           </>
         )}
       />
@@ -125,7 +127,7 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
         <SizeRows rows={sizes} setRows={setSizes} />
       ) : (
         <>
-          <div className="eyebrow">{box ? "Empaque (por cada caja)" : "Empaque de siempre (uno por pedido; en el pedido lo puedes cambiar)"}<HelpTip text={HELP.salePack} /></div>
+          <div className="eyebrow">{box ? "Empaque (por cada caja)" : "Empaque de siempre (uno por pedido)"}<HelpTip text={HELP.salePack} /></div>
           <LinesEditor
             rows={pack}
             setRows={setPack}

@@ -7,7 +7,7 @@ export class UpdateUserDto {
   name?: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsEmail({}, { message: 'Escribe un correo válido, como nombre@correo.com.' })
   email?: string;
 
   @IsOptional()

@@ -29,7 +29,7 @@ export function AnalyticsView() {
 
   return (
     <>
-      <PageHead title="Analítica" sub="Cómo van tus ventas, qué se vende más y qué productos no te dejan ganancia." />
+      <PageHead title="Analítica" sub="Tus ventas, lo más vendido y tu ganancia." />
       <Summary now={now} before={before} today={data.today} />
       <div className="grid g4 stats" style={{ marginTop: 16 }}>
         <Stat label="Vendiste" value={money(now.sales)} hint="Últimas 4 semanas, sin domicilios" now={now.sales} before={before.sales} beforeText={money(before.sales)} />
@@ -47,17 +47,17 @@ export function AnalyticsView() {
       <div className="grid g2" style={{ marginTop: 16 }}>
         <div className="card">
           <h2>¿Cómo van tus ventas cada semana?</h2>
-          <p className="small muted">Plata vendida en cada una de las últimas 8 semanas.</p>
+          <p className="small muted">Últimas 8 semanas.</p>
           <WeekLine weeks={weeks} today={data.today} />
         </div>
         <div className="card">
           <h2>¿Qué días tienes más trabajo?</h2>
-          <p className="small muted">Pedidos por día de producción en las últimas 8 semanas.</p>
+          <p className="small muted">Pedidos por día, últimas 8 semanas.</p>
           <WeekdayBars counts={weekdays} />
         </div>
         <div className="card">
           <h2>¿Qué es lo que más vendes?</h2>
-          <p className="small muted">Lo que deja buena parte de tu plata, en las últimas 8 semanas.</p>
+          <p className="small muted">Últimas 8 semanas.</p>
           {sold.length ? <SellerPie list={sold} max={9} /> : <Empty>Todavía no hay ventas.</Empty>}
           {sold.length ? (
             <p className="conclusion">
@@ -67,10 +67,7 @@ export function AnalyticsView() {
         </div>
         <div className="card">
           <h2>¿Qué casi no se vende?</h2>
-          <p className="small muted">
-            Cada una deja menos de la mitad de lo que deja, en promedio, cada cosa que vendes. Piensa si vale la pena seguir ofreciéndola, cambiarle el
-            precio o mostrarla más.
-          </p>
+          <p className="small muted">Vende menos de la mitad del promedio: muéstralo más o cámbialo.</p>
           {least.some((x) => x.sales > 0) ? <SellerPie list={least} max={9} offset={Math.min(sold.length, 10)} /> : null}
           {least.some((x) => x.sales > 0) ? (
             <p className="conclusion">
@@ -86,7 +83,7 @@ export function AnalyticsView() {
         </div>
         <div className="card">
           <h2>¿Qué no te deja ganancia?</h2>
-          <p className="small muted">Lo que cuesta hacerlo comparado con lo que cobras.</p>
+          <p className="small muted">Lo que te cuesta frente a lo que cobras.</p>
           {flagged.length ? (
             <div className="list">
               {flagged.map((x) => (
@@ -107,7 +104,7 @@ export function AnalyticsView() {
           ) : (
             <Empty>Todo lo que vendes te deja buena ganancia.</Empty>
           )}
-          <p className="small muted" style={{ marginTop: 10 }}>El precio sugerido busca que te quede el {data.settings.targetMargin} % de lo que cobras. Lo cambias en Configuración.</p>
+          <p className="small muted" style={{ marginTop: 10 }}>Precio sugerido para ganar el {data.settings.targetMargin} %.</p>
         </div>
         <DoughCards least={least} />
       </div>

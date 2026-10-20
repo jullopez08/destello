@@ -8,13 +8,15 @@ import { errorMessage } from "@/lib/api"
 import type { SupplyKind } from "@/lib/kitchen/rules"
 import type { Supply } from "@/lib/kitchen/types"
 import { perishableByDefault } from "@/lib/kitchen/batches"
+import { factorOf } from "@/lib/kitchen/format"
+import { MoneyInput } from "@/components/ui/money-input"
 import { Eyebrow, Field, Seg } from "../shared"
 import { HELP } from "@/lib/kitchen/help"
 
-// "¿No está? Insumo nuevo" dentro de Proveedor y Compra: se crea con solo el
-// nombre y cómo se mide, sin salir del formulario. La existencia, el costo y
-// el mínimo quedan en 0: la primera compra los llena y en Insumos sale
-// «Ponle un mínimo». Va dentro de otro <form>, así que no es un form propio.
+// "¿No está? Insumo nuevo" dentro de Receta, Proveedor y Compra: se crea con el
+// nombre, cómo se mide y su precio (obligatorio y mayor que cero), sin salir del
+// formulario. La existencia y el mínimo quedan en 0: la primera compra la llena y
+// en Insumos sale «Ponle un mínimo». Va dentro de otro <form>, así que no es un form propio.
 
 type Added = { supplierId?: string; supplierName?: string; onAdded: (supply: Supply) => void }
 
@@ -39,6 +41,7 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
   const [name, setName] = useState(initialName)
   const [kind, setKind] = useState<SupplyKind>("MASS")
   const [category, setCategory] = useState<"INGREDIENT" | "PACKAGING">("INGREDIENT")
+  const [price, setPrice] = useState("")
   // Sigue al nombre (casi todo ingrediente vence) hasta que la dueña lo toque.
   const [chosen, setChosen] = useState<boolean | null>(null)
   const perishable = chosen ?? perishableByDefault(name, category)
@@ -52,11 +55,14 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
     const clean = name.trim()
     if (!clean) return setError("Escribe el nombre del insumo.")
     if (data.supplies.some((s) => s.name.toLowerCase() === clean.toLowerCase())) return setError(`Ya tienes «${clean}». Búscalo en la lista.`)
+    const perBig = Number(price)
+    if (!(perBig > 0)) return setError("Escribe el precio: no puede quedar en 0.")
+    const measure = category === "PACKAGING" ? "UNIT" : kind
     setBusy(true)
     setError("")
     try {
       const before = new Set(data.supplies.map((s) => s.id))
-      const next = await mutate("/supplies", "POST", { name: clean, kind: category === "PACKAGING" ? "UNIT" : kind, category, stock: 0, min: 0, cost: 0, supplierId: supplierId || null, perishable: category === "INGREDIENT" && perishable })
+      const next = await mutate("/supplies", "POST", { name: clean, kind: measure, category, stock: 0, min: 0, cost: perBig / factorOf(measure), pricePaid: perBig, priceQty: factorOf(measure), supplierId: supplierId || null, perishable: category === "INGREDIENT" && perishable })
       const added = next.supplies.find((s) => !before.has(s.id))
       toast(`${clean} agregado`)
       if (added) onAdded(added)
@@ -112,7 +118,9 @@ export function QuickSupplyPanel({ supplierId, supplierName, onAdded, onClose, i
           <Seg name="quick-perishable" value={perishable ? "si" : "no"} onChange={(v) => setChosen(v === "si")} options={[["no", "No"], ["si", "Sí"]]} />
         </div>
       ) : null}
-      <p className="small muted">Lo que tienes y el costo se llenan solos con la primera compra. El mínimo se lo pones después en Insumos.</p>
+      <Field label={`Precio por ${category === "PACKAGING" || kind === "UNIT" ? "unidad" : kind === "MASS" ? "kilo" : "litro"} ($)`} help={HELP.supplyQuickPrice}>
+        <MoneyInput value={price} onChange={setPrice} />
+      </Field>
       {error ? <div className="err" role="alert">{error}</div> : null}
       <button type="button" className="btn primary" disabled={busy} onClick={() => void add()}>
         {busy ? "Agregando…" : "Agregar insumo"}

@@ -20,7 +20,7 @@ export function PerishableReview({ suggest }: { suggest?: boolean }) {
   return (
     <Modal
       title="Revisar vencimientos"
-      sub="Marca los ingredientes que traen fecha de vencimiento: en cada compra se pedirá la fecha y lo vencido no se usará."
+      sub="Marca los que traen fecha de vencimiento."
       submit={`Guardar (${count} con fecha)`}
       onClose={close}
       onSubmit={async () => {

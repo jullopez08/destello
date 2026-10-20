@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Icon } from "@/components/ui/icon"
 import { Modal, FormError } from "@/components/ui/modal"
 import { useToast } from "@/components/ui/toast"
-import { api } from "@/lib/api"
+import { api, errorMessage } from "@/lib/api"
 import { PALETTES } from "@/lib/palettes"
 import { money } from "@/lib/kitchen/format"
 import { Empty, Eyebrow, Field, Kpi, PageHead, useModal } from "@/components/kitchen/shared"
@@ -18,9 +18,17 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
   const { open } = useModal()
   const [q, setQ] = useState("")
   // Cada cifra filtra la lista por ese estado; tocarla de nuevo (o "Empresas") muestra todas.
-  const [only, setOnly] = useState<"all" | "ACTIVE" | "TRIALING" | "due">("all")
+  const [only, setOnly] = useState<"all" | "ACTIVE" | "TRIALING" | "due" | "pending">("all")
+  const toast = useToast()
   const due = (o: Organization) => o.subscription?.status === "PAST_DUE" || !o.active
-  const matches = (o: Organization) => only === "all" || (only === "due" ? due(o) : o.subscription?.status === only)
+  const pending = orgs.filter((o) => o.approvalPending)
+  const matches = (o: Organization) =>
+    only === "all" || (only === "due" ? due(o) : only === "pending" ? o.approvalPending : o.subscription?.status === only)
+  async function approve(o: Organization) {
+    await api(`/organizations/${o.id}/approve`, { method: "POST" })
+    await reload()
+    toast(`${o.name} ya puede entrar`)
+  }
   const list = orgs.filter((o) => matches(o) && (!q || `${o.name} ${o.slug} ${o.users.map((u) => u.email).join(" ")}`.toLowerCase().includes(q.toLowerCase())))
   const count = (s: string) => orgs.filter((o) => o.subscription?.status === s).length
   const pick = (f: typeof only) => () => setOnly(only === f ? "all" : f)
@@ -39,6 +47,11 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
         <Kpi v={count("TRIALING")} l="En prueba" c="c-lilac" onClick={pick("TRIALING")} on={only === "TRIALING"} />
         <Kpi v={orgs.filter(due).length} l="Con pago pendiente o bloqueadas" c="c-peach" onClick={pick("due")} on={only === "due"} />
       </div>
+      {pending.length ? (
+        <button type="button" className="callout c-lilac small pending-callout" onClick={pick("pending")}>
+          {pending.length === 1 ? "1 negocio inscrito espera" : `${pending.length} negocios inscritos esperan`} tu aprobación ›
+        </button>
+      ) : null}
       <div className="row" style={{ marginBottom: 12 }}>
         <input className="search" placeholder="Buscar por nombre o correo" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar empresa" />
       </div>
@@ -60,7 +73,7 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                         <span className="swatch" style={{ background: PALETTES.find((p) => p.id === o.palette)?.swatch }} />
                         <div>
                           <b>{o.name}</b>
-                          <div className="small muted">{o.slug}</div>
+                          <div className="small muted">{o.slug}{o.businessType === "RESTAURANT" ? " · Restaurante" : ""}</div>
                         </div>
                       </div>
                     </td>
@@ -79,9 +92,16 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                     <td>
                       <span className={`chip ${tone}`}>{label}</span>
                       {!o.active ? <div className="small" style={{ color: "var(--cherry)", marginTop: 4 }}>Bloqueada</div> : null}
+                      {o.approvalPending ? <span className="chip warn" style={{ marginTop: 4 }}>En revisión</span> : null}
                     </td>
                     <td className="small num">{s ? dateFmt(s.currentPeriodEnd) : "—"}</td>
-                    <td><span className="btn ghost sm">Ver</span></td>
+                    <td>
+                      {o.approvalPending ? (
+                        <button type="button" className="btn primary sm" onClick={(e) => { e.stopPropagation(); approve(o).catch((err) => toast(errorMessage(err))) }}>Aprobar</button>
+                      ) : (
+                        <span className="btn ghost sm">Ver</span>
+                      )}
+                    </td>
                   </tr>
                 )
               })}
@@ -99,7 +119,7 @@ export function OrganizationForm({ plans, reload }: { plans: Plan[]; reload: () 
   const { close } = useModal()
   const toast = useToast()
   const activePlans = plans.filter((p) => p.active)
-  const [f, setF] = useState({ name: "", slug: "", planId: activePlans.find((p) => p.isTrial)?.id ?? activePlans[0]?.id ?? "", palette: "vainilla", ownerName: "", ownerEmail: "", ownerPassword: "" })
+  const [f, setF] = useState({ name: "", slug: "", businessType: "PRODUCTION", planId: activePlans.find((p) => p.isTrial)?.id ?? activePlans[0]?.id ?? "", palette: "vainilla", ownerName: "", ownerEmail: "", ownerPassword: "" })
   const [slugTouched, setSlugTouched] = useState(false)
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }))
 
@@ -126,6 +146,12 @@ export function OrganizationForm({ plans, reload }: { plans: Plan[]; reload: () 
         </Field>
         <Field label="Identificador" hint="Minúsculas, números y guiones.">
           <input value={f.slug} onChange={(e) => { setSlugTouched(true); set({ slug: slugify(e.target.value) }) }} required />
+        </Field>
+        <Field label="Tipo de negocio">
+          <select value={f.businessType} onChange={(e) => set({ businessType: e.target.value })}>
+            <option value="PRODUCTION">Pastelería, panadería o cocina oculta</option>
+            <option value="RESTAURANT">Restaurante con mesas</option>
+          </select>
         </Field>
         <Field label="Plan">
           <select value={f.planId} onChange={(e) => set({ planId: e.target.value })}>

@@ -83,6 +83,19 @@ export class UsersService {
     return this.sanitize(user);
   }
 
+  async setOwnTour(userId: string, done?: boolean, tip?: string) {
+    const current = await this.prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { seenTips: true } });
+    const data =
+      done === false
+        ? { tourCompletedAt: null, seenTips: [] }
+        : {
+            ...(done ? { tourCompletedAt: new Date() } : {}),
+            ...(tip && !current.seenTips.includes(tip) ? { seenTips: [...current.seenTips, tip] } : {}),
+          };
+    const user = await this.prisma.user.update({ where: { id: userId }, data });
+    return { tourCompletedAt: user.tourCompletedAt, seenTips: user.seenTips };
+  }
+
   async changeOwnPassword(userId: string, currentPassword: string, newPassword: string) {
     const existing = await this.prisma.user.findUnique({ where: { id: userId } });
 

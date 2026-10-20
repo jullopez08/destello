@@ -101,12 +101,13 @@ export function LotForm({ recipeId }: { recipeId?: string }) {
   return (
     <Modal
       title="Producir lote de masa"
-      sub="Descuenta los insumos y guarda la masa para usarla en los próximos pedidos."
+      sub="Descuenta los insumos y guarda la masa para los próximos pedidos."
       onClose={close}
       onSubmit={async () => {
         if (!recipe) throw new FormError("Elige la receta.")
         if (!(b > 0)) throw new FormError("Escribe cuántas tandas.")
-        await mutate("/lots", "POST", { recipeId: recipe.id, batches: b, days: Number(days) || 4 }, `Lote guardado: ${grams(recipe.yieldGrams * b)} de ${recipe.name.toLowerCase()}`)
+        if (!(Number(days) >= 1)) throw new FormError("Escribe cuántos días dura: no puede quedar vacío ni en 0.")
+        await mutate("/lots", "POST", { recipeId: recipe.id, batches: b, days: Number(days) }, `Lote guardado: ${grams(recipe.yieldGrams * b)} de ${recipe.name.toLowerCase()}`)
         close()
       }}
     >

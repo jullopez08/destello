@@ -1,4 +1,5 @@
-import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { BusinessType } from '@prisma/client';
+import { IsEmail, IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { PALETTES } from '../palettes';
 
 // El super admin crea la empresa, su suscripción y la cuenta de la dueña en un
@@ -23,11 +24,15 @@ export class CreateOrganizationDto {
   @IsIn(PALETTES)
   palette?: string;
 
+  @IsOptional()
+  @IsEnum(BusinessType)
+  businessType?: BusinessType;
+
   @IsString()
   @IsNotEmpty()
   ownerName!: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'Escribe un correo válido, como nombre@correo.com.' })
   ownerEmail!: string;
 
   @IsString()

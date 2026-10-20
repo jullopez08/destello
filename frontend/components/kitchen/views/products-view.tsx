@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
+import { HELP } from "@/lib/kitchen/help"
 import { Cookie } from "@/components/ui/cookie"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { presentationCost, presentationHealth, presentationMargin, productCost } from "@/lib/kitchen/rules"
@@ -38,7 +39,7 @@ export function ProductsView() {
 
   return (
     <>
-      <PageHead title="Productos y lo que vendes" sub="El producto es lo que horneas, con sus gramos. Lo que vendes puede ser una caja armada, por unidad o por sabor y tamaño; su precio ya incluye el empaque.">
+      <PageHead title="Productos y lo que vendes" sub="Lo que horneas y cómo lo vendes." help={HELP.pageProducts}>
         <button className="btn soft" onClick={() => open(<ProductForm />)} disabled={!data.recipes.length}>Nuevo producto</button>
         <button className="btn primary" onClick={() => open(<PresentationForm />)} disabled={!data.products.length}>
           <Icon name="plus" />

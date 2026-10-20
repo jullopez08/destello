@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
+import { HELP } from "@/lib/kitchen/help"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { costLabel, money, qty } from "@/lib/kitchen/format"
 import { Empty, PageHead, Tabs, useModal } from "../shared"
@@ -33,7 +34,7 @@ export function SuppliesView({ tab, setTab, query, setQuery }: { tab: SupplyTab;
 
   return (
     <>
-      <PageHead title="Insumos" sub="Todo se mide por peso, volumen o unidad. El costo es el promedio de lo que has pagado a todos los proveedores.">
+      <PageHead title="Insumos" sub="Lo que tienes de cada insumo." help={HELP.pageSupplies}>
         <button className="btn soft" onClick={() => open(<PerishableReview />)}>Revisar vencimientos</button>
         <button className="btn primary" onClick={() => open(<SupplyForm />)}>
           <Icon name="plus" />

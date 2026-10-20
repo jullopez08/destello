@@ -5,7 +5,7 @@ import { Role } from '@prisma/client';
 // (ADMIN) para una empresa existente.
 export class CreateUserDto {
 
-  @IsEmail()
+  @IsEmail({}, { message: 'Escribe un correo válido, como nombre@correo.com.' })
   email!: string;
 
   @IsString()

@@ -14,6 +14,7 @@ import {
   buildPaymentDueEmailSubject,
   PaymentDueNoticeDetails,
 } from './payment-due-email.template';
+import { buildSignupCodeEmailHtml } from './signup-code-email.template';
 
 const DEFAULT_FROM = `${BRAND_NAME} <noreply@aggendarme.com>`;
 
@@ -38,9 +39,9 @@ export class EmailService {
     }
   }
 
-  private async send(payload: { from: string; to: string | string[]; subject: string; html: string }) {
+  private async send(payload: { from: string; to: string | string[]; subject: string; html: string }, devNote = '') {
     if (!this.resend) {
-      const links = process.env.NODE_ENV === 'production' ? '' : ` links=${(payload.html.match(/href="([^"]+)"/g) ?? []).join(' ')}`;
+      const links = process.env.NODE_ENV === 'production' ? '' : ` links=${(payload.html.match(/href="([^"]+)"/g) ?? []).join(' ')}${devNote}`;
       this.logger.warn(`[email not sent] to=${String(payload.to)} subject="${payload.subject}"${links}`);
       return { data: { id: 'not-sent' }, error: null };
     }
@@ -122,5 +123,21 @@ export class EmailService {
 
     this.logger.log(`Payment due notice accepted by Resend (id=${data?.id})`);
     return true;
+  }
+
+  // Código para confirmar el correo al inscribirse. Sin llave de Resend (local,
+  // o sin dominio propio) el código sale en el log fuera de producción.
+  async sendSignupCode(to: string, code: string, minutes: number): Promise<void> {
+    const { data, error } = await this.send(
+      { from: this.from, to, subject: `${code} es tu código de ${BRAND_NAME}`, html: buildSignupCodeEmailHtml(code, minutes) },
+      ` code=${code}`,
+    );
+
+    if (error) {
+      this.logger.error(`Failed to send signup code: ${error.message}`);
+      return;
+    }
+
+    this.logger.log(`Signup code email accepted by Resend (id=${data?.id})`);
   }
 }

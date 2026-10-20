@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
+import { HELP } from "@/lib/kitchen/help"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { recipeCostPerGram } from "@/lib/kitchen/rules"
 import { lotState } from "@/lib/kitchen/lots"
@@ -18,7 +19,7 @@ export function RecipesView() {
 
   return (
     <>
-      <PageHead title="Recetas y masas" sub="Masas y rellenos que preparas: cada receta rinde una tanda en gramos. Las galletas se hacen por lote y se guardan; los rollos y panes, solo con pedido.">
+      <PageHead title="Recetas y masas" sub="Tus masas y rellenos, y cuánto rinden." help={HELP.pageRecipes}>
         <button className="btn soft" onClick={() => open(<LotForm />)} disabled={!data.recipes.length}>Producir lote de masa</button>
         <button className="btn primary only-desktop" onClick={() => open(<RecipeForm />)}>
           <Icon name="plus" />

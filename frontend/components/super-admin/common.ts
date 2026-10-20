@@ -18,6 +18,9 @@ export interface Organization {
   slug: string
   active: boolean
   palette: string
+  businessType: "PRODUCTION" | "RESTAURANT"
+  /** Inscrita sola con SIGNUP_MODE=review: espera "Aprobar" */
+  approvalPending: boolean
   createdAt: string
   dataDeletionScheduledAt: string | null
   subscription: Subscription | null

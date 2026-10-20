@@ -83,7 +83,7 @@ export class KitchenSnapshotService {
       accounts: accounts.map(({ id, bank, type, number, owner }) => ({ id, bank, type, number, owner })),
       couriers: couriers.map(({ id, name, phone, position }) => ({ id, name, phone, position })),
       suppliers: suppliers.map(({ id, name, contact, phone, email, address, notes, color }) => ({ id, name, contact, phone, email, address, notes, color })),
-      supplies: supplies.map(({ id, name, kind, category, stock, min, cost, perishable, supplierId }) => ({ id, name, kind, category, stock, min, cost, perishable, supplierId })),
+      supplies: supplies.map(({ id, name, kind, category, stock, min, cost, pricePaid, priceQty, perishable, supplierId }) => ({ id, name, kind, category, stock, min, cost, pricePaid, priceQty, perishable, supplierId })),
       /** Lo que entró de cada insumo con vencimiento y aún queda, también lo vencido */
       supplyBatches: batches.map(({ id, supplyId, qty, left, expiresOn, receivedOn }) => ({ id, supplyId, qty, left, expiresOn, receivedOn })),
       /** Insumos botados en los últimos 70 días (Analítica) */

@@ -39,26 +39,26 @@ export function TodayView() {
     <>
       <PageHead title={firstName ? `${greeting()}, ${firstName}` : greeting()} sub={`Así va la cocina hoy, ${longDate(today)}.`}>
         <div className="row only-desktop">
-          <VoiceToggle />
-          <button className="btn primary" onClick={() => open(<OrderForm />)}>
+          <div data-tour="voz"><VoiceToggle /></div>
+          <button className="btn primary" data-tour="nuevo-pedido" onClick={() => open(<OrderForm />)}>
             <Icon name="plus" />
             Nuevo pedido
           </button>
         </div>
       </PageHead>
-      <div className="only-mobile" style={{ marginBottom: 14 }}>
+      <div className="only-mobile" style={{ marginBottom: 14 }} data-tour="voz">
         <VoiceCard />
       </div>
       <LotAlerts />
       <SupplyAlerts />
-      <div className="grid g4">
+      <div className="grid g4" data-tour="hoy-cifras">
         <Kpi v={todays.length} l="Pedidos para hoy" s={`${pend.length} por producir`} c="c-accent" href="#pedidos" />
         <Kpi v={money(sales)} l="Ventas de hoy" s="Sin contar domicilios" c="c-strawberry" />
         <Kpi v={boxes} l="Cajas por armar" s={`${Object.keys(plan.boxes).length} presentaciones`} c="c-lilac" href="#produccion" />
         <Kpi v={low.length} l="Insumos bajos" s={low.length ? "Revisa antes de producir" : "Todo en orden"} c="c-peach" href={low.length ? "#insumos/bajos" : undefined} />
       </div>
       <div className="grid g2" style={{ marginTop: 16 }}>
-        <div className="card">
+        <div className="card" data-tour="hoy-produccion">
           <div className="row between">
             <h2>Producción de hoy</h2>
             <a className="btn ghost sm" href="#produccion">Ver lista</a>
@@ -91,7 +91,7 @@ export function TodayView() {
             </div>
           ) : null}
         </div>
-        <div className="card">
+        <div className="card" data-tour="hoy-pedidos">
           <div className="row between">
             <h2>Pedidos por producir</h2>
             <a className="btn ghost sm" href="#pedidos">Ver pedidos</a>
@@ -112,7 +112,7 @@ export function TodayView() {
             <Empty>Todo producido.</Empty>
           )}
         </div>
-        <div className="card">
+        <div className="card" data-tour="hoy-insumos">
           <h2>Insumos bajos</h2>
           {low.length ? (
             <div className="list">
@@ -145,7 +145,7 @@ export function TodayView() {
               </p>
             </div>
           ) : null}
-          <div className="card">
+          <div className="card" data-tour="hoy-camino">
             <h2>En camino</h2>
             {onWay.length ? (
               <div className="list">

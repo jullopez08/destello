@@ -137,7 +137,7 @@
 /* ---------- Ventanas en el celular: suben desde abajo ---------- */
 @media (max-width: 560px) {
   .veil { place-items: end stretch; padding: 0; }
-  .modal, .modal.wide { width: 100%; max-height: 92dvh; border-radius: 26px 26px 0 0; border-bottom: 0; }
+  .modal, .modal.wide { width: 100%; max-height: 92%; border-radius: 26px 26px 0 0; border-bottom: 0; }
   .modal > header { padding: 18px 18px 6px; }
   .modal .body { padding: 8px 18px 8px; }
   .modal > footer { padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px)); }

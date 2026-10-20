@@ -58,7 +58,7 @@ function attempts(d: any, today: string) {
     ['Editar un proveedor', 'PUT', `/kitchen/suppliers/${supplier.id}`, { name: 'x', color: supplier.color, supplyIds: [] }],
     ['Borrar un proveedor', 'DELETE', `/kitchen/suppliers/${supplier.id}`],
     ['Editar un insumo', 'PUT', `/kitchen/supplies/${supply.id}`,
-      { name: 'x', kind: supply.kind, category: supply.category, stock: 0, min: 0, cost: 0 }],
+      { name: 'x', kind: supply.kind, category: supply.category, stock: 0, min: 0, cost: 1 }],
     ['Borrar un insumo', 'DELETE', `/kitchen/supplies/${supply.id}`],
     ['Marcar vencimiento de un insumo', 'PATCH', '/kitchen/supplies/perishable', { items: [{ supplyId: supply.id, perishable: false }] }],
     ['Comprar un insumo ajeno', 'POST', '/kitchen/purchases',
@@ -118,6 +118,7 @@ async function main() {
   list.push(['Ver la cuenta de la dueña de Destello', 'GET', `/users/${ownerId}`]);
   list.push(['Ver la empresa Destello', 'GET', `/organizations/${orgId}`]);
   list.push(['Ver la suscripción de Destello', 'GET', `/subscriptions/${orgId}`]);
+  list.push(['Aprobar un negocio (solo super admin)', 'POST', `/organizations/${orgId}/approve`]);
 
   let failures = 0;
   for (const [label, method, path, body] of list) {

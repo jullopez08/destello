@@ -65,7 +65,7 @@ export function DoughCards({ least }: { least: Seller[] }) {
 
       <div className="card">
         <h2>Masa por lote</h2>
-        <p className="small muted">Lo que conviene preparar, según lo que te pidieron en 4 semanas.</p>
+        <p className="small muted">Cuánta preparar, según lo pedido en 4 semanas.</p>
         {plan.length ? (
           <div className="hbars" role="list" aria-label="Masa sugerida por lote" style={{ marginTop: 12 }}>
             {plan.map((x) => {

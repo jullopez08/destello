@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { HELP } from "@/lib/kitchen/help"
 import { Icon } from "@/components/ui/icon"
 import { useKitchen } from "@/lib/kitchen/store"
 import { grams } from "@/lib/kitchen/format"
@@ -31,7 +32,7 @@ export function SetupView() {
 
   return (
     <>
-      <PageHead title="Primeros pasos" sub="Antes de empezar, deja lista tu cocina. Son 4 pasos y puedes cambiar todo después en Configuración." />
+      <PageHead title="Primeros pasos" sub="4 pasos para dejar lista tu cocina." help={HELP.pageSetup} />
       <div className="prod-progress setup-progress" role="group" aria-label="Avance de los primeros pasos">
         <div className="row between">
           <b>{count} de 4 listos</b>
@@ -43,7 +44,7 @@ export function SetupView() {
       </div>
 
       <div className="setup-steps">
-        <Step n={1} done={done[0]} title="Tu negocio" text="El nombre, el WhatsApp donde te piden, la hora de corte y los días que cierras.">
+        <Step n={1} done={done[0]} title="Tu negocio" text="Nombre, WhatsApp, hora de corte y días que cierras.">
           {done[0] && !editBusiness ? (
             <div className="row between">
               <span className="small">{data.settings.name} · WhatsApp {data.settings.whatsapp}</span>
@@ -54,7 +55,7 @@ export function SetupView() {
           )}
         </Step>
 
-        <Step n={2} done={done[1]} title="Tu primera receta" text="Una masa con sus ingredientes y cuántos gramos rinde. Los ingredientes que no tengas se crean ahí mismo.">
+        <Step n={2} done={done[1]} title="Tu primera receta" text="Una masa, sus ingredientes y cuánto rinde.">
           <List items={data.recipes.map((r) => `${r.name} · rinde ${grams(r.yieldGrams)}`)} />
           <button type="button" className={`btn ${done[1] ? "soft" : "primary"} sm`} onClick={() => open(<RecipeForm />)}>
             <Icon name="plus" />
@@ -62,7 +63,7 @@ export function SetupView() {
           </button>
         </Step>
 
-        <Step n={3} done={done[2]} title="Tu llave Bre-B" text="Donde tus clientes te transfieren: tu celular, correo, cédula o el código que te dio el banco.">
+        <Step n={3} done={done[2]} title="Tu llave Bre-B" text="Donde tus clientes te transfieren.">
           <List items={keys.map((k) => `${k.number}${k.bank ? ` · ${k.bank}` : ""}`)} />
           <button type="button" className={`btn ${done[2] ? "soft" : "primary"} sm`} onClick={() => open(<AccountForm initialKind="breb" />)}>
             <Icon name="plus" />
@@ -70,7 +71,7 @@ export function SetupView() {
           </button>
         </Step>
 
-        <Step n={4} done={done[3]} title="Tus repartidores" text="Escribe cada nombre igual a como lo tienes guardado en tu WhatsApp. El primero es al que se le pregunta primero.">
+        <Step n={4} done={done[3]} title="Tus repartidores" text="Con el nombre que tienes en tu WhatsApp. El primero es el principal.">
           <List items={data.couriers.map((c) => `${c.name} · ${c.phone}`)} />
           <button type="button" className={`btn ${done[3] ? "soft" : "primary"} sm`} onClick={() => open(<CourierForm />)}>
             <Icon name="plus" />

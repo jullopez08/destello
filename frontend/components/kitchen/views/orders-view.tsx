@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
+import { HELP } from "@/lib/kitchen/help"
 import { byId, lineLabel, orderTotal, useKitchen } from "@/lib/kitchen/store"
 import { dateLabel, money } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
@@ -70,13 +71,13 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
 
   return (
     <>
-      <PageHead title="Pedidos" sub="Los pedidos llegan por WhatsApp a tu celular. Aquí los registras y sigues su entrega.">
-        <button className="btn primary only-desktop" onClick={() => open(<OrderForm />)}>
+      <PageHead title="Pedidos" sub="Registra tus pedidos y sigue su entrega." help={HELP.pageOrders}>
+        <button className="btn primary only-desktop" data-tour="nuevo-pedido" onClick={() => open(<OrderForm />)}>
           <Icon name="plus" />
           Nuevo pedido
         </button>
       </PageHead>
-      <button className="fab only-mobile" onClick={() => open(<OrderForm />)}>
+      <button className="fab only-mobile" data-tour="nuevo-pedido" onClick={() => open(<OrderForm />)}>
         <Icon name="plus" />
         Pedido a mano
       </button>

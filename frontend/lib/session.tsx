@@ -16,7 +16,17 @@ export interface SessionUser {
   palette: string | null
   logoUrl: string | null
   termsAcceptedAt: string | null
+  /** PRODUCTION: pastelería, panadería, cocina oculta · RESTAURANT: con mesas */
+  businessType: BusinessType | null
+  /** Inscrita por la página y esperando la aprobación del super admin */
+  approvalPending: boolean
+  /** Cuándo terminó o saltó la guía del panel; null = se le muestra */
+  tourCompletedAt: string | null
+  /** Secciones cuya tarjeta de primera vez ya cerró */
+  seenTips: string[]
 }
+
+export type BusinessType = "PRODUCTION" | "RESTAURANT"
 
 // Versión de los términos que acepta la dueña: la fecha "Última actualización"
 // de /terminos y /privacidad. Cambiarla no obliga a aceptar de nuevo; solo

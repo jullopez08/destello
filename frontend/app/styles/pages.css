@@ -10,6 +10,9 @@
 .login .form { display: grid; place-items: center; padding: 32px 16px; }
 .login form { width: min(380px, 100%); display: flex; flex-direction: column; gap: 14px; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--ink-2); text-decoration: underline; cursor: pointer; font-size: 13px; text-align: left; }
+/* Entrada, registro y espera: los enlaces de abajo centrados y sin subrayar, como botones suaves (Julieth, 2026-10-19). */
+.login form .linkbtn, .signup-closed .linkbtn { align-self: center; text-align: center; text-decoration: none; font-weight: 600; }
+.login form .linkbtn:disabled { opacity: 0.55; cursor: default; }
 
 /* ---------- Gráficas ---------- */
 .chart svg { width: 100%; height: auto; display: block; }
@@ -114,15 +117,15 @@
 /* ---------- Configuración ---------- */
 /* Días cerrados: botones redondos de un toque (Lun … Dom). */
 .days { display: flex; flex-wrap: wrap; gap: 6px; }
-.days label { cursor: pointer; }
-.days input { position: absolute; opacity: 0; pointer-events: none; }
+.days label { cursor: pointer; position: relative; }
+.days input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .days span { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; font-size: 13px; text-transform: capitalize; }
 .days input:checked + span { background: var(--strawberry); border-color: var(--ink); text-decoration: line-through; }
 .days input:focus-visible + span { outline: 3px solid var(--accent-deep); }
 /* Paletas: círculos de color con su nombre debajo. */
 .palettes { display: flex; flex-wrap: wrap; gap: 10px 14px; }
-.palettes label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 56px; }
-.palettes input { position: absolute; opacity: 0; pointer-events: none; }
+.palettes label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 56px; position: relative; }
+.palettes input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .palettes .dot { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); }
 .palettes input:checked ~ .dot { border-color: var(--ink); box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--ink); }
 .palettes input:checked ~ .small { font-weight: 700; }
@@ -200,7 +203,7 @@
   /* 16 px: con menos, el iPhone agranda la pantalla al tocar el campo. */
   .login .f input { font-size: 16px; min-height: 50px; }
   .login .btn.primary { min-height: 52px; font-size: 16px; }
-  .login .linkbtn { font-size: 14px; padding: 6px 0; align-self: flex-start; }
+  .login .linkbtn { font-size: 14px; padding: 6px 0; }
 }
 /* Documentos legales en la bienvenida: filas que se tocan (abren en otra pestaña). */
 .doc-links { display: flex; flex-direction: column; padding: 4px 16px; }
@@ -230,3 +233,14 @@
 /* Analítica de la masa (analytics-dough.tsx) */
 .dough-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .dough-pending { display: inline-flex; margin-top: 14px; }
+
+/* Inscripción (/registro) */
+.signup-closed { width: min(380px, 100%); display: flex; flex-direction: column; gap: 14px; }
+.signup-type { border: 0; margin: 0; padding: 0; min-width: 0; }
+.signup-type { display: flex; flex-direction: column; gap: 5px; }
+.signup-type legend { padding: 0; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
+.signup-type .seg span { display: block; border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+.signup-terms { gap: 10px; flex-wrap: nowrap; align-items: flex-start; }
+.signup-terms input { width: 20px; height: 20px; accent-color: var(--accent-deep); flex: none; margin-top: 2px; }
+.signup-code { font-size: 24px; letter-spacing: 8px; text-align: center; font-variant-numeric: tabular-nums; }
+.pending-callout { display: block; width: 100%; text-align: left; border: 0; cursor: pointer; margin-bottom: 12px; font-weight: 600; color: var(--ink); }

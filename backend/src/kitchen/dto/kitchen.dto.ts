@@ -9,6 +9,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
   Matches,
   Max,
@@ -74,7 +75,7 @@ export class SupplierDto {
   @IsString() @IsNotEmpty() @MaxLength(80) name!: string;
   @IsOptional() @IsString() @MaxLength(80) contact?: string;
   @IsOptional() @IsString() @MaxLength(30) phone?: string;
-  @IsOptional() @ValidateIf((_, v) => v !== '') @IsEmail() email?: string;
+  @IsOptional() @ValidateIf((_, v) => v !== '') @IsEmail({}, { message: 'Escribe un correo válido, como nombre@correo.com.' }) email?: string;
   @IsOptional() @IsString() @MaxLength(160) address?: string;
   @IsOptional() @IsString() @MaxLength(500) notes?: string;
   @IsIn(CARD_COLORS) color!: string;
@@ -89,7 +90,11 @@ export class SupplyDto {
   @IsNumber() @Min(0) stock!: number;
   @IsNumber() @Min(0) min!: number;
   /** por g, ml o und */
-  @IsNumber() @Min(0) cost!: number;
+  /** Por gramo, mililitro o unidad: siempre mayor que cero (Julieth, 2026-10-19) */
+  @IsNumber() @IsPositive() cost!: number;
+  /** Lo pagado y por cuánto (g, ml o und), tal como se escribió (para mostrarlo igual al editar) */
+  @IsOptional() @IsNumber() @IsPositive() pricePaid?: number;
+  @IsOptional() @IsNumber() @IsPositive() priceQty?: number;
   @IsOptional() @ValidateIf((_, v) => v !== null) @IsString() supplierId?: string | null;
   /** Tiene fecha de vencimiento (cada compra pide la fecha) */
   @IsOptional() @IsBoolean() perishable?: boolean;
@@ -111,7 +116,7 @@ export class SupplyPerishableDto {
 export class PurchaseLineDto {
   @IsString() @IsNotEmpty() supplyId!: string;
   @IsNumber() @Min(0.0001) qty!: number;
-  @IsInt() @Min(0) total!: number;
+  @IsInt() @Min(1) total!: number;
   /** Obligatoria si el insumo tiene vencimiento */
   @IsOptional() @Matches(ISO_DATE) expiresOn?: string;
 }

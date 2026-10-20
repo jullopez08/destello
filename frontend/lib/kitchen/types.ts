@@ -40,6 +40,9 @@ export interface Supply {
   stock: number
   min: number
   cost: number
+  /** Último precio tal como se escribió: lo pagado (pesos) por tanta cantidad (g, ml o und); null en los viejos */
+  pricePaid: number | null
+  priceQty: number | null
   /** tiene fecha de vencimiento: cada compra pide la fecha y queda como un lote */
   perishable: boolean
   supplierId: string | null

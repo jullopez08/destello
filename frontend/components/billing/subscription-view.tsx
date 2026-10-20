@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { HELP } from "@/lib/kitchen/help"
 import { Empty, PageHead } from "@/components/kitchen/shared"
 import { WompiCheckout } from "./wompi-checkout"
 import { paymentState, PAY_EARLY_DAYS, type MySubscription } from "@/lib/billing"
@@ -39,7 +40,7 @@ export function SubscriptionView({ subscription }: { subscription: MySubscriptio
 
   return (
     <>
-      <PageHead title="Suscripción" sub="Tu plan de Destello y tus pagos. El pago es con Wompi: tarjeta, PSE, Nequi o Bancolombia." />
+      <PageHead title="Suscripción" sub="Tu plan y tus pagos." help={HELP.pageSubscription} />
       {reason === "blocked" ? (
         <div className="callout c-strawberry sub-alert">
           <b>Tu panel está en pausa por falta de pago.</b> Paga tu plan para volver a usarlo; tus datos siguen guardados.
@@ -85,17 +86,17 @@ export function SubscriptionView({ subscription }: { subscription: MySubscriptio
                 {s.amountDue < s.plan.price ? <span className="muted"> (con tu descuento; precio normal {money(s.plan.price / 100)})</span> : null}
               </p>
               <WompiCheckout label={reason === "blocked" || reason === "grace" ? "Pagar y reactivar" : "Pagar con Wompi"} />
-              <p className="small muted">Cada pago aprobado extiende tu plan {s.plan.durationDays} días. Si pagas antes de que venza no pierdes días: se suman desde la fecha de vencimiento. Si un pago se rechaza, no se cobra nada y puedes intentarlo de nuevo.</p>
+              <p className="small muted">Cada pago suma {s.plan.durationDays} días desde que vence: pagar antes no te hace perder días.</p>
             </>
           ) : s.plan.isTrial ? (
             <>
               <h2 style={{ margin: 0 }}>Cuando termine la prueba</h2>
-              <p>Tu prueba es gratis y no tienes que pagar nada todavía. Al terminar, pasas al plan mensual y te pediremos el pago aquí mismo.</p>
+              <p>Tu prueba es gratis. Al terminar, pagas el plan mensual aquí.</p>
             </>
           ) : (
             <>
               <h2 style={{ margin: 0 }}>Estás al día</h2>
-              <p>No tienes nada que pagar ahora. {PAY_EARLY_DAYS} días antes de que venza tu plan aparece aquí el botón para pagar.</p>
+              <p>Nada por pagar ahora. El botón aparece {PAY_EARLY_DAYS} días antes de que venza.</p>
             </>
           )}
         </div>

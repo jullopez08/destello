@@ -23,3 +23,32 @@ export function ConfirmForm({ title, text, label, path, method, done }: { title:
     </Modal>
   )
 }
+
+// "¿Está seguro?" antes de guardar (Julieth, 2026-10-19): muestra lo que va a quedar en la tarjeta. Se abre encima
+// del formulario: «No, modificar» vuelve a él tal como estaba; «Sí, confirmar» guarda y cierra los dos.
+export function ConfirmSave({ title, rows, onConfirm }: { title: string; rows: [string, React.ReactNode][]; onConfirm: () => Promise<unknown> }) {
+  const { close } = useModal()
+  return (
+    <Modal
+      title={title}
+      sub="Revisa que todo esté bien."
+      submit="Sí, confirmar"
+      cancel="No, modificar"
+      onClose={close}
+      onSubmit={async () => {
+        await onConfirm()
+        close()
+        close()
+      }}
+    >
+      <dl className="confirm-rows">
+        {rows.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </Modal>
+  )
+}
