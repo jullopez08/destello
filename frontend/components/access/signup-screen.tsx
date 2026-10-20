@@ -6,20 +6,15 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { api, errorMessage } from "@/lib/api"
 import { contactHref, TRIAL_MESSAGE } from "@/lib/contact"
 import { phoneInput } from "@/lib/kitchen/format"
-import { CURRENT_TERMS_VERSION, type BusinessType } from "@/lib/session"
+import { CURRENT_TERMS_VERSION } from "@/lib/session"
 import { Art } from "./access-art"
-
-const TYPES: [BusinessType, string][] = [
-  ["PRODUCTION", "Pastelería, panadería o cocina oculta"],
-  ["RESTAURANT", "Restaurante con mesas"],
-]
 
 // Inscripción por la página (/registro): datos del negocio, código al correo y
 // al confirmarlo entra a su cocina con la prueba gratis, sin tarjeta.
 export function SignupScreen() {
   const [mode, setMode] = useState<"open" | "review" | "closed" | null>(null)
   const [step, setStep] = useState<"form" | "code">("form")
-  const [f, setF] = useState({ ownerName: "", email: "", whatsapp: "", businessName: "", businessType: "PRODUCTION" as BusinessType, password: "" })
+  const [f, setF] = useState({ ownerName: "", email: "", whatsapp: "", businessName: "", servesTables: false, password: "" })
   const [terms, setTerms] = useState(false)
   const [code, setCode] = useState("")
   const [sentAt, setSentAt] = useState(0)
@@ -85,18 +80,18 @@ export function SignupScreen() {
               <input autoComplete="organization" placeholder="Ej. Pastelería Dulce Hogar" value={f.businessName} onChange={(e) => set({ businessName: e.target.value })} required />
             </label>
             <fieldset className="f signup-type">
-              <legend>Tipo de negocio</legend>
-              <div className="seg col">
-                {TYPES.map(([id, label]) => (
-                  <label key={id}>
-                    <input type="radio" name="businessType" checked={f.businessType === id} onChange={() => set({ businessType: id })} />
+              <legend>¿Atiendes clientes en mesas?</legend>
+              <div className="seg">
+                {([[false, "No"], [true, "Sí"]] as const).map(([value, label]) => (
+                  <label key={label}>
+                    <input type="radio" name="servesTables" checked={f.servesTables === value} onChange={() => set({ servesTables: value })} />
                     <span>{label}</span>
                   </label>
                 ))}
               </div>
-              {f.businessType === "RESTAURANT" ? (
-                <span className="small muted">Las mesas, los meseros y la pantalla de cocina están en camino. Mientras tanto tienes pedidos, producción e inventario.</span>
-              ) : null}
+              <span className="small muted">
+                {f.servesTables ? "Las mesas y los meseros están en camino. Ya tienes pedidos, producción e inventario." : "Pedidos, domicilios, producción e inventario. Lo puedes cambiar después."}
+              </span>
             </fieldset>
             <label className="f">
               Correo

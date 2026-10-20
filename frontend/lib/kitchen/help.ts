@@ -89,6 +89,8 @@ export const HELP = {
   staffName: "Como le dicen en el restaurante. Así sale en sus mesas.",
   staffKitchen: "Un nombre para reconocer la tablet. Ej.: «Cocina» o «Barra».",
 
+  businessTables: "Sí: se encienden las mesas y los meseros. Pedidos, domicilios y recetas los tienen todos.",
+
   // Lo que explica cómo funciona cada sección: va en el "?" junto al título (PageHead help), no en el subtítulo.
   pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos.",
   pageProduction: "Sale de los pedidos hasta la hora de corte. Primero se usa la masa de los lotes.",

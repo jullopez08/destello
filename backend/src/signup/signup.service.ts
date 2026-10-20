@@ -45,7 +45,7 @@ export class SignupService {
       whatsapp,
       ownerName: dto.ownerName.trim(),
       businessName: dto.businessName.trim(),
-      businessType: dto.businessType,
+      servesTables: dto.servesTables,
       passwordHash: await bcrypt.hash(dto.password, 10),
       termsVersion: dto.termsVersion,
       codeHash: hashCode(code),
@@ -78,7 +78,7 @@ export class SignupService {
       const { owner } = await createOrganizationWithOwner(tx, {
         name: request.businessName,
         slug: await freeSlug(tx, request.businessName),
-        businessType: request.businessType,
+        servesTables: request.servesTables,
         whatsapp: phoneDisplay(request.whatsapp),
         approvalPending: this.mode === 'review',
         plan,

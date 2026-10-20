@@ -44,7 +44,7 @@ export class OrganizationsService {
           name: dto.name,
           slug: dto.slug,
           palette: dto.palette,
-          businessType: dto.businessType,
+          servesTables: dto.servesTables,
           plan,
           owner: { name: dto.ownerName, email: dto.ownerEmail, passwordHash },
         });

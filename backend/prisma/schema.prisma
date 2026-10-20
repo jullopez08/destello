@@ -23,8 +23,9 @@ model Organization {
   logoUrl String?
   /// Paleta del panel elegida por la dueña: vainilla | fresa | lavanda | menta | durazno | cielo
   palette String  @default("vainilla")
-  /// Producción por pedido (pastelería, panadería, cocina oculta) o restaurante con mesas
-  businessType     BusinessType @default(PRODUCTION)
+  /// "¿Atiendes clientes en mesas?" (Julieth, 2026-10-19): enciende mesas y meseros. Pastelería, panadería,
+  /// cocina oculta o restaurante da igual: todas tienen pedidos, domicilios, recetas y pantalla de cocina.
+  servesTables     Boolean      @default(false)
   /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
   approvalPending  Boolean      @default(false)
 
@@ -67,13 +68,6 @@ model Organization {
   orders           Order[]
   editions         Edition[]
   productionChecks ProductionCheck[]
-}
-
-enum BusinessType {
-  /// Pastelería, panadería, cocina oculta: produce lo pedido
-  PRODUCTION
-  /// Restaurante con mesas (módulo de mesas, meseros y cocina)
-  RESTAURANT
 }
 
 /// Mesero (su celular, con PIN) o pantalla de cocina (tablet fija). No tienen correo ni contraseña: entran
@@ -135,7 +129,7 @@ model SignupRequest {
   /// Ya cifrada con bcrypt
   passwordHash  String
   businessName  String
-  businessType  BusinessType
+  servesTables  Boolean
   /// Solo dígitos, para no dar dos pruebas al mismo número
   whatsapp      String
   termsVersion  String

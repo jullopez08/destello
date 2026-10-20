@@ -18,7 +18,8 @@ export interface Organization {
   slug: string
   active: boolean
   palette: string
-  businessType: "PRODUCTION" | "RESTAURANT"
+  /** "¿Atiende clientes en mesas?" */
+  servesTables: boolean
   /** Inscrita sola con SIGNUP_MODE=review: espera "Aprobar" */
   approvalPending: boolean
   createdAt: string

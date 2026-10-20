@@ -73,7 +73,7 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                         <span className="swatch" style={{ background: PALETTES.find((p) => p.id === o.palette)?.swatch }} />
                         <div>
                           <b>{o.name}</b>
-                          <div className="small muted">{o.slug}{o.businessType === "RESTAURANT" ? " · Restaurante" : ""}</div>
+                          <div className="small muted">{o.slug}{o.servesTables ? " · Con mesas" : ""}</div>
                         </div>
                       </div>
                     </td>
@@ -119,7 +119,7 @@ export function OrganizationForm({ plans, reload }: { plans: Plan[]; reload: () 
   const { close } = useModal()
   const toast = useToast()
   const activePlans = plans.filter((p) => p.active)
-  const [f, setF] = useState({ name: "", slug: "", businessType: "PRODUCTION", planId: activePlans.find((p) => p.isTrial)?.id ?? activePlans[0]?.id ?? "", palette: "vainilla", ownerName: "", ownerEmail: "", ownerPassword: "" })
+  const [f, setF] = useState({ name: "", slug: "", servesTables: false, planId: activePlans.find((p) => p.isTrial)?.id ?? activePlans[0]?.id ?? "", palette: "vainilla", ownerName: "", ownerEmail: "", ownerPassword: "" })
   const [slugTouched, setSlugTouched] = useState(false)
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }))
 
@@ -147,10 +147,10 @@ export function OrganizationForm({ plans, reload }: { plans: Plan[]; reload: () 
         <Field label="Identificador" hint="Minúsculas, números y guiones.">
           <input value={f.slug} onChange={(e) => { setSlugTouched(true); set({ slug: slugify(e.target.value) }) }} required />
         </Field>
-        <Field label="Tipo de negocio">
-          <select value={f.businessType} onChange={(e) => set({ businessType: e.target.value })}>
-            <option value="PRODUCTION">Pastelería, panadería o cocina oculta</option>
-            <option value="RESTAURANT">Restaurante con mesas</option>
+        <Field label="¿Atiende clientes en mesas?">
+          <select value={f.servesTables ? "si" : "no"} onChange={(e) => set({ servesTables: e.target.value === "si" })}>
+            <option value="no">No</option>
+            <option value="si">Sí</option>
           </select>
         </Field>
         <Field label="Plan">

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { BusinessType, StaffRole } from '@prisma/client';
+import { StaffRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStaffDto } from './dto/staff.dto';
@@ -32,8 +32,9 @@ export class StaffAdminService {
 
   async create(organizationId: string, dto: CreateStaffDto) {
     const organization = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
-    if (organization.businessType !== BusinessType.RESTAURANT) {
-      throw new BadRequestException('Los meseros y la pantalla de cocina son para restaurantes con mesas.');
+    // La pantalla de cocina sirve a todos; los meseros, solo si atiende en mesas (Julieth, 2026-10-19).
+    if (dto.role === StaffRole.WAITER && !organization.servesTables) {
+      throw new BadRequestException('Los meseros son para negocios que atienden en mesas. Actívalo en Configuración.');
     }
     // El PIN se muestra solo esta vez (se guarda cifrado): la dueña se lo dice al mesero.
     const pin = dto.role === StaffRole.WAITER ? newPin() : null;

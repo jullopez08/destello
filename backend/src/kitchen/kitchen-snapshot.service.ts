@@ -76,6 +76,7 @@ export class KitchenSnapshotService {
         closedDays: organization.closedDays,
         targetMargin: organization.targetMargin,
         palette: organization.palette,
+        servesTables: organization.servesTables,
         logoUrl: organization.logoUrl,
         /** false: el panel solo muestra los primeros pasos */
         setupDone: organization.setupCompletedAt !== null,
