@@ -16,6 +16,7 @@ import { DataRetentionModule } from './data-retention/data-retention.module';
 import { KitchenModule } from './kitchen/kitchen.module';
 import { SignupModule } from './signup/signup.module';
 import { StaffModule } from './staff/staff.module';
+import { RestaurantModule } from './restaurant/restaurant.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { StaffModule } from './staff/staff.module';
     KitchenModule,
     SignupModule,
     StaffModule,
+    RestaurantModule,
   ],
   controllers: [AppController],
   providers: [AppService],

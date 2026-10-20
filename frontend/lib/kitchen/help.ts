@@ -91,6 +91,9 @@ export const HELP = {
 
   businessTables: "Sí: se encienden las mesas y los meseros. Pedidos, domicilios y recetas los tienen todos.",
 
+  tables: "Los meseros las ven en su celular para abrirlas y enviar comandas. Las abiertas salen en verde.",
+  tableName: "Como la llaman en el salón. Ej.: «Terraza 2» o «Barra».",
+
   // Lo que explica cómo funciona cada sección: va en el "?" junto al título (PageHead help), no en el subtítulo.
   pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos.",
   pageProduction: "Sale de los pedidos hasta la hora de corte. Primero se usa la masa de los lotes.",
