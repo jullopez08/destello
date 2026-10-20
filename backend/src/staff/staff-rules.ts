@@ -2,7 +2,6 @@ import { createHash, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 
 // Reglas puras del equipo del restaurante (meseros y pantalla de cocina), probadas en staff-rules.spec.ts.
 
-export const INVITE_MS = 48 * 60 * 60 * 1000;
 export const MAX_PIN_FAILS = 5;
 export const PIN_LOCK_MS = 15 * 60 * 1000;
 export const SESSION_HOURS = 12;
@@ -10,7 +9,7 @@ export const DEVICE_COOKIE = 'staff_device';
 export const SESSION_COOKIE = 'staff_session';
 export const DEVICE_COOKIE_MS = 365 * 24 * 60 * 60 * 1000;
 
-/** Secreto largo al azar para enlaces y aparatos (43 caracteres). */
+/** Secreto largo al azar para el enlace fijo y los aparatos (43 caracteres). */
 export function newSecret(): string {
   return randomBytes(32).toString('base64url');
 }
@@ -53,7 +52,7 @@ export function isLocked(lockedUntil: Date | null, now: Date): boolean {
   return !!lockedUntil && lockedUntil > now;
 }
 
-/** Tras un PIN equivocado: cuántos van y, al llegar a 5, hasta cuándo queda bloqueado (y vuelve a 0). */
+/** Tras un PIN equivocado (en el aparato o al abrir el enlace): cuántos van y, al llegar a 5, hasta cuándo queda bloqueado (y vuelve a 0). */
 export function afterWrongPin(failedPins: number, now: Date): { failedPins: number; lockedUntil: Date | null } {
   const next = failedPins + 1;
   return next >= MAX_PIN_FAILS ? { failedPins: 0, lockedUntil: new Date(now.getTime() + PIN_LOCK_MS) } : { failedPins: next, lockedUntil: null };

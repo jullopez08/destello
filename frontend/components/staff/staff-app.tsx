@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Cookie } from "@/components/ui/cookie"
 import { api, ApiError, errorMessage } from "@/lib/api"
@@ -11,10 +11,10 @@ import { KitchenScreen } from "./kitchen-screen"
 interface Profile { name: string; role: "WAITER" | "KITCHEN"; organizationName: string; palette: string | null }
 type State = { kind: "loading" } | { kind: "nodevice"; message: string } | { kind: "pin"; profile: Profile } | { kind: "in"; profile: Profile }
 
-const NO_DEVICE = "Este aparato no está conectado. Pídele a la dueña tu enlace."
+const NO_DEVICE = "Este aparato no está conectado. Abre el enlace que te mandó la dueña."
 
-// Lo que ve un mesero o la pantalla de cocina (/equipo). El aparato ya quedó amarrado con su enlace:
-// el mesero escribe su PIN cada turno; la cocina entra sola. Las mesas y los pedidos llegan en el siguiente paso.
+// Lo que ve un mesero o la pantalla de cocina (/equipo). El aparato ya quedó conectado con su enlace y su PIN:
+// cada turno (12 h) se escribe el PIN otra vez, también en la cocina (Julieth, 2026-10-20).
 export function StaffApp() {
   const [state, setState] = useState<State>({ kind: "loading" })
 
@@ -30,9 +30,7 @@ export function StaffApp() {
         show({ kind: "in", profile: await api<Profile>("/staff/me") })
       } catch {
         try {
-          const profile = await api<Profile>("/staff/device")
-          if (profile.role === "KITCHEN") show({ kind: "in", profile: await api<Profile>("/staff/login", { method: "POST", body: {} }) })
-          else show({ kind: "pin", profile })
+          show({ kind: "pin", profile: await api<Profile>("/staff/device") })
         } catch (err) {
           show({ kind: "nodevice", message: err instanceof ApiError && err.status === 403 ? errorMessage(err) : NO_DEVICE })
         }
@@ -45,7 +43,7 @@ export function StaffApp() {
 
   if (state.kind === "loading") return <Screen><p className="muted">Cargando…</p></Screen>
   if (state.kind === "nodevice") return <Screen><h2>Destello</h2><p className="muted">{state.message}</p></Screen>
-  if (state.kind === "pin") return <PinPad profile={state.profile} onIn={(profile) => setState({ kind: "in", profile })} />
+  if (state.kind === "pin") return <PinPad profile={state.profile} send={(pin) => api<Profile>("/staff/login", { method: "POST", body: { pin } })} onIn={(profile) => setState({ kind: "in", profile })} />
   const out = () => setState({ kind: "pin", profile: state.profile })
   if (state.profile.role === "WAITER") return <WaiterFloor name={state.profile.name} organizationName={state.profile.organizationName} onOut={out} />
   return <KitchenScreen name={state.profile.name} organizationName={state.profile.organizationName} />
@@ -62,7 +60,7 @@ function Screen({ children }: { children: React.ReactNode }) {
   )
 }
 
-function PinPad({ profile, onIn }: { profile: Profile; onIn: (p: Profile) => void }) {
+function PinPad({ profile, send, onIn }: { profile: Profile; send: (pin: string) => Promise<Profile>; onIn: (p: Profile) => void }) {
   const [pin, setPin] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -75,7 +73,7 @@ function PinPad({ profile, onIn }: { profile: Profile; onIn: (p: Profile) => voi
     if (next.length < 4) return
     setBusy(true)
     try {
-      onIn(await api<Profile>("/staff/login", { method: "POST", body: { pin: next } }))
+      onIn(await send(next))
     } catch (err) {
       setError(errorMessage(err))
       setPin("")
@@ -106,18 +104,21 @@ function PinPad({ profile, onIn }: { profile: Profile; onIn: (p: Profile) => voi
   )
 }
 
-// /equipo/[enlace]: amarra este aparato y pasa a /equipo. El enlace sirve una sola vez (de ahí el ref:
-// en desarrollo React corre el efecto dos veces y el segundo intento ya no serviría).
+// /equipo/[enlace]: el enlace fijo de cada persona (Julieth, 2026-10-20). Saluda, pide el PIN y, si es correcto,
+// conecta este navegador y pasa a /equipo. Sirve las veces que haga falta, en cualquier navegador.
 export function ClaimDevice({ token }: { token: string }) {
   const router = useRouter()
-  const tried = useRef(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    if (tried.current) return
-    tried.current = true
-    api("/staff/claim", { method: "POST", body: { token } })
-      .then(() => router.replace("/equipo"))
+    api<Profile>("/staff/link", { method: "POST", body: { token } })
+      .then((p) => {
+        applyPalette(p.palette)
+        setProfile(p)
+      })
       .catch((err) => setError(errorMessage(err)))
-  }, [token, router])
-  return <Screen>{error ? <><h2>Enlace no válido</h2><p className="muted">{error}</p></> : <p className="muted">Conectando este aparato…</p>}</Screen>
+  }, [token])
+  if (error) return <Screen><h2>Enlace no válido</h2><p className="muted">{error}</p></Screen>
+  if (!profile) return <Screen><p className="muted">Cargando…</p></Screen>
+  return <PinPad profile={profile} send={(pin) => api<Profile>("/staff/claim", { method: "POST", body: { token, pin } })} onIn={() => router.replace("/equipo")} />
 }

@@ -15,6 +15,7 @@ import {
   PaymentDueNoticeDetails,
 } from './payment-due-email.template';
 import { buildSignupCodeEmailHtml } from './signup-code-email.template';
+import { buildStaffDeviceEmailHtml, StaffDeviceNoticeDetails } from './staff-device-email.template';
 
 const DEFAULT_FROM = `${BRAND_NAME} <noreply@aggendarme.com>`;
 
@@ -139,5 +140,20 @@ export class EmailService {
     }
 
     this.logger.log(`Signup code email accepted by Resend (id=${data?.id})`);
+  }
+
+  // Alguien del equipo conectó un aparato nuevo (StaffAuthService.claim).
+  async sendStaffDeviceNotice(to: string[], details: StaffDeviceNoticeDetails): Promise<void> {
+    const { data, error } = await this.send(
+      { from: this.from, to, subject: `${details.staffName} entró desde un aparato nuevo`, html: buildStaffDeviceEmailHtml(details) },
+      ` aparato=${details.device}`,
+    );
+
+    if (error) {
+      this.logger.error(`Failed to send staff device notice: ${error.message}`);
+      return;
+    }
+
+    this.logger.log(`Staff device notice accepted by Resend (id=${data?.id})`);
   }
 }

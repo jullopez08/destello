@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
+import { EmailModule } from '../email/email.module';
 import { StaffAdminController } from './staff-admin.controller';
 import { StaffAdminService } from './staff-admin.service';
 import { StaffAuthController } from './staff-auth.controller';
@@ -13,6 +14,7 @@ import { StaffSessionGuard } from './staff-session.guard';
 @Module({
   imports: [
     PrismaModule,
+    EmailModule,
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

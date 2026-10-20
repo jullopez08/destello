@@ -125,7 +125,7 @@ async function main() {
   const staff = lucia ? (await call(lucia, 'GET', '/kitchen/staff')).body : [];
   for (const m of Array.isArray(staff) ? staff.slice(0, 1) : []) {
     list.push([`Nuevo PIN para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/pin`]);
-    list.push([`Enlace para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/invite`]);
+    list.push([`Enlace nuevo para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/link`]);
     if (m.devices[0]) list.push([`Desconectar el aparato de ${m.name}`, 'DELETE', `/kitchen/staff/${m.id}/devices/${m.devices[0].id}`]);
     list.push([`Quitar a ${m.name} (otro restaurante)`, 'DELETE', `/kitchen/staff/${m.id}`]);
   }
