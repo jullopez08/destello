@@ -20,7 +20,7 @@ export function KitchenScreen({ name, organizationName }: { name: string; organi
 
   const show = useCallback((b: KitchenBoard) => {
     const ids = new Set(b.tickets.filter((t) => t.status === "SENT").map((t) => t.id))
-    if (seen.current && [...ids].some((id) => !seen.current!.has(id))) beep()
+    if (seen.current && [...ids].some((id) => !seen.current!.has(id))) beep("new")
     seen.current = ids
     setSkew(new Date(b.now).getTime() - Date.now())
     setBoard(b)

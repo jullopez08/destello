@@ -24,7 +24,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
 
   const show = useCallback((f: Floor) => {
     const mine = f.tables.flatMap((t) => (t.session?.mine ? t.session.tickets.filter((k) => k.status === "READY").map((k) => ({ id: k.id, table: t.name, number: k.number })) : []))
-    if (seenReady.current && mine.some((k) => !seenReady.current!.has(k.id))) beep()
+    if (seenReady.current && mine.some((k) => !seenReady.current!.has(k.id))) beep("ready")
     seenReady.current = new Set(mine.map((k) => k.id))
     setReady(mine)
     setSkew(new Date(f.now).getTime() - Date.now())
@@ -57,7 +57,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
     const fresh = lateIds.split(",").filter((id) => id && !warned.current.has(id))
     if (!fresh.length) return
     fresh.forEach((id) => warned.current.add(id))
-    beep()
+    beep("late")
   }, [lateIds])
 
   const table = floor?.tables.find((t) => t.id === openId)
