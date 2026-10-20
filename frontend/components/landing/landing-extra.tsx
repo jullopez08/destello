@@ -55,7 +55,7 @@ export function LandingInstall() {
 
 const FAQ = [
   ["¿Mis clientas tienen que instalar algo?", "No. Te siguen escribiendo a tu WhatsApp de siempre; tú anotas el pedido en Destello."],
-  ["¿Sirve para mi tipo de negocio?", "Sí, si produces con recetas: pastelerías, panaderías, cocinas ocultas y comidas a domicilio. Para restaurantes con mesas, muy pronto."],
+  ["¿Sirve para mi tipo de negocio?", "Sí, si cocinas con recetas: pastelería, panadería, repostería, cocina oculta o restaurante. Las mesas y los meseros llegan muy pronto."],
   ["¿Necesito computador?", "No. Todo el panel funciona en el celular. Si tienes computador, también lo puedes usar ahí."],
   ["¿Qué pasa con mis datos?", "Son de tu negocio y no se los compartimos a nadie. Si dejas de usar Destello, los guardamos 6 meses por si vuelves y luego se borran."],
   ["¿Y si se me olvida pagar?", "Te avisamos antes de que venza y tienes un día de gracia. Tus datos no se pierden: el panel solo queda en pausa hasta que pagues."],
