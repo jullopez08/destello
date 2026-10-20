@@ -14,6 +14,8 @@ export async function purgeOrganizationData(
   organizationId: string,
 ) {
   // ── Cocina: de lo que más depende a lo que menos ──
+  // Equipo del restaurante: sus enlaces y aparatos se borran en cascada.
+  await tx.staffMember.deleteMany({ where: { organizationId } });
   await tx.productionCheck.deleteMany({ where: { organizationId } });
   await tx.orderLine.deleteMany({ where: { order: { organizationId } } });
   await tx.order.deleteMany({ where: { organizationId } });

@@ -12,6 +12,7 @@ import { initials } from "@/lib/kitchen/format"
 import { Eyebrow, PageHead } from "../shared"
 import { BusinessForm } from "../forms/business-form"
 import { AccountsCard, CouriersCard, MyAccountCard, WhatsappCard } from "./settings-lists"
+import { TeamCard } from "./team-card"
 
 // ── Configuración ──
 
@@ -65,6 +66,7 @@ export function SettingsView() {
 
         <AccountsCard />
         <CouriersCard />
+        {user?.businessType === "RESTAURANT" ? <TeamCard /> : null}
         <WhatsappCard />
         <div className="card stack">
           <h2 style={{ margin: 0 }}>Tu marca</h2>

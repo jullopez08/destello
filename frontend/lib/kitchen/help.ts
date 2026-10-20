@@ -85,6 +85,10 @@ export const HELP = {
 
   supplyQuickPrice: "Lo que te costó la última vez. Las compras lo van ajustando.",
 
+  staffTeam: "Cada uno entra con un enlace que le mandas. Si pierde el celular o se va, desconéctalo aquí.",
+  staffName: "Como le dicen en el restaurante. Así sale en sus mesas.",
+  staffKitchen: "Un nombre para reconocer la tablet. Ej.: «Cocina» o «Barra».",
+
   // Lo que explica cómo funciona cada sección: va en el "?" junto al título (PageHead help), no en el subtítulo.
   pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos.",
   pageProduction: "Sale de los pedidos hasta la hora de corte. Primero se usa la masa de los lotes.",

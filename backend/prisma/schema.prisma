@@ -50,6 +50,7 @@ model Organization {
   updatedAt               DateTime  @updatedAt
 
   users            User[]
+  staff            StaffMember[]
   subscription     Subscription?
   bankAccounts     BankAccount[]
   couriers         Courier[]
@@ -73,6 +74,56 @@ enum BusinessType {
   PRODUCTION
   /// Restaurante con mesas (módulo de mesas, meseros y cocina)
   RESTAURANT
+}
+
+/// Mesero (su celular, con PIN) o pantalla de cocina (tablet fija). No tienen correo ni contraseña: entran
+/// con un enlace de invitación de un solo uso que amarra el aparato (StaffDevice). Fase 3, 2026-10-19.
+enum StaffRole {
+  WAITER
+  KITCHEN
+}
+
+model StaffMember {
+  id             String    @id @default(cuid())
+  organizationId String
+  name           String
+  role           StaffRole
+  /// bcrypt del PIN de 4 dígitos; solo meseros
+  pinHash        String?
+  createdAt      DateTime  @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  devices      StaffDevice[]
+  invites      StaffInvite[]
+
+  @@index([organizationId])
+}
+
+/// Enlace para amarrar un aparato: un solo uso, vence en 48 h; se guarda el sha256, nunca el enlace.
+model StaffInvite {
+  id        String    @id @default(cuid())
+  staffId   String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
+}
+
+/// Aparato amarrado (cookie httpOnly `staff_device` = id.secreto; se guarda el sha256 del secreto).
+/// Desconectarlo es borrarlo. Los PIN fallidos se cuentan aquí: 5 seguidos lo bloquean 15 minutos.
+model StaffDevice {
+  id          String    @id @default(cuid())
+  staffId     String
+  secretHash  String    @unique
+  label       String
+  failedPins  Int       @default(0)
+  lockedUntil DateTime?
+  lastSeenAt  DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+
+  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
 }
 
 /// Inscripción por la página (POST /signup/start) esperando el código del correo.

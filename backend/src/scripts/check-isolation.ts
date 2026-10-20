@@ -18,11 +18,11 @@ const PASSWORD = 'test1234';
 
 type Res = { status: number; body: any };
 
-async function login(email: string) {
+async function login(email: string, password = PASSWORD) {
   const res = await fetch(`${API}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password: PASSWORD }),
+    body: JSON.stringify({ email, password }),
   });
   if (!res.ok) throw new Error(`No pude entrar como ${email} (${res.status}).`);
   const cookie = res.headers.getSetCookie().find((c) => c.startsWith('access_token='));
@@ -119,6 +119,16 @@ async function main() {
   list.push(['Ver la empresa Destello', 'GET', `/organizations/${orgId}`]);
   list.push(['Ver la suscripción de Destello', 'GET', `/subscriptions/${orgId}`]);
   list.push(['Aprobar un negocio (solo super admin)', 'POST', `/organizations/${orgId}/approve`]);
+
+  // Equipo de otro restaurante (Repostería Lucía, si ya tiene meseros o cocina).
+  const lucia = await login('lucia@prueba.test', 'clave1234').catch(() => null);
+  const staff = lucia ? (await call(lucia, 'GET', '/kitchen/staff')).body : [];
+  for (const m of Array.isArray(staff) ? staff.slice(0, 1) : []) {
+    list.push([`Nuevo PIN para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/pin`]);
+    list.push([`Enlace para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/invite`]);
+    if (m.devices[0]) list.push([`Desconectar el aparato de ${m.name}`, 'DELETE', `/kitchen/staff/${m.id}/devices/${m.devices[0].id}`]);
+    list.push([`Quitar a ${m.name} (otro restaurante)`, 'DELETE', `/kitchen/staff/${m.id}`]);
+  }
 
   let failures = 0;
   for (const [label, method, path, body] of list) {
