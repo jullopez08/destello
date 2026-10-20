@@ -15,6 +15,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { DataRetentionModule } from './data-retention/data-retention.module';
 import { KitchenModule } from './kitchen/kitchen.module';
 import { SignupModule } from './signup/signup.module';
+import { StaffModule } from './staff/staff.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SignupModule } from './signup/signup.module';
     DataRetentionModule,
     KitchenModule,
     SignupModule,
+    StaffModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -233,14 +233,3 @@
 /* Analítica de la masa (analytics-dough.tsx) */
 .dough-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .dough-pending { display: inline-flex; margin-top: 14px; }
-
-/* Inscripción (/registro) */
-.signup-closed { width: min(380px, 100%); display: flex; flex-direction: column; gap: 14px; }
-.signup-type { border: 0; margin: 0; padding: 0; min-width: 0; }
-.signup-type { display: flex; flex-direction: column; gap: 5px; }
-.signup-type legend { padding: 0; margin-bottom: 5px; font-size: 13px; font-weight: 700; }
-.signup-type .seg span { display: block; border-radius: 12px; padding: 10px 14px; font-size: 14px; }
-.signup-terms { gap: 10px; flex-wrap: nowrap; align-items: flex-start; }
-.signup-terms input { width: 20px; height: 20px; accent-color: var(--accent-deep); flex: none; margin-top: 2px; }
-.signup-code { font-size: 24px; letter-spacing: 8px; text-align: center; font-variant-numeric: tabular-nums; }
-.pending-callout { display: block; width: 100%; text-align: left; border: 0; cursor: pointer; margin-bottom: 12px; font-weight: 600; color: var(--ink); }

@@ -3,6 +3,7 @@ import { Bagel_Fat_One, DM_Sans } from "next/font/google"
 import "./globals.css"
 import "./styles/pieces.css"
 import "./styles/pages.css"
+import "./styles/access.css"
 import "./styles/mobile.css"
 import { NavMemory } from "@/components/ui/nav-memory"
 
