@@ -44,6 +44,22 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   }, [show])
 
   const serverNow = now + skew
+  // Comandas suyas que pasaron el tiempo máximo: suena una vez por comanda y salen arriba hasta que la cocina las
+  // marque listas (Julieth, 2026-10-19: el aviso de acercarse a la mesa no debe depender de estar mirando).
+  const late = (floor?.tables ?? []).flatMap((t) => {
+    const k = t.session?.mine ? oldestWaiting(t.session) : null
+    const mins = k ? minutesSince(k.sentAt, serverNow) : 0
+    return k && floor && waitLevel(mins, floor.normalMin, floor.maxMin) === "late" ? [{ id: k.id, tableId: t.id, table: t.name, mins }] : []
+  })
+  const warned = useRef<Set<string>>(new Set())
+  const lateIds = late.map((k) => k.id).join(",")
+  useEffect(() => {
+    const fresh = lateIds.split(",").filter((id) => id && !warned.current.has(id))
+    if (!fresh.length) return
+    fresh.forEach((id) => warned.current.add(id))
+    beep()
+  }, [lateIds])
+
   const table = floor?.tables.find((t) => t.id === openId)
   if (floor && table) return <TableSheet table={table} catalog={floor.catalog} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
 
@@ -59,6 +75,15 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
         </button>
       </header>
       {error ? <div className="err" role="alert">{error}</div> : null}
+      {late.length ? (
+        <div className="callout c-strawberry ready-alert" role="alert">
+          {late.map((k) => (
+            <button key={k.id} type="button" className="linkbtn" onClick={() => setOpenId(k.tableId)}>
+              {k.table} lleva {k.mins} min: acércate, discúlpate por la espera y revisa en cocina ›
+            </button>
+          ))}
+        </div>
+      ) : null}
       {ready.length ? (
         <div className="callout c-mint ready-alert" role="status">
           {ready.map((k) => (
