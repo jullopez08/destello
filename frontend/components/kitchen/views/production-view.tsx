@@ -1,6 +1,7 @@
 "use client"
 
 import { Cookie } from "@/components/ui/cookie"
+import { HELP } from "@/lib/kitchen/help"
 import { byId, pendingFor, planFor, useKitchen } from "@/lib/kitchen/store"
 import { addDays } from "@/lib/kitchen/rules"
 import { dateLabel, fmtN, grams, longDate, qty } from "@/lib/kitchen/format"
@@ -23,7 +24,7 @@ export function ProductionView({ day, setDay }: { day: string | null; setDay: (d
 
   return (
     <>
-      <PageHead title="Producción del día" sub="Calculada con los pedidos tomados hasta la hora de corte. Primero se usa la masa de los lotes y lo que falta se hace con insumos.">
+      <PageHead title="Producción del día" sub="Lo que hay que hacer hoy." help={HELP.pageProduction}>
         {pend.length ? (
           <button className="btn primary only-desktop" onClick={register}>
             Registrar producción terminada
@@ -32,7 +33,7 @@ export function ProductionView({ day, setDay }: { day: string | null; setDay: (d
       </PageHead>
       <Tabs value={current} onChange={setDay} options={days.map((d) => [d, `${dateLabel(d, today)} · ${longDate(d)}`] as [string, string])} />
       {!pend.length ? (
-        <Empty>{orders.length ? "La producción de este día ya está registrada. Los pedidos están listos para enviar." : "Todavía no hay pedidos para este día."}</Empty>
+        <Empty>{orders.length ? "Producción registrada. Los pedidos están listos para enviar." : "Todavía no hay pedidos para este día."}</Empty>
       ) : (
         <>
           <div className="only-mobile">

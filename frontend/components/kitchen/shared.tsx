@@ -58,11 +58,28 @@ export function Empty({ children, style }: { children: React.ReactNode; style?: 
   )
 }
 
-export function PageHead({ title, sub, children }: { title: string; sub?: string; children?: React.ReactNode }) {
+// Subtítulo: una frase corta con para qué sirve la sección; cómo funciona va en `help` (el "?" junto al título).
+export function PageHead({ title, sub, help, children }: { title: string; sub?: string; help?: string; children?: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  // El "?" va amarrado a la última palabra: si no cabe en la línea, bajan juntos.
+  const cut = title.lastIndexOf(" ")
   return (
     <div className="head">
       <div>
-        <h1>{title}</h1>
+        <h1>
+          {help ? (
+            <>
+              {title.slice(0, cut + 1)}
+              <span className="nowrap">
+                {title.slice(cut + 1)}
+                <button type="button" className="help-btn head-help" aria-label="¿Qué es esto?" aria-expanded={open} onClick={() => setOpen(!open)}>?</button>
+              </span>
+            </>
+          ) : (
+            title
+          )}
+        </h1>
+        {help && open ? <span className="help-tip head-tip" role="note">{help}</span> : null}
         {sub ? <p className="muted">{sub}</p> : null}
       </div>
       {children ? <div className="row">{children}</div> : null}

@@ -24,7 +24,7 @@ export function EditionForm() {
   return (
     <Modal
       title="Nueva edición especial"
-      sub="Se vende entre estas fechas. Cuánto se vende lo decide lo que produzcas."
+      sub="Se vende solo entre estas fechas."
       onClose={close}
       onSubmit={async () => {
         if (!name.trim()) throw new FormError("Escribe el nombre.")
@@ -103,7 +103,7 @@ export function EditionRemoveForm({ edition }: { edition: Edition }) {
           <input type="checkbox" checked={hide} onChange={(e) => setHide(e.target.checked)} style={{ width: 22, height: 22, flex: "none" }} />
           <span>
             También desactivar lo que se hizo para esta edición: <b>{only.map((id) => byId(data.presentations, id)?.name).join(", ")}</b>.
-            <span className="small muted" style={{ display: "block" }}>Deja de salir al tomar pedidos. Los pedidos anteriores no cambian y lo puedes volver a activar en Productos.</span>
+            <span className="small muted" style={{ display: "block" }}>Deja de salir en pedidos nuevos. Lo reactivas en Productos.</span>
           </span>
         </label>
       ) : null}

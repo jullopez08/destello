@@ -9,6 +9,7 @@ import type { Order } from "@/lib/kitchen/types"
 import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import { blankOrderRow, OrderRowPicker, type OrderRow } from "./order-row"
 import { HELP } from "@/lib/kitchen/help"
+import { MoneyInput } from "@/components/ui/money-input"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
 
@@ -101,7 +102,7 @@ export function OrderForm() {
       {dom ? (
         <div className="fields">
           <Field label="Dirección" help={HELP.orderAddress}><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Calle, número, apto" /></Field>
-          <Field label="Domicilio cotizado ($)" help={HELP.orderFee}><input type="number" min="0" step="500" value={fee} onChange={(e) => setFee(e.target.value)} /></Field>
+          <Field label="Domicilio cotizado ($)" help={HELP.orderFee}><MoneyInput value={fee} onChange={(v) => setFee(v)} /></Field>
         </div>
       ) : null}
       {lines.length ? (
@@ -146,7 +147,7 @@ export function SendForm({ order }: { order: Order }) {
   return (
     <Modal
       title={`Enviar pedido #${order.number}`}
-      sub="Se le pregunta primero al repartidor principal. El cliente recibe solo el aviso de que va en camino."
+      sub="Primero se le pregunta al repartidor principal."
       submit="Marcar en camino"
       onClose={close}
       onSubmit={async () => {

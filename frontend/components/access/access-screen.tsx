@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Cookie } from "@/components/ui/cookie"
+import { Art } from "./access-art"
 import { PasswordInput } from "@/components/ui/password-input"
 import { ToastProvider } from "@/components/ui/toast"
 import { api, ApiError, errorMessage } from "@/lib/api"
@@ -25,25 +25,8 @@ function Router() {
   if (status === "loading") return <div className="login"><Art /><div className="form"><p className="muted">Cargando…</p></div></div>
   if (!user) return <LoginScreen />
   if (needsTerms) return <TermsScreen />
+  if (user.approvalPending) return <PendingScreen />
   return isSuperAdmin(user) ? <SuperAdminApp /> : <KitchenApp />
-}
-
-function Art() {
-  return (
-    <section className="art">
-      <div>
-        <div className="eyebrow" style={{ color: "inherit", opacity: 0.7 }}>Panel de la cocina</div>
-        <h1 style={{ marginTop: 10 }}><Link href="/" className="home-link" title="Ir a la página de Destello">Destello</Link></h1>
-        <p>Pedidos del día, producción, inventario por peso y proveedores. Todo en un solo lugar.</p>
-      </div>
-      <div className="plate" aria-hidden="true">
-        <Cookie />
-        <Cookie look="choco" />
-        <Cookie look="roll" />
-        <Cookie look="bread" />
-      </div>
-    </section>
-  )
 }
 
 function LoginScreen() {
@@ -106,6 +89,7 @@ function LoginScreen() {
             <button type="button" className="linkbtn" onClick={() => { setError(null); setMode(mode === "login" ? "forgot" : "login") }}>
               {mode === "login" ? "¿Olvidaste tu contraseña?" : "Volver a entrar"}
             </button>
+            <Link href="/registro" className="linkbtn">¿Aún no tienes cuenta? Prueba 15 días gratis</Link>
             <p className="small muted">
               Al entrar aceptas los <Link href="/terminos">Términos</Link> y la <Link href="/privacidad">Política de privacidad</Link>.
             </p>
@@ -164,6 +148,24 @@ function TermsScreen() {
           </label>
           {error ? <div className="err" role="alert">{error}</div> : null}
           <button className="btn primary" type="submit" disabled={!checked || busy}>{busy ? "Guardando…" : "Aceptar y entrar"}</button>
+          <button type="button" className="linkbtn" onClick={logout}>Salir</button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+// Inscrita por la página con SIGNUP_MODE=review: espera la aprobación.
+function PendingScreen() {
+  const { user, logout } = useSession()
+  return (
+    <div className="login">
+      <Art />
+      <section className="form">
+        <form onSubmit={(e) => { e.preventDefault(); window.location.reload() }}>
+          <h2>Estamos revisando tu negocio</h2>
+          <p className="muted">Ya creaste la cuenta de {user?.organizationName}. En cuanto la aprobemos podrás entrar a tu cocina; te escribimos al WhatsApp del negocio.</p>
+          <button className="btn primary" type="submit">Revisar de nuevo</button>
           <button type="button" className="linkbtn" onClick={logout}>Salir</button>
         </form>
       </section>

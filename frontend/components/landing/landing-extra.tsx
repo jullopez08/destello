@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
 import { Icon } from "@/components/ui/icon"
-import { ANDROID_APK_URL, contactHref, TRIAL_MESSAGE } from "@/lib/contact"
+import { ANDROID_APK_URL } from "@/lib/contact"
 
 // ── Página de presentación: descargar, preguntas, contacto y pie ──
 
@@ -92,7 +92,7 @@ export function LandingContact() {
         </div>
         <h2>Prueba Destello 15 días gratis.</h2>
         <p>Escríbenos y dejamos tu cocina lista para empezar mañana.</p>
-        <a className="btn ghost" href={contactHref(TRIAL_MESSAGE)}>Quiero probarlo</a>
+        <Link className="btn ghost" href="/registro">Quiero probarlo</Link>
       </div>
     </section>
   )

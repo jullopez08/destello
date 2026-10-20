@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Supply" ADD COLUMN     "pricePaid" DOUBLE PRECISION,
+ADD COLUMN     "priceQty" DOUBLE PRECISION;

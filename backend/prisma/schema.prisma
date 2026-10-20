@@ -23,6 +23,10 @@ model Organization {
   logoUrl String?
   /// Paleta del panel elegida por la dueña: vainilla | fresa | lavanda | menta | durazno | cielo
   palette String  @default("vainilla")
+  /// Producción por pedido (pastelería, panadería, cocina oculta) o restaurante con mesas
+  businessType     BusinessType @default(PRODUCTION)
+  /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
+  approvalPending  Boolean      @default(false)
 
   // Datos de la cocina (Configuración)
   whatsapp        String?
@@ -64,6 +68,33 @@ model Organization {
   productionChecks ProductionCheck[]
 }
 
+enum BusinessType {
+  /// Pastelería, panadería, cocina oculta: produce lo pedido
+  PRODUCTION
+  /// Restaurante con mesas (módulo de mesas, meseros y cocina)
+  RESTAURANT
+}
+
+/// Inscripción por la página (POST /signup/start) esperando el código del correo.
+/// Al verificarlo se crea la empresa y se borra la solicitud.
+model SignupRequest {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  ownerName     String
+  /// Ya cifrada con bcrypt
+  passwordHash  String
+  businessName  String
+  businessType  BusinessType
+  /// Solo dígitos, para no dar dos pruebas al mismo número
+  whatsapp      String
+  termsVersion  String
+  /// sha256 del código de 6 dígitos
+  codeHash      String
+  codeExpiresAt DateTime
+  attempts      Int          @default(0)
+  createdAt     DateTime     @default(now())
+}
+
 enum Role {
   SUPER_ADMIN
   /// Dueña de la empresa
@@ -91,6 +122,11 @@ model User {
   /// POST /auth/accept-terms; null = la dueña aún no acepta los términos
   termsAcceptedAt DateTime?
   termsVersion    String?
+
+  /// Cuándo terminó (o saltó) la guía del panel; null = se le muestra al entrar a Hoy
+  tourCompletedAt DateTime?
+  /// Secciones cuya tarjeta de "primera vez" ya cerró (p. ej. "insumos")
+  seenTips        String[]  @default([])
 
   organization      Organization?  @relation(fields: [organizationId], references: [id])
   billingContactFor Subscription[]
@@ -253,6 +289,10 @@ model Supply {
   min            Float          @default(0)
   /// Costo promedio por g, ml o unidad (pesos)
   cost           Float          @default(0)
+  /// Último precio tal como se escribió: lo pagado (pesos, con centavos) por tanta cantidad (g, ml o und).
+  /// Lo fija el formulario del insumo y lo actualiza cada compra; el formulario lo muestra al editar.
+  pricePaid      Float?
+  priceQty       Float?
   /// Tiene fecha de vencimiento: cada compra pide la fecha y queda como un lote (SupplyBatch)
   perishable     Boolean        @default(false)
   supplierId     String?
@@ -446,8 +486,8 @@ model ProductExtra {
   qty       Float
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  supply  Supply? @relation(fields: [supplyId], references: [id])
-  recipe  Recipe? @relation(fields: [recipeId], references: [id])
+  supply  Supply? @relation(fields: [supplyId], references: [id], onDelete: Restrict)
+  recipe  Recipe? @relation(fields: [recipeId], references: [id], onDelete: Restrict)
 }
 
 /// Lo que se vende: una caja o presentación con su precio

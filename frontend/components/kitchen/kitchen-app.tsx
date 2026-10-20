@@ -26,6 +26,7 @@ import { EditionsView } from "./views/editions-view"
 import { AnalyticsView } from "./views/analytics-view"
 import { SettingsView } from "./views/settings-view"
 import { SetupView } from "./views/setup-view"
+import { SectionTip, Tour } from "./tour"
 
 // Navegación por #hash, como el diseño: cada sección tiene su enlace.
 function subscribeHash(cb: () => void) {
@@ -131,7 +132,9 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
     <VoiceProvider>
       <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceIndicator />} mic={<VoiceMicButton />}>
         <PayBanner subscription={subscription} page={page} />
+        <SectionTip page={page} />
         {view}
+        <Tour />
       </Shell>
     </VoiceProvider>
   )

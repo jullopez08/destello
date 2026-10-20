@@ -66,7 +66,7 @@ export function WeekdayBars({ counts }: { counts: number[] }) {
         ))}
       </div>
       <p className="conclusion">
-        {counts[top] ? <>Los <b>{DAYS[top]}{DAYS[top].endsWith("s") ? "" : "s"}</b> es cuando más produces: ten listos insumos y masa desde antes.</> : "Todavía no hay pedidos para ver qué días tienes más trabajo."}
+        {counts[top] ? <>Los <b>{DAYS[top]}{DAYS[top].endsWith("s") ? "" : "s"}</b> produces más: ten todo listo desde antes.</> : "Todavía no hay pedidos para ver qué días tienes más trabajo."}
       </p>
     </>
   )

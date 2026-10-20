@@ -8,6 +8,7 @@ import type { SupplyKind } from "@/lib/kitchen/rules"
 import { Field, HelpTip, LinesEditor, toNumber, useModal } from "../shared"
 import { QuickSupply } from "./quick-supply"
 import { HELP } from "@/lib/kitchen/help"
+import { MoneyInput } from "@/components/ui/money-input"
 
 // ── Compra: sube la existencia y recalcula el costo promedio ──
 
@@ -39,7 +40,7 @@ export function PurchaseForm() {
           const s = byId(data.supplies, r.supplyId)!
           const [k, m] = UNIT_F[r.unit]
           const q = toNumber(r.qty), t = toNumber(r.total)
-          if (!(q > 0) || !(t >= 0)) throw new FormError(`Escribe cantidad y total de ${s.name}.`)
+          if (!(q > 0) || !(t > 0)) throw new FormError(`Escribe cantidad y total de ${s.name}: no pueden quedar en 0.`)
           if (k !== s.kind) throw new FormError(`${s.name} se mide en ${unitOf(s.kind)}. Cambia la unidad.`)
           if (s.perishable && !r.expiresOn) throw new FormError(`Escribe cuándo vence ${s.name}.`)
           if (s.perishable && r.expiresOn < data.today) throw new FormError(`${s.name}: esa fecha ya pasó, está vencido.`)
@@ -82,7 +83,7 @@ export function PurchaseForm() {
             <select aria-label="Unidad" value={r.unit} onChange={(e) => update({ unit: e.target.value })}>
               {Object.keys(UNIT_F).map((u) => <option key={u}>{u}</option>)}
             </select>
-            <input aria-label="Total pagado" type="number" min="0" step="100" placeholder="Total $" value={r.total} onChange={(e) => update({ total: e.target.value })} />
+            <MoneyInput aria-label="Total pagado" placeholder="Total 0,00" value={r.total} onChange={(v) => update({ total: v })} />
             {byId(data.supplies, r.supplyId)?.perishable ? (
               <label className="exp">
                 <span>Vence el</span>

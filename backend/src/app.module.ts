@@ -14,6 +14,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { DataRetentionModule } from './data-retention/data-retention.module';
 import { KitchenModule } from './kitchen/kitchen.module';
+import { SignupModule } from './signup/signup.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { KitchenModule } from './kitchen/kitchen.module';
     UploadsModule,
     DataRetentionModule,
     KitchenModule,
+    SignupModule,
   ],
   controllers: [AppController],
   providers: [AppService],

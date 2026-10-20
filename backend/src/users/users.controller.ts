@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { TourDto } from './dto/tour.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -45,6 +46,12 @@ export class UsersController {
     const { accessToken, expiresAt } = await this.authService.issueSession(currentUser.userId);
     setSessionCookie(res, accessToken, expiresAt);
     return user;
+  }
+
+  // La guía del panel y las tarjetas de primera vez de cada sección (ver TourDto).
+  @Patch('me/tour')
+  setOwnTour(@Body() dto: TourDto, @CurrentUser() currentUser: CurrentUserData) {
+    return this.usersService.setOwnTour(currentUser.userId, dto.done, dto.tip);
   }
 
   @Get(':id')

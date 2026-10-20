@@ -87,9 +87,16 @@ export class InventoryService {
     if (dto.kind !== supply.kind && (await this.supplyInUse(id))) {
       throw new BadRequestException('No se puede cambiar cómo se mide: este insumo ya está en recetas, productos, empaques o compras.');
     }
-    const { expiresOn: _initial, ...data } = dto;
+    const { expiresOn, ...data } = dto;
+    const today = toIsoDate(new Date());
+    // Pasa a "tiene vencimiento": lo que ya hay queda como un lote con la fecha que se escribió.
+    const firstBatch = data.perishable && !supply.perishable && expiresOn && data.stock > 0;
+    if (firstBatch && expiresOn < today) throw new BadRequestException('Esa fecha ya pasó: lo que tienes está vencido.');
     await this.prisma.$transaction(async (tx) => {
       await tx.supply.update({ where: { id }, data: { ...data, supplierId: data.supplierId || null } });
+      if (firstBatch) {
+        await tx.supplyBatch.create({ data: { organizationId, supplyId: id, qty: data.stock, left: data.stock, expiresOn, receivedOn: today } });
+      }
       // Sin vencimiento, lo que estaba en lotes pasa a no tener fecha.
       if (data.perishable === false) await tx.supplyBatch.deleteMany({ where: { supplyId: id } });
       else await applyTakes(tx, trimBatches(await tx.supplyBatch.findMany({ where: { supplyId: id } }), data.stock));
@@ -161,7 +168,7 @@ export class InventoryService {
         supply.cost = cost;
         await tx.supply.update({
           where: { id: supply.id },
-          data: { stock: supply.stock, cost, ...(supply.supplierId ? {} : { supplierId: dto.supplierId }) },
+          data: { stock: supply.stock, cost, pricePaid: line.total, priceQty: line.qty, ...(supply.supplierId ? {} : { supplierId: dto.supplierId }) },
         });
       }
 

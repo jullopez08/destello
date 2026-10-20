@@ -44,7 +44,7 @@ export function ProductForm({ product }: { product?: Product }) {
   return (
     <Modal
       title={product ? "Editar producto" : "Nuevo producto"}
-      sub="Una unidad de lo que horneas, con sus gramos. Si la haces en dos pesos (pequeña y rellena), son dos productos."
+      sub="Lo que horneas, con sus gramos."
       onClose={close}
       onSubmit={async () => {
         const grams_ = toNumber(g)
@@ -73,7 +73,7 @@ export function ProductForm({ product }: { product?: Product }) {
       </div>
       <Field label="Gramos de masa por unidad" help={HELP.productGrams} hint="Solo para la cocina. El cliente no lo ve."><input type="number" min="1" value={g} onChange={(e) => setG(e.target.value)} required /></Field>
       <div className="eyebrow">Rellenos y extras por unidad, opcional<HelpTip text={HELP.productExtras} /></div>
-      <div className="small muted">Relleno comprado o capacillo: un insumo. Relleno que preparas tú (arequipe, ganache): su receta, en gramos.</div>
+      <div className="small muted">Un insumo, o un relleno que preparas (en gramos).</div>
       <LinesEditor
         rows={extras}
         setRows={setExtras}

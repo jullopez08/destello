@@ -8,8 +8,8 @@ import { purgeOrganizationData } from '../data-retention/purge-organization-data
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { UpdateBrandingDto } from './dto/update-branding.dto';
+import { createOrganizationWithOwner } from './create-organization';
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 const OWNER_SELECT = { id: true, name: true, email: true, active: true, termsAcceptedAt: true } as const;
 const ORGANIZATION_INCLUDE = {
@@ -36,32 +36,17 @@ export class OrganizationsService {
       throw new BadRequestException('Ya existe una cuenta con ese correo.');
     }
 
-    const password = await bcrypt.hash(dto.ownerPassword, 10);
+    const passwordHash = await bcrypt.hash(dto.ownerPassword, 10);
 
     return handleUniqueConstraint(async () => {
       return this.prisma.$transaction(async (tx) => {
-        const organization = await tx.organization.create({
-          data: { name: dto.name, slug: dto.slug, palette: dto.palette ?? 'vainilla' },
-        });
-
-        const owner = await tx.user.create({
-          data: {
-            email: dto.ownerEmail,
-            name: dto.ownerName,
-            password,
-            roles: [Role.ADMIN],
-            organizationId: organization.id,
-          },
-        });
-
-        await tx.subscription.create({
-          data: {
-            organizationId: organization.id,
-            planId: plan.id,
-            status: plan.isTrial ? SubscriptionStatus.TRIALING : SubscriptionStatus.ACTIVE,
-            currentPeriodEnd: new Date(Date.now() + plan.durationDays * MS_PER_DAY),
-            billingContactUserId: owner.id,
-          },
+        const { organization } = await createOrganizationWithOwner(tx, {
+          name: dto.name,
+          slug: dto.slug,
+          palette: dto.palette,
+          businessType: dto.businessType,
+          plan,
+          owner: { name: dto.ownerName, email: dto.ownerEmail, passwordHash },
         });
 
         return tx.organization.findUniqueOrThrow({ where: { id: organization.id }, include: ORGANIZATION_INCLUDE });
@@ -106,6 +91,12 @@ export class OrganizationsService {
   // hace DataRetentionCron a los 6 meses de quedar inactiva. Si la suscripción
   // ya no está en prueba, solo se permite con la empresa inactiva, para no
   // borrar una pastelería real por error.
+  async approve(id: string) {
+    await this.findOne(id);
+    await this.prisma.organization.update({ where: { id }, data: { approvalPending: false } });
+    return this.findOne(id);
+  }
+
   async remove(id: string) {
     const organization = await this.findOne(id);
     const { subscription } = organization;

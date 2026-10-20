@@ -137,7 +137,8 @@ export function PerishableBanner() {
     <div className="callout c-peach lot-alert" style={{ marginBottom: 14 }}>
       <span>
         <b>{names}</b>
-        {missing.length > 2 ? ` y ${missing.length - 2} más` : ""} suelen vencer y no piden fecha.
+        {missing.length > 2 ? ` y ${missing.length - 2} más` : ""}
+        {missing.length === 1 ? " suele vencer y no pide fecha." : " suelen vencer y no piden fecha."}
       </span>
       <div className="row" style={{ gap: 6 }}>
         <button type="button" className="btn soft sm" onClick={() => open(<PerishableReview suggest />)}>Revisar</button>

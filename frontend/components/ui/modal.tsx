@@ -5,11 +5,15 @@ import { Icon } from "./icon"
 
 // Ventana del diseño: encabezado y pie fijos, cuerpo con scroll. onSubmit
 // devuelve una promesa; si lanza, el mensaje se muestra dentro de la ventana.
+/** Ventanas abiertas ahora mismo (para bloquear el scroll de la página mientras haya al menos una). */
+let openModals = 0
+
 export function Modal({
   title,
   sub,
   children,
   submit = "Guardar",
+  cancel = "Cancelar",
   danger = false,
   wide = false,
   hideCancel = false,
@@ -20,6 +24,7 @@ export function Modal({
   sub?: React.ReactNode
   children: React.ReactNode
   submit?: string
+  cancel?: string
   danger?: boolean
   wide?: boolean
   hideCancel?: boolean
@@ -31,13 +36,13 @@ export function Modal({
   const formRef = useRef<HTMLFormElement>(null)
 
   // Con la ventana abierta, la página de atrás no se mueve: así no hay doble
-  // scroll ni queda un hueco al deslizar en el celular.
+  // scroll ni queda un hueco al deslizar en el celular. Se cuentan las ventanas
+  // abiertas: con dos (formulario + confirmación) cerrándose a la vez, guardar y
+  // restaurar el valor anterior dejaba la página bloqueada para siempre.
   useEffect(() => {
-    const html = document.documentElement
-    const before = html.style.overflow
-    html.style.overflow = "hidden"
+    if (openModals++ === 0) document.documentElement.style.overflow = "hidden"
     return () => {
-      html.style.overflow = before
+      if (--openModals === 0) document.documentElement.style.overflow = ""
     }
   }, [])
 
@@ -91,7 +96,7 @@ export function Modal({
         <footer>
           {hideCancel ? null : (
             <button type="button" className="btn ghost" onClick={onClose}>
-              Cancelar
+              {cancel}
             </button>
           )}
           <button type="submit" className={`btn ${danger ? "danger" : "primary"}`} disabled={busy}>

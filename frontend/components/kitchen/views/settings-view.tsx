@@ -7,6 +7,7 @@ import { api, errorMessage } from "@/lib/api"
 import { useSession } from "@/lib/session"
 import { PALETTES } from "@/lib/palettes"
 import { useKitchen } from "@/lib/kitchen/store"
+import { TOUR_START_EVENT } from "@/lib/kitchen/tour"
 import { initials } from "@/lib/kitchen/format"
 import { Eyebrow, PageHead } from "../shared"
 import { BusinessForm } from "../forms/business-form"
@@ -50,7 +51,12 @@ export function SettingsView() {
 
   return (
     <>
-      <PageHead title="Configuración" sub="Los datos de tu negocio, cómo se ve tu panel y tu cuenta." />
+      <PageHead title="Configuración" sub="Tu negocio, tu panel y tu cuenta.">
+        <button type="button" className="btn soft" onClick={() => window.dispatchEvent(new Event(TOUR_START_EVENT))}>
+          <Icon name="hoy" />
+          Ver la guía otra vez
+        </button>
+      </PageHead>
       <div className="grid g2 settings">
         <div className="card stack">
           <h2 style={{ margin: 0 }}>El negocio</h2>
@@ -73,7 +79,7 @@ export function SettingsView() {
                 </label>
               ))}
             </div>
-            <p className="small muted" style={{ marginTop: 8 }}>Cambia la barra lateral, los botones y los fondos. Los textos siempre van en café.</p>
+            <p className="small muted" style={{ marginTop: 8 }}>Cambia los colores de la barra, los botones y los fondos.</p>
           </div>
           <div>
             <Eyebrow>Logo</Eyebrow>

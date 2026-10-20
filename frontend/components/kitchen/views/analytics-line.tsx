@@ -90,7 +90,7 @@ export function WeekLine({ weeks, today }: { weeks: WeekStat[]; today: string })
           {money(w.sales)} · {w.orders} {w.orders === 1 ? "pedido" : "pedidos"}
           {w === best ? " · tu mejor semana" : ""}
         </span>
-        <span className="small muted">Toca otro punto para ver esa semana. La línea de rayas es tu promedio.</span>
+        <span className="small muted">Toca un punto para ver esa semana. Rayas: tu promedio.</span>
       </div>
       <p className="conclusion">
         {best && best.sales > 0 ? <>Tu mejor semana fue la del <b>{range(best.start, best.end, today)}</b> con <b>{money(best.sales)}</b>. </> : null}

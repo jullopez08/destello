@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -51,6 +51,14 @@ export class OrganizationsController {
   @Roles(Role.SUPER_ADMIN)
   update(@Param('id') id: string, @Body() dto: UpdateOrganizationDto) {
     return this.organizationsService.update(id, dto);
+  }
+
+  // Inscrita sola con SIGNUP_MODE=review: desde aquí ya entra a su cocina.
+  @Post(':id/approve')
+  @HttpCode(200)
+  @Roles(Role.SUPER_ADMIN)
+  approve(@Param('id') id: string) {
+    return this.organizationsService.approve(id);
   }
 
   @Delete(':id')

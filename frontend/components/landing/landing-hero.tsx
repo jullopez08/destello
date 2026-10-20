@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
 import { Icon } from "@/components/ui/icon"
-import { contactHref, TRIAL_MESSAGE } from "@/lib/contact"
 
 // ── Página de presentación: barra de arriba y portada ──
 
@@ -35,7 +34,7 @@ export function LandingHero() {
         <h1>Tu cocina, en orden.</h1>
         <p className="lp-lead">Anota los pedidos y Destello te dice qué producir, qué comprar y cuánto ganas en cada venta.</p>
         <div className="lp-actions">
-          <a className="btn primary" href={contactHref(TRIAL_MESSAGE)}>Probar 15 días gratis</a>
+          <Link className="btn primary" href="/registro">Probar 15 días gratis</Link>
           <a className="btn ghost" href="#como-funciona">Ver cómo funciona</a>
         </div>
         <p className="small lp-trust">Sin tarjeta · Desde el celular · Te ayudamos a empezar</p>

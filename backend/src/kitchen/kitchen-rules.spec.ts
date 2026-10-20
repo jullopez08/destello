@@ -99,6 +99,14 @@ describe('kitchen rules — inventario', () => {
     // sin existencia, el costo es el de la compra
     expect(averageCostAfterPurchase(0, 3, 500, 2000)).toBeCloseTo(4);
   });
+
+  it('lo que queda (aunque no sean kilos cerrados) conserva su valor al comprar más barato', () => {
+    // Ejemplo de Julieth: quedan 4,65 kg comprados a $2.500/kg y llegan 36 kg por $82.800 ($2.300/kg).
+    const cost = averageCostAfterPurchase(4650, 2.5, 36000, 82800);
+    expect(cost * 1000).toBeCloseTo(2322.88, 1); // nuevo promedio por kilo
+    // Nada se pierde: lo que vale el total es lo que valían los 4,65 kg más lo que se pagó.
+    expect(cost * (4650 + 36000)).toBeCloseTo(4650 * 2.5 + 82800, 6);
+  });
 });
 
 describe('kitchen rules — día de producción', () => {

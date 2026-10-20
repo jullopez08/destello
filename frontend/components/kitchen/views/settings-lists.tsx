@@ -1,10 +1,11 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
+import { HELP } from "@/lib/kitchen/help"
 import { useSession } from "@/lib/session"
 import { useKitchen } from "@/lib/kitchen/store"
 import { initials } from "@/lib/kitchen/format"
-import { Empty, useModal } from "../shared"
+import { Empty, HelpTip, useModal } from "../shared"
 import { AccountForm, BREB_TYPE, CourierForm } from "../forms/settings-forms"
 import { ChangePasswordForm } from "../forms/password-form"
 import { ConfirmForm } from "../forms/confirm-form"
@@ -23,7 +24,7 @@ export function AccountsCard() {
           Agregar
         </button>
       </div>
-      <p className="small muted" style={{ margin: "6px 0 10px" }}>Las que les compartes a tus clientes cuando pagan por transferencia: cuentas bancarias o llaves Bre-B (celular, correo, cédula o la que te dio tu banco).</p>
+      <p className="small muted" style={{ margin: "6px 0 10px" }}>Donde te pagan por transferencia. <HelpTip text={HELP.pageAccounts} /></p>
       {data.accounts.length ? (
         <div className="list">
           {data.accounts.map((a) => {
@@ -64,7 +65,7 @@ export function CouriersCard() {
           Agregar
         </button>
       </div>
-      <p className="small muted" style={{ margin: "6px 0 10px" }}>Se le pregunta primero al de arriba. Si no puede, se pasa al siguiente.</p>
+      <p className="small muted" style={{ margin: "6px 0 10px" }}>Primero se le pregunta al de arriba.</p>
       {data.couriers.length ? (
         <div className="list">
           {data.couriers.map((c, i) => (
@@ -110,7 +111,7 @@ export function WhatsappCard() {
         <h2 style={{ margin: 0 }}>WhatsApp</h2>
         <span className="chip">Aún no conectado</span>
       </div>
-      <p style={{ margin: 0 }}>Por ahora tus clientes te escriben al WhatsApp de siempre y respondes desde tu celular. Aquí registras los pedidos y la cocina calcula el resto.</p>
+      <p style={{ margin: 0 }}>Por ahora respondes desde tu celular y anotas los pedidos aquí.</p>
       <p className="small" style={{ margin: 0 }}>
         Muy pronto podrás conectar {phone ? <b className="num">{phone}</b> : "tu número"} para que los pedidos lleguen solos a Destello.
       </p>
