@@ -8,11 +8,11 @@ import { toIsoDate } from '../kitchen/kitchen-rules';
 const READY_VISIBLE_MS = 30 * 60 * 1000;
 
 type Named = { presentation: { name: string; items: { productId: string; product: { name: string } }[]; sizes: { id: string; name: string }[] }; productId: string | null; sizeId: string | null };
-const lineName = (l: Named) =>
+export const lineName = (l: Named) =>
   [l.presentation.name, l.presentation.items.find((i) => i.productId === l.productId)?.product.name, l.presentation.sizes.find((z) => z.id === l.sizeId)?.name]
     .filter(Boolean)
     .join(' · ');
-const withNames = { presentation: { include: { items: { include: { product: true } }, sizes: true } } } as const;
+export const withNames = { presentation: { include: { items: { include: { product: true } }, sizes: true } } } as const;
 type BoardOrder = { id: string; number: number; customer: string; delivery: string; lines: (Named & { qty: number })[] };
 const boardOrder = (o: BoardOrder) => ({
   id: o.id,

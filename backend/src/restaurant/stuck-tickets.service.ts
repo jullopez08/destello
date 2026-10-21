@@ -3,14 +3,17 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from '../kitchen/kitchen-snapshot.service';
 import { produce, withoutPackaging } from '../kitchen/produce';
-import { toIsoDate } from '../kitchen/kitchen-dates';
+import type { CancelReason } from './cancel-reasons';
+import { lineName, withNames } from './kitchen-screen.service';
 
 const GONE = 'Esa comanda ya no está en cocina.';
-const CANCELLED_LOOKBACK_MS = 36 * 60 * 60 * 1000;
+/** Historial de anuladas en Caja: 30 días. */
+const CANCELLED_DAYS = 30;
 
 // Comanda trabada en cocina (Julieth, 2026-10-21): la cocina no tocó "Listo" y la mesa no se puede cobrar. La caja
 // (encargado de caja o la dueña) la destraba: "Ya salió de cocina" (se sirvió: descuenta insumos como "Listo") o
-// "Anular comanda" (no se hizo: no se cobra ni descuenta, y queda guardada con quién la anuló para la dueña).
+// "Anular comanda" (no se hizo: no se cobra ni descuenta). Cada anulación lleva motivo y queda en Caja con sus productos,
+// quién y cuándo, para que la dueña la revise (como los informes de anulaciones de Toast o Aloha).
 @Injectable()
 export class StuckTicketsService {
   constructor(
@@ -30,34 +33,44 @@ export class StuckTicketsService {
   }
 
   /** `staffId`: el encargado de caja que la anula; sin él, la dueña desde Caja. */
-  async cancel(organizationId: string, ticketId: string, staffId?: string) {
+  async cancel(organizationId: string, ticketId: string, reason: CancelReason, staffId?: string) {
     await this.sent(this.prisma, organizationId, ticketId);
     const staff = staffId ? await this.prisma.staffMember.findUnique({ where: { id: staffId }, select: { name: true } }) : null;
     const { count } = await this.prisma.kitchenTicket.updateMany({
       where: { id: ticketId, status: 'SENT' },
-      data: { status: 'CANCELLED', cancelledAt: new Date(), cancelledBy: staff?.name ?? 'La dueña' },
+      data: { status: 'CANCELLED', cancelledAt: new Date(), cancelledBy: staff?.name ?? 'La dueña', cancelReason: reason },
     });
     if (!count) throw new BadRequestException(GONE);
   }
 
-  // Las anuladas de hoy, para que la dueña las vea en Caja.
-  async cancelledToday(organizationId: string) {
-    const today = toIsoDate(new Date());
+  // Las anuladas de los últimos 30 días, con lo que llevaba (no se descontó del inventario), para revisarlas en Caja.
+  async cancelled(organizationId: string) {
     const tickets = await this.prisma.kitchenTicket.findMany({
-      where: { organizationId, status: 'CANCELLED', cancelledAt: { gte: new Date(Date.now() - CANCELLED_LOOKBACK_MS) } },
+      where: { organizationId, status: 'CANCELLED', cancelledAt: { gte: new Date(Date.now() - CANCELLED_DAYS * 86_400_000) } },
       orderBy: { cancelledAt: 'desc' },
-      include: { lines: true, session: { include: { table: { select: { name: true } } } } },
+      include: { lines: { include: withNames }, session: { include: { table: { select: { name: true } } } } },
     });
-    return tickets
-      .filter((k) => toIsoDate(k.cancelledAt!) === today)
-      .map((k) => ({
-        id: k.id,
-        number: k.number,
-        table: k.session.table.name,
-        by: k.cancelledBy,
-        at: k.cancelledAt,
-        total: k.lines.reduce((a, l) => a + l.qty * l.unitPrice, 0),
-      }));
+    return tickets.map((k) => ({
+      id: k.id,
+      number: k.number,
+      table: k.session.table.name,
+      by: k.cancelledBy,
+      reason: k.cancelReason,
+      sentAt: k.sentAt,
+      at: k.cancelledAt,
+      reviewedAt: k.cancelReviewedAt,
+      lines: k.lines.map((l) => ({ name: lineName(l), qty: l.qty })),
+      total: k.lines.reduce((a, l) => a + l.qty * l.unitPrice, 0),
+    }));
+  }
+
+  // La dueña la revisó: ya no sale en "Por revisar".
+  async review(organizationId: string, ticketId: string) {
+    const { count } = await this.prisma.kitchenTicket.updateMany({
+      where: { id: ticketId, organizationId, status: 'CANCELLED' },
+      data: { cancelReviewedAt: new Date() },
+    });
+    if (!count) throw new NotFoundException('Comanda no encontrada.');
   }
 
   private async sent(db: Prisma.TransactionClient, organizationId: string, ticketId: string) {

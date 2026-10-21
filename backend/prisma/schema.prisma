@@ -196,6 +196,10 @@ model KitchenTicket {
   /// Anulada desde la caja: cuándo y quién (la dueña la ve en Caja)
   cancelledAt    DateTime?
   cancelledBy    String?
+  /// Por qué se anuló (CANCEL_REASONS en restaurant/cancel-reasons.ts)
+  cancelReason   String?
+  /// Cuándo la dueña revisó la anulación en Caja (null = por revisar)
+  cancelReviewedAt DateTime?
 
   organization Organization @relation(fields: [organizationId], references: [id])
   session      TableSession @relation(fields: [sessionId], references: [id])

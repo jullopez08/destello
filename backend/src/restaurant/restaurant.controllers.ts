@@ -7,7 +7,7 @@ import { RequireActiveOrganizationGuard } from '../common/guards/require-active-
 import { CurrentUser, type CurrentUserData } from '../common/decorators/current-user.decorator';
 import { requireOrganization } from '../kitchen/kitchen-snapshot.service';
 import { requireCashier, requireKitchen, requireWaiter, StaffSessionGuard, type StaffRequest } from '../staff/staff-session.guard';
-import { AddTablesDto, CloseTableDto, RenameTableDto, SendTicketDto } from './dto/restaurant.dto';
+import { AddTablesDto, CancelTicketDto, CloseTableDto, RenameTableDto, SendTicketDto } from './dto/restaurant.dto';
 import { FloorService } from './floor.service';
 import { KitchenScreenService } from './kitchen-screen.service';
 import { StuckTicketsService } from './stuck-tickets.service';
@@ -99,9 +99,9 @@ export class FloorController {
 
   @Post('tickets/:id/cancel')
   @HttpCode(200)
-  async cancel(@Req() req: StaffRequest, @Param('id') id: string) {
+  async cancel(@Req() req: StaffRequest, @Param('id') id: string, @Body() dto: CancelTicketDto) {
     const staff = requireCashier(req);
-    await this.stuck.cancel(staff.organizationId, id, staff.sub);
+    await this.stuck.cancel(staff.organizationId, id, dto.reason, staff.sub);
     return this.view(req);
   }
 
@@ -158,16 +158,26 @@ export class CashierController {
 
   @Post('tickets/:id/cancel')
   @HttpCode(200)
-  async cancel(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+  async cancel(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: CancelTicketDto) {
     const org = requireOrganization(user);
     await this.floor.servesTables(org);
-    await this.stuck.cancel(org, id);
+    await this.stuck.cancel(org, id, dto.reason);
     return this.view(org);
   }
 
-  // Las mesas y las comandas anuladas hoy (solo la dueña las ve).
+  // La dueña revisó una anulación.
+  @Post('cancelled/:id/review')
+  @HttpCode(200)
+  async review(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    const org = requireOrganization(user);
+    await this.floor.servesTables(org);
+    await this.stuck.review(org, id);
+    return this.view(org);
+  }
+
+  // Las mesas y las comandas anuladas en 30 días (solo la dueña las ve).
   private async view(org: string) {
-    const [floor, cancelled] = await Promise.all([this.floor.load(org, undefined, true), this.stuck.cancelledToday(org)]);
+    const [floor, cancelled] = await Promise.all([this.floor.load(org, undefined, true), this.stuck.cancelled(org)]);
     return { ...floor, cancelled };
   }
 }

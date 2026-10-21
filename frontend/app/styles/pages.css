@@ -237,3 +237,7 @@
 /* Analítica de la masa (analytics-dough.tsx) */
 .dough-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .dough-pending { display: inline-flex; margin-top: 14px; }
+/* Caja: comandas anuladas (Julieth, 2026-10-21) */
+.cancelled-card { margin-top: 16px; }
+.cancelled-item { gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cancelled-item .btn { align-self: flex-start; }

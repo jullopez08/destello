@@ -14,8 +14,18 @@ export interface CatalogItem {
 }
 export interface PayKey { id: string; bank: string; type: string; number: string; owner: string }
 export interface Floor { now: string; normalMin: number; maxMin: number; taxRate: number; cashier: boolean; tables: FloorTable[]; catalog: CatalogItem[]; payKeys: PayKey[]; cancelled?: CancelledTicket[] }
-/** Comanda anulada hoy desde la caja (solo la dueña las ve, en Caja) */
-export interface CancelledTicket { id: string; number: number; table: string; by: string | null; at: string; total: number }
+/** Comanda anulada en los últimos 30 días (solo la dueña las ve, en Caja) */
+export interface CancelledTicket { id: string; number: number; table: string; by: string | null; reason: CancelReason | null; sentAt: string; at: string; reviewedAt: string | null; lines: { name: string; qty: number }[]; total: number }
+
+/** Por qué se anula una comanda. Copia de CANCEL_REASONS en backend/src/restaurant/cancel-reasons.ts. */
+export type CancelReason = "LEFT" | "MISTAKE" | "SLOW" | "SOLD_OUT" | "OTHER"
+export const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
+  LEFT: "El cliente se fue",
+  MISTAKE: "Se pidió por error",
+  SLOW: "Se demoró mucho",
+  SOLD_OUT: "Se acabó",
+  OTHER: "Otro",
+}
 
 /** Cómo va una mesa, para su color en el mapa (Julieth, 2026-10-20). */
 export type TableStage = "free" | "new" | "kitchen" | "ready" | "served" | "bill"
