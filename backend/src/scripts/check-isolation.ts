@@ -119,6 +119,7 @@ async function main() {
   list.push(['Ver la empresa Destello', 'GET', `/organizations/${orgId}`]);
   list.push(['Ver la suscripción de Destello', 'GET', `/subscriptions/${orgId}`]);
   list.push(['Aprobar un negocio (solo super admin)', 'POST', `/organizations/${orgId}/approve`]);
+  list.push(['Marcar un negocio como no real (solo super admin)', 'POST', `/organizations/${orgId}/reject`]);
   list.push(['Bajar la carta en PDF de Destello (solo super admin)', 'GET', `/organizations/${orgId}/menu`]);
 
   // Equipo de otro restaurante (Repostería Lucía, si ya tiene meseros o cocina).

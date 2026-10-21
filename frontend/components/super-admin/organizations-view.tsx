@@ -21,13 +21,15 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
   const [only, setOnly] = useState<"all" | "ACTIVE" | "TRIALING" | "due" | "pending">("all")
   const toast = useToast()
   const due = (o: Organization) => o.subscription?.status === "PAST_DUE" || !o.active
-  const pending = orgs.filter((o) => o.approvalPending)
+  // Por revisar: inscrita en modo review (no entra) o en modo open sin verificar aún (entra y trabaja normal).
+  const toCheck = (o: Organization) => o.approvalPending || (!o.verifiedAt && !o.rejectedAt)
+  const pending = orgs.filter(toCheck)
   const matches = (o: Organization) =>
-    only === "all" || (only === "due" ? due(o) : only === "pending" ? o.approvalPending : o.subscription?.status === only)
-  async function approve(o: Organization) {
-    await api(`/organizations/${o.id}/approve`, { method: "POST" })
+    only === "all" || (only === "due" ? due(o) : only === "pending" ? toCheck(o) : o.subscription?.status === only)
+  async function decide(o: Organization, real: boolean) {
+    await api(`/organizations/${o.id}/${real ? "approve" : "reject"}`, { method: "POST" })
     await reload()
-    toast(`${o.name} ya puede entrar`)
+    toast(real ? `${o.name} quedó verificada` : `${o.name} quedó en pausa`)
   }
   const list = orgs.filter((o) => matches(o) && (!q || `${o.name} ${o.slug} ${o.users.map((u) => u.email).join(" ")}`.toLowerCase().includes(q.toLowerCase())))
   const count = (s: string) => orgs.filter((o) => o.subscription?.status === s).length
@@ -49,7 +51,7 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
       </div>
       {pending.length ? (
         <button type="button" className="callout c-lilac small pending-callout" onClick={pick("pending")}>
-          {pending.length === 1 ? "1 negocio inscrito espera" : `${pending.length} negocios inscritos esperan`} tu aprobación ›
+          {pending.length === 1 ? "1 negocio inscrito espera que lo verifiques" : `${pending.length} negocios inscritos esperan que los verifiques`} ›
         </button>
       ) : null}
       <div className="row" style={{ marginBottom: 12 }}>
@@ -92,7 +94,9 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                     <td>
                       <span className={`chip ${tone}`}>{label}</span>
                       {!o.active ? <div className="small" style={{ color: "var(--cherry)", marginTop: 4 }}>Bloqueada</div> : null}
-                      {o.approvalPending ? <span className="chip warn" style={{ marginTop: 4 }}>En revisión</span> : null}
+                      {o.approvalPending ? <span className="chip warn" style={{ marginTop: 4 }}>En revisión</span>
+                        : o.rejectedAt ? <span className="chip bad" style={{ marginTop: 4 }}>No es real</span>
+                        : !o.verifiedAt ? <span className="chip warn" style={{ marginTop: 4 }}>Por verificar</span> : null}
                       {o.findUs || o.menu ? (
                         <div className="small row" style={{ marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
                           {o.findUs ? <a href={o.findUs} target="_blank" rel="noopener noreferrer">{o.findUs.includes("instagram.com") ? "Instagram" : "Google Maps"} ↗</a> : null}
@@ -102,8 +106,11 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                     </td>
                     <td className="small num">{s ? dateFmt(s.currentPeriodEnd) : "—"}</td>
                     <td>
-                      {o.approvalPending ? (
-                        <button type="button" className="btn primary sm" onClick={(e) => { e.stopPropagation(); approve(o).catch((err) => toast(errorMessage(err))) }}>Aprobar</button>
+                      {toCheck(o) || o.rejectedAt ? (
+                        <div className="row nowrap" onClick={(e) => e.stopPropagation()}>
+                          <button type="button" className="btn primary sm" onClick={() => decide(o, true).catch((err) => toast(errorMessage(err)))}>{o.approvalPending ? "Aprobar" : "Verificar"}</button>
+                          {o.rejectedAt ? null : <button type="button" className="btn ghost sm" onClick={() => decide(o, false).catch((err) => toast(errorMessage(err)))}>No es real</button>}
+                        </div>
                       ) : (
                         <span className="btn ghost sm">Ver</span>
                       )}

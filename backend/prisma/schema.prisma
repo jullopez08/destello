@@ -33,6 +33,11 @@ model Organization {
   salesTax                SalesTax  @default(NONE)
   /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
   approvalPending  Boolean @default(false)
+  /// Cuándo el super admin comprobó que el negocio es real (Instagram o Maps y la carta); null = por verificar.
+  /// En modo `open` trabaja normal mientras tanto (Julieth, 2026-10-21).
+  verifiedAt       DateTime?
+  /// "No es real": la cuenta queda en pausa con sus datos hasta que el super admin la verifique
+  rejectedAt       DateTime?
 
   // Datos de la cocina (Configuración)
   whatsapp         String?

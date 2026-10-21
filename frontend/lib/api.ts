@@ -15,6 +15,8 @@ export class ApiError extends Error {
 // términos; 401 cuando la sesión venció. La app escucha estos eventos.
 export const SESSION_EXPIRED_EVENT = "destello:session-expired"
 export const TERMS_REQUIRED_EVENT = "destello:terms-required"
+// 403 business_rejected: el super admin marcó el negocio "No es real" (queda en pausa).
+export const BUSINESS_REJECTED_EVENT = "destello:business-rejected"
 
 export async function api<T>(path: string, options: { method?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
   let response: Response
@@ -42,6 +44,7 @@ export async function api<T>(path: string, options: { method?: string; body?: un
     if (typeof window !== "undefined") {
       if (response.status === 401 && !path.startsWith("/auth/login")) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
       if (code === "terms_not_accepted") window.dispatchEvent(new Event(TERMS_REQUIRED_EVENT))
+      if (raw.error === "business_rejected") window.dispatchEvent(new Event(BUSINESS_REJECTED_EVENT))
     }
 
     // 429: el servidor frena los intentos seguidos (p. ej. 6 entradas cada 3 minutos).

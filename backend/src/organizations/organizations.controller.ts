@@ -61,12 +61,20 @@ export class OrganizationsController {
     return this.organizationsService.update(id, dto);
   }
 
-  // Inscrita sola con SIGNUP_MODE=review: desde aquí ya entra a su cocina.
+  // Verifica el negocio; inscrita con SIGNUP_MODE=review, desde aquí ya entra a su cocina.
   @Post(':id/approve')
   @HttpCode(200)
   @Roles(Role.SUPER_ADMIN)
   approve(@Param('id') id: string) {
     return this.organizationsService.approve(id);
+  }
+
+  // Revisado su Instagram o Maps y la carta, no parece real: queda en pausa con sus datos.
+  @Post(':id/reject')
+  @HttpCode(200)
+  @Roles(Role.SUPER_ADMIN)
+  reject(@Param('id') id: string) {
+    return this.organizationsService.reject(id);
   }
 
   @Delete(':id')
