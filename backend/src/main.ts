@@ -13,33 +13,13 @@ async function bootstrap() {
   // — normal parsed req.body is unaffected, this only adds the raw buffer.
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
-  // Trust exactly two hops. Without this, Express's default
-  // (`trust proxy: false`) makes req.ip resolve to the raw TCP peer address
-  // instead of the real client, which is what let GET
-  // /appointment/patient-search's ThrottlerGuard (getTracker defaults to
-  // req.ip) undercount distinct requests as different "clients" and never
-  // actually hit its limit.
-  //
-  // Depth 2, not 1: the real path today is browser -> Railway edge ->
-  // frontend -> Railway edge again -> here, because the frontend's
-  // BACKEND_URL currently points at this service's PUBLIC Railway domain
-  // (confirmed directly in Railway's dashboard), not its private
-  // *.railway.internal one — so there are two real proxy hops, each
-  // appending its own entry to X-Forwarded-For, not one.
-  //
-  // IMPORTANT — this number is coupled to that BACKEND_URL choice, not a
-  // free-standing constant: if BACKEND_URL is ever switched to the private
-  // network (removing the second edge hop entirely), this MUST come back
-  // down to 1. Getting it wrong in that direction isn't just a functional
-  // bug — with only one real hop, depth 2 makes Express walk back two
-  // entries into X-Forwarded-For, landing on whatever an external client
-  // put there themselves instead of discarding it, i.e. a real IP-spoofing
-  // hole. See the trust-proxy investigation this session for the full
-  // reasoning and the proxy-addr-level test that verifies this depth
-  // against a given hop count before trusting it.
-  // Destello (2026-10-19): el 2 viene del montaje de aggendarme; se revisa al
-  // desplegar en Railway (Fase 4) según cuántos saltos haya de verdad.
-  app.getHttpAdapter().getInstance().set('trust proxy', 2);
+  // Cuántos proxies hay delante, para que req.ip sea el cliente real (los límites de intentos van por IP).
+  // Montaje de Destello en Railway (Fase 4): navegador → borde de Railway → panel (proxy.ts, que reenvía
+  // X-Forwarded-For tal cual) → este backend por la red privada. Un salto que agrega su entrada: TRUST_PROXY=1.
+  // Si el backend se llamara por su dirección pública habría dos (TRUST_PROXY=2). Un número mayor que los saltos
+  // reales deja que un cliente escriba su propia IP en X-Forwarded-For: se comprueba al desplegar (DEPLOY.md).
+  // Local (sin proxy delante del panel) da igual: no llega X-Forwarded-For.
+  app.getHttpAdapter().getInstance().set('trust proxy', Number(process.env.TRUST_PROXY ?? 1));
 
   // First middleware registered, so these headers land on every response —
   // including ones a later guard/filter rejects early. This backend is a
@@ -118,15 +98,8 @@ async function bootstrap() {
       transform: true
     })
   )
-  // Explicit '0.0.0.0': without a host, Node binds only the IPv6 wildcard
-  // (::) and relies on the OS's dual-stack fallback (IPV6_V6ONLY=0) to also
-  // accept IPv4 — confirmed via /proc/net/tcp (no IPv4 listener) vs
-  // /proc/net/tcp6 (:: on the port) inside the real container. That
-  // fallback isn't guaranteed across container runtimes, and Railway's edge
-  // was reaching the app's port (confirmed in its network logs) without the
-  // request ever showing up in this app's logs — consistent with the IPv4
-  // path having nothing listening on it. Binding IPv4 explicitly removes
-  // the dependency on that implicit kernel behavior entirely.
-  await app.listen(process.env.PORT ?? 3101, '0.0.0.0');
+  // HOST: 0.0.0.0 en local; en Railway '::', porque su red privada (por donde llega el panel) pide escuchar en IPv6
+  // y Node con '::' también recibe IPv4. Explícito porque sin host Node solo escucha '::' y depende del sistema.
+  await app.listen(process.env.PORT ?? 3101, process.env.HOST ?? '0.0.0.0');
 }
 bootstrap();
