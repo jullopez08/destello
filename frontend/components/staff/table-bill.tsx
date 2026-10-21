@@ -28,7 +28,7 @@ export function TableBill({ session, payKeys, taxRate, busy, onClose }: { sessio
     const prev = lines.get(key)
     lines.set(key, { name: l.name, unitPrice: l.unitPrice, qty: (prev?.qty ?? 0) + l.qty })
   }
-  const total = session.total + (tip ? tipFor(session.total) : 0)
+  const total = session.total + (tip ? tipFor(session.total, taxRate) : 0)
   const payments = parts ? parts.map((p) => ({ method: p.method, amount: pesos(p.amount) })).filter((p) => p.amount > 0) : method ? [{ method, amount: total }] : []
   const missing = total - payments.reduce((a, p) => a + p.amount, 0)
   const change = !parts && method === "CASH" ? pesos(given) - total : 0
@@ -54,7 +54,7 @@ export function TableBill({ session, payKeys, taxRate, busy, onClose }: { sessio
       <fieldset className="f">
         <legend className="f-label">Propina sugerida ({TIP_PERCENT} %) <HelpTip text={HELP.tableTip} /></legend>
         <div className="seg">
-          {([[true, `Incluir ${money(tipFor(session.total))}`], [false, "Sin propina"]] as const).map(([value, label]) => (
+          {([[true, `Incluir ${money(tipFor(session.total, taxRate))}`], [false, "Sin propina"]] as const).map(([value, label]) => (
             <label key={label}>
               <input type="radio" name="tip" checked={tip === value} onChange={() => setTip(value)} />
               <span>{label}</span>
