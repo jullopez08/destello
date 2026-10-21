@@ -9,6 +9,7 @@ import { dateLabel, grams, money, qty } from "@/lib/kitchen/format"
 import { Empty, PageHead, useModal } from "../shared"
 import { LotForm, RecipeForm } from "../forms/recipe-forms"
 import { DiscardLotForm } from "./lot-alerts"
+import { DoughPlanCard } from "./analytics-dough"
 
 // ── Recetas y masas ──
 
@@ -65,6 +66,7 @@ export function RecipesView() {
       ) : (
         <Empty style={{ marginBottom: 26 }}>No hay masa guardada.</Empty>
       )}
+      <DoughPlanCard />
       <h2 style={{ marginBottom: 12 }}>Recetas</h2>
       {data.recipes.length ? (
         <div className="grid g3">

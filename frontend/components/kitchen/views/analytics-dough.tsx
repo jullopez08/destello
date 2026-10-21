@@ -5,16 +5,16 @@ import { addDays } from "@/lib/kitchen/rules"
 import { batchExpired } from "@/lib/kitchen/batches"
 import { doughInsights, lotState, presentationsWithRecipe } from "@/lib/kitchen/lots"
 import { grams, money } from "@/lib/kitchen/format"
-import type { Seller } from "@/lib/kitchen/analytics"
+import { analytics } from "@/lib/kitchen/analytics"
 import { Empty } from "../shared"
 
 const batches = (n: number) => `${String(n).replace(".", ",")} ${n === 1 ? "tanda" : "tandas"}`
 
-// ── Analítica de la masa: gráficas primero, texto solo lo necesario ──
-// Orden de lectura (Julieth, 2026-10-16): la cifra que importa, la gráfica y lo demás al final.
-// `least` son las cosas que casi no se venden (las mismas de «¿Qué casi no se vende?»).
+// ── Lo que se botó (Analítica) y cuánta masa preparar (Recetas y masas) ──
+// Orden de lectura (Julieth, 2026-10-16): la cifra que importa, la gráfica y lo demás al final. "Masa por lote"
+// pasó a Recetas y masas el 2026-10-20: sirve para planear, no para medir.
 
-export function DoughCards({ least }: { least: Seller[] }) {
+export function WasteCard() {
   const { data, rules } = useKitchen()
   const list = doughInsights(data, rules)
   // Lo botado en 8 semanas: masa (por receta) e insumos vencidos o dañados, en la misma gráfica.
@@ -29,64 +29,69 @@ export function DoughCards({ least }: { least: Seller[] }) {
   const totalCost = wasted.reduce((a, x) => a + x.cost, 0)
   const pending =
     data.lots.filter((l) => l.left > 0 && lotState(l, data.today).expired).length + data.supplyBatches.filter((b) => b.left > 0 && batchExpired(b, data.today)).length
-  const lowIds = new Set(least.map((s) => s.id))
-  const plan = list.filter((x) => x.perDay > 0 || x.wastedGrams > 0)
-  const maxGrams = Math.max(1, ...plan.map((x) => x.suggestedGrams))
 
   return (
-    <>
-      <div className="card">
-        <h2>Lo que se botó</h2>
-        {wasted.length ? (
-          <>
-            <div className="kpi">
-              <span className="v num">{money(totalCost)}</span>
-              <span className="s">en masa e insumos, últimas 8 semanas</span>
-            </div>
-            <div className="hbars" role="list" aria-label="Lo que se botó" style={{ marginTop: 14 }}>
-              {wasted.map((x) => (
-                <div className="hbar" role="listitem" key={x.key}>
-                  <span className="t">{x.name}</span>
-                  <span className="n">{money(x.cost)}</span>
-                  <div className="bar"><span style={{ width: `${(x.cost / maxCost) * 100}%` }} /></div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <Empty>No has botado nada en 8 semanas.</Empty>
-        )}
-        {pending ? (
-          <a className="chip bad dough-pending" href="#hoy">
-            {pending} {pending === 1 ? "cosa vencida" : "cosas vencidas"} por botar ›
-          </a>
-        ) : null}
-      </div>
-
-      <div className="card">
-        <h2>Masa por lote</h2>
-        <p className="small muted">Cuánta preparar, según lo pedido en 4 semanas.</p>
-        {plan.length ? (
-          <div className="hbars" role="list" aria-label="Masa sugerida por lote" style={{ marginTop: 12 }}>
-            {plan.map((x) => {
-              const slow = x.wastedGrams > 0 && presentationsWithRecipe(data, x.recipeId).some((id) => lowIds.has(id))
-              return (
-                <div className="hbar" role="listitem" key={x.recipeId}>
-                  <span className="t">{x.name}</span>
-                  <span className="n">{x.perDay > 0 ? batches(x.suggestedBatches) : "Sobre pedido"}</span>
-                  <div className="bar"><span style={{ width: `${(x.suggestedGrams / maxGrams) * 100}%` }} /></div>
-                  <span className="small muted dough-sub">
-                    {x.perDay > 0 ? `${grams(x.suggestedGrams)} · dura ${x.shelfDays} ${x.shelfDays === 1 ? "día" : "días"}` : "Sin pedidos en 4 semanas"}
-                    {slow ? <span className="chip warn">Se vende poco: haz menos</span> : null}
-                  </span>
-                </div>
-              )
-            })}
+    <div className="card">
+      <h2>Lo que se botó</h2>
+      {wasted.length ? (
+        <>
+          <div className="kpi">
+            <span className="v num">{money(totalCost)}</span>
+            <span className="s">en masa e insumos, últimas 8 semanas</span>
           </div>
-        ) : (
-          <Empty>Aquí verás cuánta masa preparar cuando tengas pedidos de productos por lote.</Empty>
-        )}
+          <div className="hbars" role="list" aria-label="Lo que se botó" style={{ marginTop: 14 }}>
+            {wasted.map((x) => (
+              <div className="hbar" role="listitem" key={x.key}>
+                <span className="t">{x.name}</span>
+                <span className="n">{money(x.cost)}</span>
+                <div className="bar"><span style={{ width: `${(x.cost / maxCost) * 100}%` }} /></div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <Empty>No has botado nada en 8 semanas.</Empty>
+      )}
+      {pending ? (
+        <a className="chip bad dough-pending" href="#hoy">
+          {pending} {pending === 1 ? "cosa vencida" : "cosas vencidas"} por botar ›
+        </a>
+      ) : null}
+    </div>
+  )
+}
+
+/** Cuánta masa preparar por lote, según lo pedido en 4 semanas; marca la que se bota y se vende poco. */
+export function DoughPlanCard() {
+  const { data, rules } = useKitchen()
+  const list = doughInsights(data, rules)
+  const { sellers } = analytics(data, rules)
+  const fair = sellers.length ? 1 / sellers.length : 0
+  const lowIds = new Set(sellers.filter((s) => s.share < fair / 2).map((s) => s.id))
+  const plan = list.filter((x) => x.perDay > 0 || x.wastedGrams > 0)
+  const maxGrams = Math.max(1, ...plan.map((x) => x.suggestedGrams))
+  if (!plan.length) return null
+
+  return (
+    <div className="card" style={{ marginBottom: 26 }}>
+      <h2>Masa por lote</h2>
+      <p className="small muted">Cuánta preparar, según lo pedido en 4 semanas.</p>
+      <div className="hbars" role="list" aria-label="Masa sugerida por lote" style={{ marginTop: 12 }}>
+        {plan.map((x) => {
+          const slow = x.wastedGrams > 0 && presentationsWithRecipe(data, x.recipeId).some((id) => lowIds.has(id))
+          return (
+            <div className="hbar" role="listitem" key={x.recipeId}>
+              <span className="t">{x.name}</span>
+              <span className="n">{x.perDay > 0 ? batches(x.suggestedBatches) : "Sobre pedido"}</span>
+              <div className="bar"><span style={{ width: `${(x.suggestedGrams / maxGrams) * 100}%` }} /></div>
+              <span className="small muted dough-sub">
+                {x.perDay > 0 ? `${grams(x.suggestedGrams)} · dura ${x.shelfDays} ${x.shelfDays === 1 ? "día" : "días"}` : "Sin pedidos en 4 semanas"}
+                {slow ? <span className="chip warn">Se vende poco: haz menos</span> : null}
+              </span>
+            </div>
+          )
+        })}
       </div>
-    </>
+    </div>
   )
 }

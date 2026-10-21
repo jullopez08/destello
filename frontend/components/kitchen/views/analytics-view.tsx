@@ -8,7 +8,7 @@ import { Empty, PageHead } from "../shared"
 import { Stat, Summary, WeekdayBars } from "./analytics-charts"
 import { WeekLine } from "./analytics-line"
 import { SellerPie } from "./analytics-pie"
-import { DoughCards } from "./analytics-dough"
+import { WasteCard } from "./analytics-dough"
 import { WaiterCard } from "./analytics-waiters"
 import { DishTimeCard } from "./analytics-dish-times"
 
@@ -45,7 +45,6 @@ export function AnalyticsView() {
           before={before.profit}
           beforeText={money(before.profit)}
         />
-        <Stat label={tables ? "Pedidos y mesas" : "Pedidos"} value={String(now.orders)} hint="Últimas 4 semanas" now={now.orders} before={before.orders} beforeText={`${before.orders} ${tables ? "ventas" : "pedidos"}`} />
         <Stat label={tables ? "Cada venta, en promedio" : "Cada pedido, en promedio"} value={money(avgNow)} hint={tables ? "Lo que deja un pedido o una mesa" : "Lo que gasta un cliente por pedido"} now={avgNow} before={avgBefore} beforeText={money(avgBefore)} />
       </div>
       <div className="grid g2" style={{ marginTop: 16 }}>
@@ -60,7 +59,7 @@ export function AnalyticsView() {
           <WeekdayBars counts={weekdays} />
         </div>
         <div className="card">
-          <h2>¿Qué es lo que más vendes?</h2>
+          <h2>¿Qué vendes más y qué casi no?</h2>
           <p className="small muted">Últimas 8 semanas.</p>
           {sold.length ? <SellerPie list={sold} max={9} /> : <Empty>Todavía no hay ventas.</Empty>}
           {sold.length ? (
@@ -68,14 +67,9 @@ export function AnalyticsView() {
               <b>{sold[0].name}</b> es lo que más vendes: deja el <b>{Math.round(sold[0].share * 100)}&nbsp;%</b> de tu plata.
             </p>
           ) : null}
-        </div>
-        <div className="card">
-          <h2>¿Qué casi no se vende?</h2>
-          <p className="small muted">Vende menos de la mitad del promedio: muéstralo más o cámbialo.</p>
-          {least.some((x) => x.sales > 0) ? <SellerPie list={least} max={9} offset={Math.min(sold.length, 10)} /> : null}
           {least.some((x) => x.sales > 0) ? (
             <p className="conclusion">
-              <b>{least.find((x) => x.sales > 0)?.name}</b> es lo que menos vendes: {least.find((x) => x.sales > 0)?.units} en 8 semanas.
+              Casi no se venden: <b>{least.filter((x) => x.sales > 0).map((x) => `${x.name} (${x.units})`).join(", ")}</b>. Muéstralos más o cámbialos.
             </p>
           ) : null}
           {least.some((x) => x.sales === 0) ? (
@@ -83,7 +77,6 @@ export function AnalyticsView() {
               Sin ninguna venta en 8 semanas: <b>{least.filter((x) => x.sales === 0).map((x) => x.name).join(", ")}</b>.
             </p>
           ) : null}
-          {least.length ? null : <Empty>Todo lo que ofreces se está vendiendo.</Empty>}
         </div>
         <div className="card">
           <h2>¿Qué no te deja ganancia?</h2>
@@ -110,7 +103,7 @@ export function AnalyticsView() {
           )}
           <p className="small muted" style={{ marginTop: 10 }}>Precio sugerido para ganar el {data.settings.targetMargin} %.</p>
         </div>
-        <DoughCards least={least} />
+        <WasteCard />
         {tables ? <DishTimeCard data={data} /> : null}
         {tables ? <WaiterCard waiters={data.waiters} /> : null}
       </div>

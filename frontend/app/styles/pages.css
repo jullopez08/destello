@@ -174,7 +174,7 @@
 
 /* Cifras en el celular: si quedan en número impar, la última ocupa toda la fila (sin huecos). */
 @media (max-width: 560px) {
-  .g4 > .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .g4 > .kpi:last-child:nth-child(odd), .g4 > .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
   /* Una cifra nunca se parte en dos líneas. */
   .g4 .kpi .v { font-size: 22px; overflow-wrap: normal; white-space: nowrap; }
 }
