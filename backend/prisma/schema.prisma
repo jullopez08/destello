@@ -180,6 +180,8 @@ enum KitchenTicketStatus {
   READY
   /// El mesero lo llevó a la mesa
   SERVED
+  /// La caja la anuló porque no se hizo: no se cobra ni descuenta insumos (Julieth, 2026-10-21)
+  CANCELLED
 }
 
 model KitchenTicket {
@@ -191,6 +193,9 @@ model KitchenTicket {
   sentAt         DateTime            @default(now())
   readyAt        DateTime?
   servedAt       DateTime?
+  /// Anulada desde la caja: cuándo y quién (la dueña la ve en Caja)
+  cancelledAt    DateTime?
+  cancelledBy    String?
 
   organization Organization @relation(fields: [organizationId], references: [id])
   session      TableSession @relation(fields: [sessionId], references: [id])

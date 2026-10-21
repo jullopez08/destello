@@ -25,6 +25,13 @@ export function requireKitchen(req: StaffRequest) {
   return req.staff;
 }
 
+/** Solo el mesero encargado de caja (cobra cualquier mesa y destraba comandas). */
+export function requireCashier(req: StaffRequest) {
+  const staff = requireWaiter(req);
+  if (!staff.cashier) throw new ForbiddenException('Esto lo hace el encargado de caja.');
+  return staff;
+}
+
 /** Solo meseros (la pantalla de cocina no abre mesas ni pide). */
 export function requireWaiter(req: StaffRequest) {
   if (req.staff.role !== StaffRole.WAITER) throw new ForbiddenException('Esto es para los meseros.');

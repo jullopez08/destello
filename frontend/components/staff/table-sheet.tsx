@@ -5,10 +5,11 @@ import { api, errorMessage } from "@/lib/api"
 import { money } from "@/lib/kitchen/format"
 import { catalogPrice, minutesSince, waitLevel, type CatalogItem, type Floor, type FloorTable, type PayKey } from "@/lib/restaurant"
 import { TableBill, type CloseBody } from "./table-bill"
+import { StuckTicket } from "./stuck-ticket"
 
 type Draft = { key: number; item: CatalogItem; productId?: string; sizeId?: string; qty: number; note: string }
 
-const STATUS = { SENT: "En cocina", READY: "Listo", SERVED: "Servido" } as const
+const STATUS = { SENT: "En cocina", READY: "Listo", SERVED: "Servido", CANCELLED: "Anulada" } as const
 
 // Una mesa: abrirla, ver sus comandas con su reloj, armar la siguiente para enviarla a cocina, pedir la cuenta y cobrarla.
 export function TableSheet({ table, catalog, payKeys, taxRate, cashier, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; payKeys: PayKey[]; taxRate: number; cashier: boolean; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
@@ -87,6 +88,14 @@ export function TableSheet({ table, catalog, payKeys, taxRate, cashier, now, nor
               </div>
             ))}
             {level === "late" ? <p className="small ticket-tip">Lleva {mins} minutos. Acércate a la mesa, discúlpate por la espera y revisa en cocina.</p> : null}
+            {k.status === "SENT" && cashier && (s.billAt || level === "late") ? (
+              <StuckTicket
+                number={k.number}
+                busy={busy}
+                onOut={() => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/out`, { method: "POST" }))}
+                onCancel={() => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/cancel`, { method: "POST" }))}
+              />
+            ) : null}
             {k.status === "READY" && s.mine ? (
               <button type="button" className="btn primary sm" disabled={busy} onClick={() => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/served`, { method: "POST" }))}>
                 Servido
@@ -101,7 +110,7 @@ export function TableSheet({ table, catalog, payKeys, taxRate, cashier, now, nor
         </button>
       ) : null}
       {s && charges && s.billAt ? <TableBill session={s} payKeys={payKeys} taxRate={taxRate} busy={busy} onClose={close} /> : null}
-      {s?.mine && !s.tickets.length ? (
+      {s && (s.mine || cashier) && !s.tickets.length ? (
         <button type="button" className="linkbtn" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>
           Liberar la mesa (no pidieron nada)
         </button>

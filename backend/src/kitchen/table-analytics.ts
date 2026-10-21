@@ -25,7 +25,7 @@ export async function tableAnalytics(db: Db, organizationId: string) {
       FROM "TicketLine" l
       JOIN "KitchenTicket" k ON k.id = l."ticketId"
       JOIN "TableSession" s ON s.id = k."sessionId"
-      WHERE s."organizationId" = ${organizationId} AND s.status = 'CLOSED' AND s."closedAt" >= ${since}
+      WHERE s."organizationId" = ${organizationId} AND s.status = 'CLOSED' AND s."closedAt" >= ${since} AND k.status <> 'CANCELLED'
       GROUP BY 1, 2, 3, 4, 5`,
     db.$queryRaw<{ date: string; tables: bigint }[]>`
       SELECT to_char((s."closedAt" AT TIME ZONE 'UTC') AT TIME ZONE ${tz}, 'YYYY-MM-DD') AS "date", COUNT(*) AS "tables"
