@@ -148,12 +148,22 @@ export interface Edition {
 /** Analítica de los meseros (últimas 4 semanas): mesas por día de trabajo. */
 export interface WaiterStat { id: string; name: string; tables: number; days: number; perDay: number; avgSale: number; tips: number }
 
+/** Lo vendido en mesas cobradas, resumido por día y plato (sin propina); `days` dice cuántas mesas por día. */
+export interface TableSales {
+  days: { date: string; tables: number }[]
+  lines: { date: string; presentationId: string; productId: string | null; sizeId: string | null; unitPrice: number; qty: number }[]
+}
+/** Minutos promedio en cocina de la comanda de cada plato (4 semanas). */
+export interface DishTime { presentationId: string; productId: string | null; minutes: number; count: number }
+
 export interface KitchenSnapshot {
   today: string
   nextProductionDate: string
   settings: KitchenSettings
   /** Vacío si el negocio no atiende en mesas */
   waiters: WaiterStat[]
+  tableSales: TableSales
+  dishTimes: DishTime[]
   accounts: BankAccount[]
   couriers: Courier[]
   suppliers: Supplier[]

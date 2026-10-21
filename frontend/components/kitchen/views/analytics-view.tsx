@@ -10,12 +10,15 @@ import { WeekLine } from "./analytics-line"
 import { SellerPie } from "./analytics-pie"
 import { DoughCards } from "./analytics-dough"
 import { WaiterCard } from "./analytics-waiters"
+import { DishTimeCard } from "./analytics-dish-times"
 
 // ── Analítica: cómo van las ventas, qué se vende y qué no deja ganancia ──
 
 export function AnalyticsView() {
   const { data, rules } = useKitchen()
   const { now, before, weeks, weekdays, sellers } = analytics(data, rules)
+  // Con mesas, lo cobrado en mesas cuenta como venta junto a los pedidos.
+  const tables = data.settings.servesTables
   const avgNow = now.orders ? now.sales / now.orders : 0
   const avgBefore = before.orders ? before.sales / before.orders : 0
   // Si todo se vendiera igual, cada cosa dejaría `fair` de la plata. Lo que
@@ -31,7 +34,7 @@ export function AnalyticsView() {
   return (
     <>
       <PageHead title="Analítica" sub="Tus ventas, lo más vendido y tu ganancia." />
-      <Summary now={now} before={before} today={data.today} />
+      <Summary now={now} before={before} today={data.today} tables={tables} />
       <div className="grid g4 stats" style={{ marginTop: 16 }}>
         <Stat label="Vendiste" value={money(now.sales)} hint="Últimas 4 semanas, sin domicilios" now={now.sales} before={before.sales} beforeText={money(before.sales)} />
         <Stat
@@ -42,8 +45,8 @@ export function AnalyticsView() {
           before={before.profit}
           beforeText={money(before.profit)}
         />
-        <Stat label="Pedidos" value={String(now.orders)} hint="Últimas 4 semanas" now={now.orders} before={before.orders} beforeText={`${before.orders} pedidos`} />
-        <Stat label="Cada pedido, en promedio" value={money(avgNow)} hint="Lo que gasta un cliente por pedido" now={avgNow} before={avgBefore} beforeText={money(avgBefore)} />
+        <Stat label={tables ? "Pedidos y mesas" : "Pedidos"} value={String(now.orders)} hint="Últimas 4 semanas" now={now.orders} before={before.orders} beforeText={`${before.orders} ${tables ? "ventas" : "pedidos"}`} />
+        <Stat label={tables ? "Cada venta, en promedio" : "Cada pedido, en promedio"} value={money(avgNow)} hint={tables ? "Lo que deja un pedido o una mesa" : "Lo que gasta un cliente por pedido"} now={avgNow} before={avgBefore} beforeText={money(avgBefore)} />
       </div>
       <div className="grid g2" style={{ marginTop: 16 }}>
         <div className="card">
@@ -53,7 +56,7 @@ export function AnalyticsView() {
         </div>
         <div className="card">
           <h2>¿Qué días tienes más trabajo?</h2>
-          <p className="small muted">Pedidos por día, últimas 8 semanas.</p>
+          <p className="small muted">{tables ? "Pedidos y mesas" : "Pedidos"} por día, últimas 8 semanas.</p>
           <WeekdayBars counts={weekdays} />
         </div>
         <div className="card">
@@ -108,7 +111,8 @@ export function AnalyticsView() {
           <p className="small muted" style={{ marginTop: 10 }}>Precio sugerido para ganar el {data.settings.targetMargin} %.</p>
         </div>
         <DoughCards least={least} />
-        {data.settings.servesTables ? <WaiterCard waiters={data.waiters} /> : null}
+        {tables ? <DishTimeCard data={data} /> : null}
+        {tables ? <WaiterCard waiters={data.waiters} /> : null}
       </div>
     </>
   )

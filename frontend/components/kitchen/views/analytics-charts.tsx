@@ -19,13 +19,13 @@ export function Trend({ now, before }: { now: number; before: number }) {
 }
 
 // Resumen en una frase: las últimas 4 semanas frente a las 4 anteriores, con fechas.
-export function Summary({ now, before, today }: { now: Period; before: Period; today: string }) {
+export function Summary({ now, before, today, tables }: { now: Period; before: Period; today: string; tables?: boolean }) {
   const c = change(now.sales, before.sales)
   return (
     <div className="card c-accent summary">
       <div className="eyebrow">Resumen de las últimas 4 semanas</div>
       <p>
-        Del <b>{range(now.start, now.end, today)}</b> vendiste <b>{money(now.sales)}</b> en <b>{now.orders}</b> {now.orders === 1 ? "pedido" : "pedidos"}.
+        Del <b>{range(now.start, now.end, today)}</b> vendiste <b>{money(now.sales)}</b> en <b>{now.orders}</b> {tables ? (now.orders === 1 ? "pedido o mesa" : "pedidos y mesas") : now.orders === 1 ? "pedido" : "pedidos"}.
         {c === null
           ? " Todavía no hay semanas anteriores para comparar."
           : c === 0
