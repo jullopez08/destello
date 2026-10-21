@@ -17,6 +17,7 @@ import { KitchenModule } from './kitchen/kitchen.module';
 import { SignupModule } from './signup/signup.module';
 import { StaffModule } from './staff/staff.module';
 import { RestaurantModule } from './restaurant/restaurant.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RestaurantModule } from './restaurant/restaurant.module';
     SignupModule,
     StaffModule,
     RestaurantModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

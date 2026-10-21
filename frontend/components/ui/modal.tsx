@@ -17,6 +17,7 @@ export function Modal({
   danger = false,
   wide = false,
   hideCancel = false,
+  busyText = "Guardando…",
   onClose,
   onSubmit,
 }: {
@@ -28,6 +29,8 @@ export function Modal({
   danger?: boolean
   wide?: boolean
   hideCancel?: boolean
+  /** Lo que dice el botón mientras trabaja */
+  busyText?: string
   onClose: () => void
   onSubmit: () => Promise<void> | void
 }) {
@@ -100,7 +103,7 @@ export function Modal({
             </button>
           )}
           <button type="submit" className={`btn ${danger ? "danger" : "primary"}`} disabled={busy}>
-            {busy ? "Guardando…" : submit}
+            {busy ? busyText : submit}
           </button>
         </footer>
       </form>

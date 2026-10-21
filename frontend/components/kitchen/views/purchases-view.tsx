@@ -1,5 +1,6 @@
 "use client"
 
+import { ReportButton } from "../report-button"
 import { Icon } from "@/components/ui/icon"
 import { HELP } from "@/lib/kitchen/help"
 import { byId, useKitchen } from "@/lib/kitchen/store"
@@ -17,6 +18,7 @@ export function PurchasesView() {
   return (
     <>
       <PageHead title="Compras" sub="Lo que les compras a tus proveedores." help={HELP.pagePurchases}>
+        <ReportButton kind="compras" />
         <button className="btn primary only-desktop" onClick={() => open(<PurchaseForm />)}>
           <Icon name="plus" />
           Registrar compra

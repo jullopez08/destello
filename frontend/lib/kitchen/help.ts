@@ -114,5 +114,7 @@ export const HELP = {
   ticketStuck: "Si la cocina olvidó tocar Listo, marca que ya salió y se cobra. Si no se hizo, anúlala: no se cobra.",
   ticketCancelReason: "Queda guardado con quién la anuló. La dueña lo revisa en Caja.",
   cancelledTickets: "Lo anulado no se cobró ni se descontó del inventario. Revisa cada una y fíjate si alguien anula mucho.",
+  reportFrom: "El primer día que entra en el Excel.",
+  reportTo: "El último día que entra. Máximo un año a la vez.",
   tablePay: "Si pagan entre varios o de dos formas, divide el pago. Por transferencia, muéstrale las llaves del negocio.",
 } as const
