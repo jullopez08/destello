@@ -149,6 +149,8 @@ async function main() {
   list.push(['Cerrar la caja del mesero con la sesión de la dueña', 'POST', '/staff/floor/drawer/close', { counted: 0 }]);
   const luciaDrawer = lucia ? (await call(lucia, 'GET', '/kitchen/cashier/drawer')).body : null;
   const shift = luciaDrawer?.history?.[0];
+  const outMove = shift?.moves?.find((m: { hasReceipt: boolean }) => m.hasReceipt);
+  if (outMove) list.push(['Ver la factura de una salida de caja de otro restaurante', 'GET', `/kitchen/cashier/drawer/moves/${outMove.id}/receipt`]);
   if (shift) list.push(['Marcar revisado un turno de caja de otro restaurante', 'POST', `/kitchen/cashier/drawer/shifts/${shift.id}/review`]);
   list.push(['Anular una comanda con la sesión de la dueña', 'POST', '/staff/floor/tickets/x/cancel', { reason: 'OTHER' }]);
   list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);

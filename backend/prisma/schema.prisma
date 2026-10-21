@@ -65,6 +65,7 @@ model Organization {
   users            User[]
   cashShifts       CashShift[]
   cashMoves        CashMove[]
+  cashReceipts     CashReceipt[]
   supplyStockDays  SupplyStockDay[]
   staff            StaffMember[]
   tables           DiningTable[]
@@ -932,11 +933,16 @@ model CashMove {
   kind           CashMoveKind
   amount         Int
   reason         String
+  /// Para qué salió (CASH_OUT_REASONS en restaurant/cash-rules.ts); null en las entradas
+  category       String?
+  /// Salió sin factura ni recibo: la dueña la revisa
+  noReceipt      Boolean      @default(false)
   by             String
   createdAt      DateTime     @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
   shift        CashShift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  receipt      CashReceipt?
 
   @@index([organizationId])
 }
@@ -959,4 +965,19 @@ model SupplyStockDay {
 
   @@unique([supplyId, date])
   @@index([organizationId, date])
+}
+
+/// Foto de la factura o el recibo de una salida de efectivo (Julieth, 2026-10-21). Aparte de CashMove para no cargar
+/// la imagen en cada lista; se ve en el navegador, como la carta.
+model CashReceipt {
+  id             String   @id @default(cuid())
+  organizationId String
+  moveId         String   @unique
+  data           Bytes
+  mime           String
+  size           Int
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  move         CashMove     @relation(fields: [moveId], references: [id], onDelete: Cascade)
 }

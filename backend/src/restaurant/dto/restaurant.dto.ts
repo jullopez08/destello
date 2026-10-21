@@ -1,4 +1,5 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import { CASH_OUT_REASONS, type CashOutReason } from '../cash-rules';
 import { CANCEL_REASONS, type CancelReason } from '../cancel-reasons';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 
@@ -46,11 +47,13 @@ export class OpenDrawerDto {
   @IsInt() @Min(0) @Max(100_000_000) openingCash!: number;
 }
 
-/** Efectivo que entra o sale del cajón sin ser una venta. */
+/** Efectivo que entra o sale del cajón sin ser una venta. Llega en multipart (con la foto de la factura). */
 export class CashMoveDto {
   @IsIn(['IN', 'OUT']) kind!: 'IN' | 'OUT';
-  @IsInt() @Min(1) @Max(100_000_000) amount!: number;
+  @Type(() => Number) @IsInt() @Min(1) @Max(100_000_000) amount!: number;
   @IsString() @IsNotEmpty() @MaxLength(80) reason!: string;
+  @IsOptional() @IsIn(CASH_OUT_REASONS) category?: CashOutReason;
+  @IsOptional() @Transform(({ value }) => value === true || value === 'true') @IsBoolean() noReceipt?: boolean;
 }
 
 /** Lo contado al cerrar y, si no cuadró dos veces, qué pasó. */

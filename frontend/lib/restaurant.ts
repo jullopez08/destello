@@ -94,12 +94,18 @@ export function catalogPrice(item: CatalogItem, productId?: string, sizeId?: str
 }
 
 /** El cajón (GET /kitchen/cashier/drawer o /staff/floor/drawer). `expected`, `tables` y `pickups` solo para la dueña. */
-export interface CashMoveRow { id: string; kind: "IN" | "OUT"; amount: number; reason: string; by: string; at: string }
-export interface CashShiftOpen { id: string; openedAt: string; openedBy: string; openingCash: number; recount: boolean; moves: CashMoveRow[]; expected?: number; tables?: number; pickups?: number }
+export interface CashMoveRow { id: string; kind: "IN" | "OUT"; amount: number; reason: string; by: string; at: string; category: string | null; noReceipt: boolean; hasReceipt: boolean }
+
+/** Para qué sale efectivo. Copia de CASH_OUT_REASONS en backend/src/restaurant/cash-rules.ts. */
+export type CashOutReason = "SUPPLIER" | "KITCHEN" | "COURIER" | "OTHER"
+export const CASH_OUT_LABELS: Record<CashOutReason, string> = { SUPPLIER: "Pago a un proveedor", KITCHEN: "Compra para la cocina", COURIER: "Pago a un repartidor", OTHER: "Otro" }
+export interface CashShiftOpen { id: string; openedAt: string; openedBy: string; openingCash: number; recount: boolean; moves: CashMoveRow[]; expected?: number; tables?: number; pickups?: number; transfer?: number; card?: number }
 export interface CashShiftDone {
   id: string; openedAt: string; openedBy: string; openingCash: number; closedAt: string; closedBy: string
   expected: number; counted: number; difference: number; firstCount: number | null; note: string | null; reviewedAt: string | null
-  moves: { kind: "IN" | "OUT"; amount: number; reason: string; by: string; at: string }[]
+  moves: CashMoveRow[]
+  /** No cuadró o salió efectivo sin factura: la dueña lo revisa */
+  flagged: boolean
 }
 export interface CashState { shift: CashShiftOpen | null; history: CashShiftDone[] }
 /** Respuesta al cerrar: cuadra, contar de nuevo, o la diferencia para explicar (cash-rules.ts) */

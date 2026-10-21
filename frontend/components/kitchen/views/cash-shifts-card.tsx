@@ -3,7 +3,7 @@
 import { HelpTip } from "../shared"
 import { HELP } from "@/lib/kitchen/help"
 import { money } from "@/lib/kitchen/format"
-import type { CashShiftDone } from "@/lib/restaurant"
+import { CASH_OUT_LABELS, type CashOutReason, type CashShiftDone } from "@/lib/restaurant"
 
 /** Igual que CASH_TOLERANCE en backend/src/restaurant/cash-rules.ts */
 const TOLERANCE = 500
@@ -14,12 +14,14 @@ const when = (iso: string) => new Date(iso).toLocaleString("es-CO", { day: "nume
 export function CashShiftsCard({ list, busy, onReview }: { list: CashShiftDone[]; busy: boolean; onReview: (id: string) => void }) {
   if (!list.length) return null
   const off = list.filter((s) => Math.abs(s.difference) >= TOLERANCE)
+  const noReceipt = list.flatMap((s) => s.moves).filter((m) => m.noReceipt).length
   const missing = off.filter((s) => s.difference < 0).reduce((a, s) => a - s.difference, 0)
   return (
     <section className="card stack cash-shifts">
       <h3 style={{ margin: 0 }}>Turnos de caja <HelpTip text={HELP.cashShifts} /></h3>
       <p className="small muted">
-        En 30 días: {list.length === 1 ? "1 turno" : `${list.length} turnos`}, {off.length ? `${off.length} con diferencia${missing ? ` (faltaron ${money(missing)} en total)` : ""}` : "todos cuadraron"}.
+        En 30 días: {list.length === 1 ? "1 turno" : `${list.length} turnos`}, {off.length ? `${off.length} con diferencia${missing ? ` (faltaron ${money(missing)} en total)` : ""}` : "todos cuadraron"}
+        {noReceipt ? `, ${noReceipt === 1 ? "1 salida" : `${noReceipt} salidas`} sin factura` : ""}.
       </p>
       {list.map((s) => (
         <div key={s.id} className="stack cash-shift">
@@ -35,8 +37,17 @@ export function CashShiftsCard({ list, busy, onReview }: { list: CashShiftDone[]
             {s.firstCount !== null ? ` · Contaron dos veces (primero ${money(s.firstCount)})` : ""}
             {s.moves.length ? ` · ${s.moves.length === 1 ? "1 entrada o salida" : `${s.moves.length} entradas o salidas`}` : ""}
           </span>
+          {s.moves.filter((m) => m.kind === "OUT").map((m) => (
+            <span key={m.id} className="small">
+              Salió {money(m.amount)} · {CASH_OUT_LABELS[m.category as CashOutReason] ?? "Otro"}: {m.reason} · {m.by}{" "}
+              {/* La factura se abre en el visor del navegador, no se descarga: la subió alguien del equipo. */}
+              {m.hasReceipt ? (
+                <a href={`/api/kitchen/cashier/drawer/moves/${m.id}/receipt`} target="_blank" rel="noopener noreferrer">Ver factura ↗</a>
+              ) : m.noReceipt ? <span className="chip warn">Sin factura</span> : null}
+            </span>
+          ))}
           {s.note ? <span className="small">«{s.note}»</span> : null}
-          {Math.abs(s.difference) >= TOLERANCE && !s.reviewedAt ? (
+          {s.flagged && !s.reviewedAt ? (
             <button type="button" className="btn soft sm" disabled={busy} onClick={() => onReview(s.id)}>Revisado</button>
           ) : null}
         </div>
