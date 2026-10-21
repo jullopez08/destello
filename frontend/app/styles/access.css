@@ -67,3 +67,7 @@
 .ready-alert { display: flex; flex-direction: column; gap: 4px; }
 .ready-alert .linkbtn { align-self: flex-start; font-size: 15px; font-weight: 700; text-decoration: none; color: var(--ink); }
 .back-hint { text-align: center; margin-top: 8px; overflow-wrap: anywhere; }
+
+/* Captcha invisible de la inscripción: solo ocupa lugar si Cloudflare pide la casilla */
+.captcha { display: flex; justify-content: center; margin-top: 12px; }
+.captcha:empty { display: none; }

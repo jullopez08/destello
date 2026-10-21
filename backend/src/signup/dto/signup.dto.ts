@@ -1,4 +1,4 @@
-import { IsBoolean, IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class StartSignupDto {
   @IsString() @IsNotEmpty() @MaxLength(80) ownerName!: string;
@@ -10,6 +10,8 @@ export class StartSignupDto {
   @IsString() @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres.' }) @MaxLength(72) password!: string;
   /** Versión de los términos que aceptó al marcar la casilla (AAAA-MM-DD) */
   @Matches(/^\d{4}-\d{2}-\d{2}$/) termsVersion!: string;
+  /** Respuesta del captcha invisible (Cloudflare Turnstile); solo se exige si está encendido */
+  @IsOptional() @IsString() @MaxLength(2048) captcha?: string;
 }
 
 export class VerifySignupDto {

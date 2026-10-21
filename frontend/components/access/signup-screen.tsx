@@ -8,6 +8,7 @@ import { contactHref, TRIAL_MESSAGE } from "@/lib/contact"
 import { phoneInput } from "@/lib/kitchen/format"
 import { CURRENT_TERMS_VERSION } from "@/lib/session"
 import { Art } from "./access-art"
+import { Captcha, CAPTCHA_SITE_KEY } from "./captcha"
 
 // Inscripción por la página (/registro): datos del negocio, código al correo y
 // al confirmarlo entra a su cocina con la prueba gratis, sin tarjeta.
@@ -21,6 +22,8 @@ export function SignupScreen() {
   const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [captcha, setCaptcha] = useState("")
+  const [round, setRound] = useState(0)
   const set = (patch: Partial<typeof f>) => setF((x) => ({ ...x, ...patch }))
 
   useEffect(() => {
@@ -46,7 +49,9 @@ export function SignupScreen() {
 
   const sendCode = () =>
     run(async () => {
-      await api("/signup/start", { method: "POST", body: { ...f, email: f.email.trim(), termsVersion: CURRENT_TERMS_VERSION } })
+      // La respuesta del captcha sirve una vez: pase lo que pase, se pide otra para el siguiente intento.
+      setRound((n) => n + 1)
+      await api("/signup/start", { method: "POST", body: { ...f, email: f.email.trim(), termsVersion: CURRENT_TERMS_VERSION, ...(CAPTCHA_SITE_KEY ? { captcha } : {}) } })
       setSentAt(Date.now())
       setNow(Date.now())
       setCode("")
@@ -54,7 +59,8 @@ export function SignupScreen() {
     })
 
   const wait = Math.max(0, 60 - Math.floor((now - sentAt) / 1000))
-  const ready = f.ownerName.trim() && f.email.trim() && f.whatsapp.trim() && f.businessName.trim() && f.password.length >= 8 && terms
+  const filled = f.ownerName.trim() && f.email.trim() && f.whatsapp.trim() && f.businessName.trim() && f.password.length >= 8 && terms
+  const ready = filled && (!CAPTCHA_SITE_KEY || captcha)
 
   return (
     <div className="login">
@@ -112,7 +118,7 @@ export function SignupScreen() {
               </span>
             </label>
             {error ? <div className="err" role="alert">{error}</div> : null}
-            <button className="btn primary" type="submit" disabled={busy || !ready}>{busy ? "Un momento…" : "Crear mi cuenta"}</button>
+            <button className="btn primary" type="submit" disabled={busy || !ready}>{busy ? "Un momento…" : filled && !ready ? "Comprobando…" : "Crear mi cuenta"}</button>
             <Link href="/access" className="linkbtn">Ya tengo cuenta</Link>
           </form>
         ) : (
@@ -132,12 +138,13 @@ export function SignupScreen() {
             {mode === "review" ? <div className="callout c-lilac small">Después de confirmar, revisamos tu negocio y te avisamos cuando puedas entrar.</div> : null}
             {error ? <div className="err" role="alert">{error}</div> : null}
             <button className="btn primary" type="submit" disabled={busy || code.length !== 6}>{busy ? "Un momento…" : "Confirmar y entrar"}</button>
-            <button type="button" className="linkbtn" disabled={busy || wait > 0} onClick={sendCode}>
+            <button type="button" className="linkbtn" disabled={busy || wait > 0 || (!!CAPTCHA_SITE_KEY && !captcha)} onClick={sendCode}>
               {wait > 0 ? `Pedir otro código en ${wait} s` : "Pedir otro código"}
             </button>
             <button type="button" className="linkbtn" onClick={() => { setError(null); setStep("form") }}>Cambiar mis datos</button>
           </form>
         )}
+        {mode && mode !== "closed" ? <Captcha round={round} onToken={setCaptcha} /> : null}
       </section>
     </div>
   )
