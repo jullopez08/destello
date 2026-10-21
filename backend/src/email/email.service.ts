@@ -16,6 +16,7 @@ import {
 } from './payment-due-email.template';
 import { buildSignupCodeEmailHtml } from './signup-code-email.template';
 import { buildStaffDeviceEmailHtml, StaffDeviceNoticeDetails } from './staff-device-email.template';
+import { buildApprovedEmailHtml } from './approved-email.template';
 
 const DEFAULT_FROM = `${BRAND_NAME} <noreply@aggendarme.com>`;
 
@@ -140,6 +141,18 @@ export class EmailService {
     }
 
     this.logger.log(`Signup code email accepted by Resend (id=${data?.id})`);
+  }
+
+  // El super admin aprobó el negocio (OrganizationsService.approve).
+  async sendApprovedNotice(to: string[], businessName: string, link: string): Promise<void> {
+    const { data, error } = await this.send({ from: this.from, to, subject: `${businessName} ya está listo en ${BRAND_NAME}`, html: buildApprovedEmailHtml(businessName, link) });
+
+    if (error) {
+      this.logger.error(`Failed to send approved notice: ${error.message}`);
+      return;
+    }
+
+    this.logger.log(`Approved notice accepted by Resend (id=${data?.id})`);
   }
 
   // Alguien del equipo conectó un aparato nuevo (StaffAuthService.claim).

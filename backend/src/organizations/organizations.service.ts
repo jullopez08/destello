@@ -9,6 +9,8 @@ import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { UpdateBrandingDto } from './dto/update-branding.dto';
 import { createOrganizationWithOwner } from './create-organization';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from '../email/email.service';
 
 
 const OWNER_SELECT = { id: true, name: true, email: true, active: true, termsAcceptedAt: true } as const;
@@ -20,7 +22,11 @@ const ORGANIZATION_INCLUDE = {
 @Injectable()
 export class OrganizationsService {
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly email: EmailService,
+    private readonly config: ConfigService,
+  ) {}
 
   // Crea la empresa, su suscripción y la cuenta de la dueña en una sola
   // transacción. La dueña queda como contacto de facturación.
@@ -87,15 +93,22 @@ export class OrganizationsService {
     );
   }
 
+  // Aprueba una inscripción en revisión y le avisa a la dueña por correo (solo la primera vez).
+  async approve(id: string) {
+    const organization = await this.findOne(id);
+    const { count } = await this.prisma.organization.updateMany({ where: { id, approvalPending: true }, data: { approvalPending: false } });
+    const owners = organization.users.filter((u) => u.active).map((u) => u.email);
+    if (count && owners.length) {
+      const site = (this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '');
+      await this.email.sendApprovedNotice(owners, organization.name, `${site}/access`);
+    }
+    return this.findOne(id);
+  }
+
   // DESTRUCTIVO: borra la empresa y todo lo que cuelga de ella, lo mismo que
   // hace DataRetentionCron a los 6 meses de quedar inactiva. Si la suscripción
   // ya no está en prueba, solo se permite con la empresa inactiva, para no
   // borrar una pastelería real por error.
-  async approve(id: string) {
-    await this.findOne(id);
-    await this.prisma.organization.update({ where: { id }, data: { approvalPending: false } });
-    return this.findOne(id);
-  }
 
   async remove(id: string) {
     const organization = await this.findOne(id);

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Art } from "./access-art"
 import { PasswordInput } from "@/components/ui/password-input"
@@ -155,16 +155,27 @@ function TermsScreen() {
   )
 }
 
-// Inscrita por la página con SIGNUP_MODE=review: espera la aprobación.
+// Inscrita por la página con SIGNUP_MODE=review: espera la aprobación. Revisa sola cada 30 s y, al aprobarla,
+// entra a la cocina sin recargar; además le llega un correo (OrganizationsService.approve).
+const PENDING_CHECK_MS = 30000
+
 function PendingScreen() {
-  const { user, logout } = useSession()
+  const { user, logout, setUser } = useSession()
+  useEffect(() => {
+    const check = () =>
+      api<{ user: { approvalPending?: boolean } }>("/auth/me")
+        .then((me) => { if (!me.user.approvalPending) setUser((u) => ({ ...u, approvalPending: false })) })
+        .catch(() => {})
+    const timer = window.setInterval(check, PENDING_CHECK_MS)
+    return () => window.clearInterval(timer)
+  }, [setUser])
   return (
     <div className="login">
       <Art />
       <section className="form">
         <form onSubmit={(e) => { e.preventDefault(); window.location.reload() }}>
           <h2>Estamos revisando tu negocio</h2>
-          <p className="muted">Ya creaste la cuenta de {user?.organizationName}. En cuanto la aprobemos podrás entrar a tu cocina; te escribimos al WhatsApp del negocio.</p>
+          <p className="muted">Ya creaste la cuenta de {user?.organizationName}. En cuanto la aprobemos, esta pantalla te lleva a tu cocina y te avisamos por correo.</p>
           <button className="btn primary" type="submit">Revisar de nuevo</button>
           <button type="button" className="linkbtn" onClick={logout}>Salir</button>
         </form>
