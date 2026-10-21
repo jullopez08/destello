@@ -62,6 +62,14 @@ export class DataRetentionCron {
     await this.scheduleInactiveOrganizations();
     await this.sendDueNotices();
     await this.purgeDueOrganizations();
+    await this.purgeStaleSignups();
+  }
+
+  // Inscripciones sin terminar (con su carta en PDF): se borran al día siguiente aunque nadie más se inscriba,
+  // como dice la página de Eliminación de datos (Julieth, 2026-10-21).
+  async purgeStaleSignups() {
+    const { count } = await this.prisma.signupRequest.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 24 * 60 * 60 * 1000) } } });
+    if (count > 0) this.logger.log(`Deleted ${count} unfinished signup request(s).`);
   }
 
   async cancelForReactivatedOrganizations() {

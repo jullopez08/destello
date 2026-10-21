@@ -42,11 +42,12 @@ export class PasswordResetService {
   // Genera un enlace de un solo uso para cambiar la contraseña. También lo usa
   // el aviso de inicio de sesión ("No fui yo", LoginAlertService). Un enlace
   // nuevo reemplaza al anterior.
+  // En la base va la huella (sha256) del enlace, no el enlace: si alguien copiara la base, no podría usar uno vigente.
   async issueResetLink(userId: string, ttlMs: number): Promise<string> {
     const token = crypto.randomBytes(32).toString('base64url');
     await this.prisma.user.update({
       where: { id: userId },
-      data: { passwordResetToken: token, passwordResetTokenExpiresAt: new Date(Date.now() + ttlMs) },
+      data: { passwordResetToken: resetTokenHash(token), passwordResetTokenExpiresAt: new Date(Date.now() + ttlMs) },
     });
 
     const frontendUrl = (this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000').replace(/\/$/, '');
@@ -54,7 +55,7 @@ export class PasswordResetService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const user = await this.prisma.user.findUnique({ where: { passwordResetToken: token } });
+    const user = await this.prisma.user.findUnique({ where: { passwordResetToken: resetTokenHash(token) } });
     const expired = !user?.passwordResetTokenExpiresAt || user.passwordResetTokenExpiresAt.getTime() < Date.now();
 
     if (!user || expired) {
@@ -77,3 +78,5 @@ export class PasswordResetService {
     });
   }
 }
+
+export const resetTokenHash = (token: string) => crypto.createHash('sha256').update(token).digest('hex');

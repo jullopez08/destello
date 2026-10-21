@@ -148,7 +148,7 @@ function TermsScreen() {
           </div>
           <label className="row small" style={{ gap: 10, flexWrap: "nowrap", alignItems: "flex-start" }}>
             <input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} style={{ width: 20, height: 20, accentColor: "var(--accent-deep)", flex: "none", marginTop: 2 }} />
-            Leí y acepto los Términos y condiciones y la Política de privacidad, y autorizo el tratamiento de los datos de mi negocio.
+            Leí y acepto los Términos y condiciones y la Política de privacidad, autorizo el tratamiento de mis datos personales como ahí se explica y declaro que tengo la autorización de mis clientes y mi equipo para registrar los suyos.
           </label>
           {error ? <div className="err" role="alert">{error}</div> : null}
           <button className="btn primary" type="submit" disabled={!checked || busy}>{busy ? "Guardando…" : "Aceptar y entrar"}</button>

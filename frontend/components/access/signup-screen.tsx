@@ -153,7 +153,7 @@ export function SignupScreen() {
             <label className="row small signup-terms">
               <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} />
               <span>
-                Acepto los <Link href="/terminos" target="_blank">Términos</Link> y la <Link href="/privacidad" target="_blank">Política de privacidad</Link>, y autorizo el tratamiento de los datos de mi negocio.
+                Acepto los <Link href="/terminos" target="_blank">Términos</Link> y la <Link href="/privacidad" target="_blank">Política de privacidad</Link>, autorizo el tratamiento de mis datos personales como ahí se explica y declaro que tengo la autorización de mis clientes y mi equipo para registrar los suyos.
               </span>
             </label>
             {error ? <div className="err" role="alert">{error}</div> : null}
