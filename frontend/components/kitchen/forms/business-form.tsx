@@ -6,7 +6,7 @@ import { errorMessage } from "@/lib/api"
 import { useSession } from "@/lib/session"
 import { useKitchen } from "@/lib/kitchen/store"
 import { HELP } from "@/lib/kitchen/help"
-import { DAYS, phoneInput } from "@/lib/kitchen/format"
+import { DAYS, phoneInput, phoneProblem } from "@/lib/kitchen/format"
 import type { SalesTax } from "@/lib/kitchen/rules"
 import { Eyebrow, Field, Seg } from "../shared"
 
@@ -36,6 +36,8 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (setup && !f.whatsapp.trim()) return toast("Escribe el WhatsApp del negocio.", true)
+    const badPhone = phoneProblem(f.whatsapp)
+    if (badPhone) return toast(badPhone, true)
     const normalMin = Number(f.normalMin), maxMin = Number(f.maxMin)
     if (!(normalMin >= 1) || !(maxMin > normalMin)) return toast("El tiempo máximo debe ser mayor que el normal.", true)
     setSaving(true)

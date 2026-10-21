@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { Icon } from "@/components/ui/icon"
 import { useKitchen } from "@/lib/kitchen/store"
-import { bigUnitOf, factorOf, longDate, money, phoneInput } from "@/lib/kitchen/format"
+import { bigUnitOf, factorOf, longDate, money, phoneInput, phoneProblem } from "@/lib/kitchen/format"
 import type { SupplyKind } from "@/lib/kitchen/rules"
 import type { Supplier, Supply } from "@/lib/kitchen/types"
 import { ColorSeg, Eyebrow, Field, Seg, toNumber, useModal } from "../shared"
@@ -38,6 +38,8 @@ export function SupplierForm({ supplier }: { supplier?: Supplier }) {
       onClose={close}
       onSubmit={async () => {
         if (!f.name.trim()) throw new FormError("Escribe el nombre del proveedor.")
+        const badPhone = phoneProblem(f.phone, "El teléfono")
+        if (badPhone) throw new FormError(badPhone)
         const body = { ...f, supplyIds: [...sells] }
         if (supplier) await mutate(`/suppliers/${supplier.id}`, "PUT", body, "Proveedor actualizado")
         else await mutate("/suppliers", "POST", body, "Proveedor agregado")

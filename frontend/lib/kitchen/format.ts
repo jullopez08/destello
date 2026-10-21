@@ -59,13 +59,19 @@ export const COLOR_NAMES: Record<string, string> = {
   mint: "Menta",
 }
 
-// Teléfono mientras se escribe: 300 000 0000 (3, 3 y 4 dígitos) para ver si
-// falta alguno. Con indicativo (+57…) o más de 10 dígitos se deja como está.
+/** Celular de Colombia en grupos para leerlo fácil, "300 555 1280": solo números y como mucho 10 (Julieth,
+ *  2026-10-21). Si lo pegan con el +57 adelante, se quita. */
 export function phoneInput(v: string): string {
-  if (v.trim().startsWith("+")) return v
-  const d = v.replace(/\D/g, "")
-  if (d.length > 10) return v
+  let d = v.replace(/\D/g, "")
+  if (d.length > 10 && d.startsWith("57")) d = d.slice(2)
+  d = d.slice(0, 10)
   return [d.slice(0, 3), d.slice(3, 6), d.slice(6)].filter(Boolean).join(" ")
+}
+
+/** Vacío o exactamente 10 números; si no, el error para mostrar. */
+export function phoneProblem(v: string, label = "El WhatsApp"): string | null {
+  const n = v.replace(/\D/g, "").length
+  return n === 0 || n === 10 ? null : `${label} debe tener 10 números.`
 }
 
 /** Plural de la primera palabra: galleta → galletas, pan → panes, rollo → rollos. */

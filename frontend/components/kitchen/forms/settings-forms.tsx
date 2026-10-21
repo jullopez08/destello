@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { phoneInput } from "@/lib/kitchen/format"
+import { phoneInput, phoneProblem } from "@/lib/kitchen/format"
 import { Modal, FormError } from "@/components/ui/modal"
 import { useKitchen } from "@/lib/kitchen/store"
 import { Field, useModal } from "../shared"
@@ -87,6 +87,8 @@ export function CourierForm() {
       onClose={close}
       onSubmit={async () => {
         if (!name.trim() || !phone.trim()) throw new FormError("Escribe nombre y WhatsApp.")
+        const badPhone = phoneProblem(phone)
+        if (badPhone) throw new FormError(badPhone)
         await mutate("/couriers", "POST", { name: name.trim(), phone: phone.trim() }, "Repartidor agregado")
         close()
       }}

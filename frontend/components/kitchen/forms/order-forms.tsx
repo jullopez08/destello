@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/kitchen/store"
 import { linePrice, productionPlan } from "@/lib/kitchen/rules"
-import { dateLabel, longDate, money, phoneInput } from "@/lib/kitchen/format"
+import { dateLabel, longDate, money, phoneInput, phoneProblem } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
 import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import { blankOrderRow, OrderRowPicker, type OrderRow } from "./order-row"
@@ -53,6 +53,8 @@ export function OrderForm() {
           if (p?.kind === "SIZES" && !r.sizeId) throw new FormError(`Elige el tamaño de "${p.name}".`)
         }
         if (dom && !address.trim()) throw new FormError("Escribe la dirección de entrega.")
+        const badPhone = phoneProblem(phone)
+        if (badPhone) throw new FormError(badPhone)
         await mutate(
           "/orders",
           "POST",
