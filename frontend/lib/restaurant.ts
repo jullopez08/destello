@@ -30,7 +30,8 @@ export const STAGES: { stage: TableStage; label: string }[] = [
 
 export function tableStage(s: FloorSession | null): TableStage {
   if (!s) return "free"
-  if (s.billAt) return "bill"
+  // Con todo anulado no hay cuenta que cobrar: solo liberarla.
+  if (s.billAt && s.tickets.length) return "bill"
   if (s.tickets.some((k) => k.status === "SENT")) return "kitchen"
   if (s.tickets.some((k) => k.status === "READY")) return "ready"
   return s.tickets.length ? "served" : "new"

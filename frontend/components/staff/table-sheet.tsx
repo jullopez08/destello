@@ -109,10 +109,10 @@ export function TableSheet({ table, catalog, payKeys, taxRate, cashier, now, nor
           Pedir la cuenta
         </button>
       ) : null}
-      {s && charges && s.billAt ? <TableBill session={s} payKeys={payKeys} taxRate={taxRate} busy={busy} onClose={close} /> : null}
-      {s && (s.mine || cashier) && !s.tickets.length ? (
-        <button type="button" className="linkbtn" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>
-          Liberar la mesa (no pidieron nada)
+      {s && charges && s.billAt && s.tickets.length > 0 ? <TableBill session={s} payKeys={payKeys} taxRate={taxRate} busy={busy} onClose={close} /> : null}
+      {s && charges && !s.tickets.length ? (
+        <button type="button" className="btn soft" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>
+          Liberar la mesa (no hay nada que cobrar)
         </button>
       ) : null}
       {s?.mine ? (
