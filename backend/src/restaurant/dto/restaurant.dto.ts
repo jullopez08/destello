@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer';
+import { CANCEL_REASONS, type CancelReason } from '../cancel-reasons';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, ValidateNested } from 'class-validator';
 
 export class AddTablesDto {
@@ -27,6 +28,10 @@ export class SendTicketDto {
 export class TablePaymentDto {
   @IsIn(['CASH', 'TRANSFER', 'CARD']) method!: 'CASH' | 'TRANSFER' | 'CARD';
   @IsInt() @Min(1) @Max(100_000_000) amount!: number;
+}
+
+export class CancelTicketDto {
+  @IsIn(CANCEL_REASONS) reason!: CancelReason;
 }
 
 export class CloseTableDto {

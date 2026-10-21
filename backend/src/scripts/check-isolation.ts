@@ -141,9 +141,11 @@ async function main() {
   const ticket = cashier?.tables?.flatMap((t: { session?: { tickets: { id: string }[] } }) => t.session?.tickets ?? [])[0];
   if (ticket) {
     list.push(['Marcar que salió de cocina una comanda de otro restaurante', 'POST', `/kitchen/cashier/tickets/${ticket.id}/out`]);
-    list.push(['Anular una comanda de otro restaurante', 'POST', `/kitchen/cashier/tickets/${ticket.id}/cancel`]);
+    list.push(['Anular una comanda de otro restaurante', 'POST', `/kitchen/cashier/tickets/${ticket.id}/cancel`, { reason: 'OTHER' }]);
   }
-  list.push(['Anular una comanda con la sesión de la dueña', 'POST', '/staff/floor/tickets/x/cancel']);
+  const voided = cashier?.cancelled?.[0];
+  if (voided) list.push(['Marcar revisada una anulación de otro restaurante', 'POST', `/kitchen/cashier/cancelled/${voided.id}/review`]);
+  list.push(['Anular una comanda con la sesión de la dueña', 'POST', '/staff/floor/tickets/x/cancel', { reason: 'OTHER' }]);
   list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);
   list.push(['Ver la pantalla de cocina con la sesión de la dueña', 'GET', '/staff/kitchen']);
   list.push(['Pedir la cuenta de una mesa con la sesión de la dueña', 'POST', '/staff/floor/sessions/x/bill']);

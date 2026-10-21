@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useToast } from "@/components/ui/toast"
 import { TableBill, type CloseBody } from "@/components/staff/table-bill"
 import { StuckTicket } from "@/components/staff/stuck-ticket"
+import { CancelledCard } from "./cancelled-card"
 import { api, errorMessage } from "@/lib/api"
 import { HELP } from "@/lib/kitchen/help"
 import { money } from "@/lib/kitchen/format"
@@ -12,7 +13,6 @@ import { Empty, PageHead } from "../shared"
 
 const REFRESH_MS = 10000
 const waitFmt = (m: number) => (m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60 ? `${m % 60} min` : ""}`.trim() : `${Math.floor(m / 1440)} d`)
-const timeFmt = (iso: string) => new Date(iso).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" })
 
 // La caja (Julieth, 2026-10-20): muchas veces el cliente se para y paga en la caja. La dueña ve las mesas abiertas
 // y cobra cualquiera con la misma cuenta del mesero (propina sugerida, pago dividido, llaves para transferir).
@@ -33,10 +33,10 @@ export function CashierView() {
   const open = floor?.tables.filter((t) => t.session) ?? []
   const table = open.find((t) => t.id === openId)
 
-  async function run(path: string, done: string) {
+  async function run(path: string, done: string, body?: unknown) {
     setBusy(true)
     try {
-      setFloor(await api<Floor>(path, { method: "POST" }))
+      setFloor(await api<Floor>(path, { method: "POST", body }))
       toast(done)
     } catch (err) {
       toast(errorMessage(err), true)
@@ -77,7 +77,7 @@ export function CashierView() {
                 number={k.number}
                 busy={busy}
                 onOut={() => run(`/kitchen/cashier/tickets/${k.id}/out`, `Comanda ${k.number} servida`)}
-                onCancel={() => run(`/kitchen/cashier/tickets/${k.id}/cancel`, `Comanda ${k.number} anulada`)}
+                onCancel={(reason) => run(`/kitchen/cashier/tickets/${k.id}/cancel`, `Comanda ${k.number} anulada`, { reason })}
               />
             </div>
           ))}
@@ -106,15 +106,7 @@ export function CashierView() {
         <Empty>No hay mesas abiertas.</Empty>
       )}
       {!table && floor?.cancelled?.length ? (
-        <section className="card stack" style={{ marginTop: 16 }}>
-          <h3 style={{ margin: 0 }}>Comandas anuladas hoy</h3>
-          {floor.cancelled.map((k) => (
-            <div key={k.id} className="row between nowrap small">
-              <span>{k.table} · comanda {k.number} · {k.by ?? "—"} · {timeFmt(k.at)}</span>
-              <span className="num">{money(k.total)}</span>
-            </div>
-          ))}
-        </section>
+        <CancelledCard list={floor.cancelled} busy={busy} onReview={(id) => run(`/kitchen/cashier/cancelled/${id}/review`, "Anulación revisada")} />
       ) : null}
     </>
   )

@@ -93,7 +93,7 @@ export function TableSheet({ table, catalog, payKeys, taxRate, cashier, now, nor
                 number={k.number}
                 busy={busy}
                 onOut={() => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/out`, { method: "POST" }))}
-                onCancel={() => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/cancel`, { method: "POST" }))}
+                onCancel={(reason) => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/cancel`, { method: "POST", body: { reason } }))}
               />
             ) : null}
             {k.status === "READY" && s.mine ? (
