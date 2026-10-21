@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TAX_RATE } from '../kitchen/kitchen-costs';
 import { paymentProblem, tipFor } from './bill-rules';
 import { CloseTableDto } from './dto/restaurant.dto';
 
@@ -20,7 +21,8 @@ export class TableBillService {
     const session = await this.openSession(organizationId, sessionId, waiterId);
     if (session.tickets.some((k) => k.status === 'SENT')) throw new BadRequestException('Aún hay una comanda en cocina.');
     const subtotal = session.tickets.reduce((a, k) => a + k.lines.reduce((b, l) => b + l.qty * l.unitPrice, 0), 0);
-    const tip = dto.tip && subtotal > 0 ? tipFor(subtotal) : 0;
+    const { salesTax } = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { salesTax: true } });
+    const tip = dto.tip && subtotal > 0 ? tipFor(subtotal, TAX_RATE[salesTax]) : 0;
     const problem = paymentProblem(subtotal + tip, dto.payments);
     if (problem) throw new BadRequestException(problem);
     await this.prisma.$transaction(async (tx) => {

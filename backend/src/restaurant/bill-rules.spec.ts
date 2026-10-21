@@ -3,8 +3,13 @@ import { paymentProblem, tipFor } from './bill-rules';
 describe('cuenta de la mesa', () => {
   it('sugiere el 10 % de propina, en pesos redondos', () => {
     expect(tipFor(45000)).toBe(4500);
-    expect(tipFor(12345)).toBe(1235);
+    expect(tipFor(12345)).toBe(1234);
     expect(tipFor(0)).toBe(0);
+  });
+
+  it('con impuesto incluido, la propina es el 10 % del valor sin impuesto (Ley 1935)', () => {
+    expect(tipFor(12000, 0.08)).toBe(1111);
+    expect(tipFor(11900, 0.19)).toBe(1000);
   });
 
   it('acepta una sola forma de pago por el total', () => {

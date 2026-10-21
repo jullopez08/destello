@@ -4,7 +4,9 @@
 /** Propina sugerida: el 10 % de lo consumido, voluntaria (el cliente dice si la acepta). */
 export const TIP_PERCENT = 10;
 
-export const tipFor = (subtotal: number) => Math.round((subtotal * TIP_PERCENT) / 100);
+/** La Ley 1935 de 2018 no deja pasar del 10 % del servicio sin impuestos: se calcula sobre el precio sin el impuesto
+ *  incluido y se redondea hacia abajo, para no pasarse ni un peso (Julieth, 2026-10-21). */
+export const tipFor = (subtotal: number, taxRate = 0) => Math.floor((subtotal / (1 + taxRate)) * TIP_PERCENT / 100 + 1e-6);
 
 const pesos = (n: number) => `$${n.toLocaleString('es-CO')}`;
 

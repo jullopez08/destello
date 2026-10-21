@@ -56,7 +56,8 @@ export const PAY_METHODS: { method: PayMethod; label: string }[] = [
 
 /** Propina sugerida del 10 %, igual que `tipFor` en backend/src/restaurant/bill-rules.ts. */
 export const TIP_PERCENT = 10
-export const tipFor = (subtotal: number) => Math.round((subtotal * TIP_PERCENT) / 100)
+/** Ley 1935 de 2018: máximo el 10 % del servicio sin impuestos, redondeado hacia abajo. */
+export const tipFor = (subtotal: number, taxRate = 0) => Math.floor((subtotal / (1 + taxRate)) * TIP_PERCENT / 100 + 1e-6)
 
 /** Pantalla de cocina (GET /staff/kitchen). */
 export interface KitchenBoard {
