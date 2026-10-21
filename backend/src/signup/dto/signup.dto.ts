@@ -8,6 +8,8 @@ export class StartSignupDto {
   @IsString() @IsNotEmpty() @MaxLength(80) businessName!: string;
   /** "¿Atiendes clientes en mesas?" (llega como texto: el formulario va con la carta en PDF, multipart) */
   @Transform(({ value }) => value === true || value === 'true') @IsBoolean() servesTables!: boolean;
+  /** "¿Qué preparas sobre todo?": comida (true) o postres y panes */
+  @Transform(({ value }) => value === true || value === 'true') @IsBoolean() makesMeals!: boolean;
   /** Instagram o Google Maps del negocio (findUsLink) */
   @IsString() @MaxLength(300) findUs!: string;
   @IsString() @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres.' }) @MaxLength(72) password!: string;

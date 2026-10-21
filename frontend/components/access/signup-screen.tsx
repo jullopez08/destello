@@ -17,7 +17,7 @@ const MENU_MAX_MB = 5
 export function SignupScreen() {
   const [mode, setMode] = useState<"open" | "review" | "closed" | null>(null)
   const [step, setStep] = useState<"form" | "code">("form")
-  const [f, setF] = useState({ ownerName: "", email: "", whatsapp: "", businessName: "", servesTables: false, findUs: "", password: "" })
+  const [f, setF] = useState({ ownerName: "", email: "", whatsapp: "", businessName: "", servesTables: false, makesMeals: false, findUs: "", password: "" })
   // La carta del negocio en PDF (Julieth, 2026-10-20): con "¿Dónde te encontramos?" sirve para comprobar que es real.
   const [menu, setMenu] = useState<File | null>(null)
   const [terms, setTerms] = useState(false)
@@ -113,6 +113,18 @@ export function SignupScreen() {
               <span className="small muted">
                 {f.servesTables ? "Mesas, meseros, caja y pantalla de cocina, además de pedidos y producción." : "Pedidos, domicilios, producción e inventario. Lo puedes cambiar después."}
               </span>
+            </fieldset>
+            {/* Solo cambia los dibujos: galletas y panes, o platos (Julieth, 2026-10-21). */}
+            <fieldset className="f signup-type">
+              <legend>¿Qué preparas sobre todo?</legend>
+              <div className="seg">
+                {([[false, "Postres y panes"], [true, "Comida"]] as const).map(([value, label]) => (
+                  <label key={label}>
+                    <input type="radio" name="makesMeals" checked={f.makesMeals === value} onChange={() => set({ makesMeals: value })} />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
             </fieldset>
             <label className="f">
               ¿Dónde te encontramos?

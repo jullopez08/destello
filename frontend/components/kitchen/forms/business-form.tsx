@@ -27,11 +27,11 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
   const { setUser } = useSession()
   const toast = useToast()
   const st = data.settings
-  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables, normalMin: String(st.kitchenNormalMin), maxMin: String(st.kitchenMaxMin), salesTax: st.salesTax })
+  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables, makesMeals: st.makesMeals, normalMin: String(st.kitchenNormalMin), maxMin: String(st.kitchenMaxMin), salesTax: st.salesTax })
   const [saving, setSaving] = useState(false)
   // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
   const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
-  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables || Number(f.normalMin) !== st.kitchenNormalMin || Number(f.maxMin) !== st.kitchenMaxMin || f.salesTax !== st.salesTax
+  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables || f.makesMeals !== st.makesMeals || Number(f.normalMin) !== st.kitchenNormalMin || Number(f.maxMin) !== st.kitchenMaxMin || f.salesTax !== st.salesTax
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
@@ -43,10 +43,10 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
       await mutate(
         "/settings",
         "PATCH",
-        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables, kitchenNormalMin: normalMin, kitchenMaxMin: maxMin, salesTax: f.salesTax },
+        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables, makesMeals: f.makesMeals, kitchenNormalMin: normalMin, kitchenMaxMin: maxMin, salesTax: f.salesTax },
         setup ? "Negocio listo" : "Configuración guardada",
       )
-      setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name, servesTables: f.servesTables }))
+      setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name, servesTables: f.servesTables, makesMeals: f.makesMeals }))
       onSaved?.()
     } catch (err) {
       toast(errorMessage(err), true)
@@ -77,6 +77,10 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
       <div>
         <Eyebrow help={HELP.businessTables}>¿Atiendes clientes en mesas?</Eyebrow>
         <Seg name="serves-tables" value={f.servesTables ? "si" : "no"} onChange={(v) => setF({ ...f, servesTables: v === "si" })} options={[["no", "No"], ["si", "Sí"]]} />
+      </div>
+      <div>
+        <Eyebrow help={HELP.businessMakes}>¿Qué preparas sobre todo?</Eyebrow>
+        <Seg name="makes-meals" value={f.makesMeals ? "comida" : "postres"} onChange={(v) => setF({ ...f, makesMeals: v === "comida" })} options={[["postres", "Postres y panes"], ["comida", "Comida"]]} />
       </div>
       <div>
         <Eyebrow help={HELP.businessClosed}>Días cerrados</Eyebrow>

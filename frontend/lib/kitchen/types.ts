@@ -16,6 +16,8 @@ export interface KitchenSettings {
   logoUrl: string | null
   /** "¿Atiendes clientes en mesas?": enciende mesas y meseros */
   servesTables: boolean
+  /** "¿Qué preparas sobre todo?": comida (dibujos de platos) o postres y panes */
+  makesMeals: boolean
   /** Minutos que suele tardar un plato y el máximo antes de avisar a la mesa */
   kitchenNormalMin: number
   kitchenMaxMin: number

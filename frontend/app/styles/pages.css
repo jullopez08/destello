@@ -64,6 +64,15 @@
 .dbar .col span::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 9px; border-radius: 50%; background: #b8732f; border: 2.5px solid #f6d4a0; box-sizing: border-box; }
 .dbar.best .col span::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 32%; max-height: 42px; background: #6b3a22;
   border-radius: 10px 10px 45% 55% / 10px 10px 35% 45%; }
+/* Negocios de comida (Julieth, 2026-10-21): cada columna es un pincho, un palito de madera con trozos de tomate,
+   pimiento, carne y queso ensartados; el día de más trabajo lleva un tomate cherry en la punta. */
+.dbars.food .col span { width: 46%; border-radius: 6px; box-shadow: inset -3px 0 0 rgba(0, 0, 0, 0.1);
+  background: repeating-linear-gradient(to bottom, #e05a3f 0 13px, #fff6e5 13px 15px, #7cc25a 15px 28px, #fff6e5 28px 30px, #9a5a36 30px 43px, #fff6e5 43px 45px, #f3c96b 45px 58px, #fff6e5 58px 60px); }
+.dbars.food .col span::before { top: -13px; left: 50%; right: auto; width: 3px; height: 13px; margin-left: -1.5px; border: 0;
+  border-radius: 2px 2px 0 0; background: #c98642; }
+.dbars.food .dbar.best .col span::after { top: -24px; left: 50%; right: auto; width: 13px; height: 13px; max-height: none; margin-left: -6.5px;
+  border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9a85 0 22%, #d8452f 30%); }
+.dbars.food .col { margin-top: 20px; }
 
 .dbar .t { font-size: 12px; font-weight: 600; text-transform: capitalize; }
 @media (max-width: 560px) { .stat .v { font-size: 21px; } .summary p { font-size: 15px; } }

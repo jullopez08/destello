@@ -49,6 +49,10 @@ export class UpdateKitchenSettingsDto {
   @IsOptional() @IsBoolean()
   servesTables?: boolean;
 
+  /** "¿Qué preparas sobre todo?": comida o postres y panes (solo los dibujos) */
+  @IsOptional() @IsBoolean()
+  makesMeals?: boolean;
+
   /** Minutos que suele tardar un plato y el máximo antes de avisar a la mesa */
   @IsOptional() @IsInt() @Min(1) @Max(180)
   kitchenNormalMin?: number;

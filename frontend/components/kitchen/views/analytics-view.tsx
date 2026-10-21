@@ -61,12 +61,12 @@ export function AnalyticsView() {
         <div className="card">
           <h2>¿Qué días tienes más trabajo?</h2>
           <p className="small muted">{tables ? "Pedidos y mesas" : "Pedidos"} por día, últimas 8 semanas.</p>
-          <WeekdayBars counts={weekdays} />
+          <WeekdayBars counts={weekdays} food={data.settings.makesMeals} />
         </div>
         <div className="card">
           <h2>¿Qué vendes más y qué casi no?</h2>
           <p className="small muted">Últimas 8 semanas.</p>
-          {sold.length ? <SellerPie list={sold} max={9} /> : <Empty>Todavía no hay ventas.</Empty>}
+          {sold.length ? <SellerPie list={sold} max={9} food={data.settings.makesMeals} /> : <Empty>Todavía no hay ventas.</Empty>}
           {sold.length ? (
             <p className="conclusion">
               <b>{sold[0].name}</b> es lo que más vendes: deja el <b>{Math.round(sold[0].share * 100)}&nbsp;%</b> de tu plata.

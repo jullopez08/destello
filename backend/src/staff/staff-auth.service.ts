@@ -102,7 +102,7 @@ export class StaffAuthService {
 
   async profile(staffId: string) {
     const staff = await this.prisma.staffMember.findUniqueOrThrow({ where: { id: staffId }, include: { organization: true } });
-    return { name: staff.name, role: staff.role, organizationName: staff.organization.name, palette: staff.organization.palette, servesTables: staff.organization.servesTables };
+    return { name: staff.name, role: staff.role, organizationName: staff.organization.name, palette: staff.organization.palette, servesTables: staff.organization.servesTables, makesMeals: staff.organization.makesMeals };
   }
 
   private async knownDevice(cookie: string | undefined) {
