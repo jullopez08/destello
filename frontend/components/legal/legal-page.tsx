@@ -3,15 +3,16 @@ import { Cookie } from "@/components/ui/cookie"
 import { LegalBack } from "./legal-back"
 
 // Datos de la titular (persona natural; no es una empresa). El Decreto 1377 de 2013 (art. 13) pide nombre, domicilio,
-// dirección, correo y teléfono del responsable. PENDIENTE (Julieth): el correo es provisional de aggendarme hasta que
-// Destello tenga dominio, y falta el teléfono de contacto.
+// dirección, correo y teléfono del responsable (Julieth, 2026-10-21). `email` es para datos personales y asuntos
+// legales; `contactEmail`, para soporte, cancelaciones y reembolsos. Ambos de aggendarme hasta que Destello tenga dominio.
 export const OWNER = {
   name: "Julieth Perdomo López",
   nit: "1010124306-9",
   city: "Cartago, Valle del Cauca, Colombia",
   address: "CR 3 #1A-169 BRR San Vicente, Cartago, Valle del Cauca, Colombia",
   email: "legal@aggendarme.com",
-  phone: "Por definir",
+  contactEmail: "info@aggendarme.com",
+  phone: "301 899 0546",
 }
 
 // Al cambiar el contenido legal, actualizar esta fecha y CURRENT_TERMS_VERSION (lib/session.tsx).

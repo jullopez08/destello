@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Cancelaciones, derecho de retracto, reembolsos y reversión del pago de la suscripción a Destello.",
 }
 
-const mail = <a href={`mailto:${OWNER.email}`}>{OWNER.email}</a>
+const mail = <a href={`mailto:${OWNER.contactEmail}`}>{OWNER.contactEmail}</a>
 
 // Reembolsos (Julieth, 2026-10-21): Ley 1480 de 2011 (Estatuto del Consumidor) art. 47 (retracto en ventas a distancia),
 // art. 51 (reversión del pago) y Ley 2439 de 2024 (devolución en máximo 15 días calendario). Borrador: revisar con abogado.
@@ -55,7 +55,7 @@ export default function ReembolsosPage() {
       <h2>8. Cómo pedir una cancelación o una devolución</h2>
       <ul>
         <li>Escriba a {mail} con el asunto <b>“Cancelación/Reembolso — [nombre del negocio]”</b>, desde el correo de la cuenta.</li>
-        <li>Respondemos dentro de los dos (2) días hábiles siguientes.</li>
+        <li>Respondemos dentro de los dos (2) días hábiles siguientes. También puede llamar o escribir al {OWNER.phone}.</li>
         <li>
           Si procede la devolución, la hacemos al mismo medio con que pagó en máximo <b>quince (15) días calendario</b> (Ley 2439 de 2024). Los
           tiempos de acreditación de su banco o de Wompi pueden sumar unos días.

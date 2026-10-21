@@ -25,7 +25,8 @@ export default function PrivacidadPage() {
       <ul>
         <li><b>Responsable:</b> {OWNER.name}, persona natural, NIT {OWNER.nit}. Destello es un producto suyo.</li>
         <li><b>Domicilio:</b> {OWNER.city}. <b>Dirección:</b> {OWNER.address}.</li>
-        <li><b>Correo:</b> {mail}. <b>Teléfono:</b> {OWNER.phone}.</li>
+        <li><b>Correo para datos personales:</b> {mail}. <b>Otros asuntos:</b> <a href={`mailto:${OWNER.contactEmail}`}>{OWNER.contactEmail}</a>.</li>
+        <li><b>Teléfono:</b> <a href={`tel:+57${OWNER.phone.replace(/\D/g, "")}`}>{OWNER.phone}</a>.</li>
         <li><b>Quién atiende sus consultas y reclamos:</b> la misma titular, {OWNER.name}, en el correo anterior.</li>
       </ul>
 

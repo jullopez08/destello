@@ -118,7 +118,8 @@ export default function TerminosPage() {
 
       <h2>13. Ley aplicable y contacto</h2>
       <p>
-        Estos términos se rigen por las leyes de Colombia. Antes de acudir a una autoridad, escríbanos a {mail} para buscar una solución directa.
+        Estos términos se rigen por las leyes de Colombia. Antes de acudir a una autoridad, escríbanos a{" "}
+        <a href={`mailto:${OWNER.contactEmail}`}>{OWNER.contactEmail}</a> para buscar una solución directa (asuntos de datos personales: {mail}).
         Usted conserva su derecho a acudir a la Superintendencia de Industria y Comercio. Dirección: {OWNER.address}. Teléfono: {OWNER.phone}.
       </p>
     </LegalPage>
