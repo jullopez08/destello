@@ -2,6 +2,7 @@ import type { PrismaService } from '../prisma/prisma.service';
 import { CANCEL_REASON_TEXT, type CancelReason } from '../restaurant/cancel-reasons';
 import { taxIn } from '../kitchen/kitchen-costs';
 import { toIsoDate } from '../kitchen/kitchen-dates';
+import { CashDrawerService } from '../restaurant/cash-drawer.service';
 import type { ReportRange } from './report-range';
 import { daysOf, salesData } from './sales-data';
 import { addSheet, dmy, hm, toBuffer, workbook, type Column } from './xlsx';
@@ -87,6 +88,44 @@ export async function cashReport(prisma: PrismaService, organizationId: string, 
       { header: 'Revisada', width: 10 },
     ],
     cancelled.map((k) => [dmy(toIsoDate(k.at)), hm(k.at), k.table, k.number, k.products, k.total, k.by, k.reason ? CANCEL_REASON_TEXT[k.reason as CancelReason] ?? k.reason : 'Sin motivo', k.reviewed ? 'Sí' : 'No']),
+  );
+
+  // Turnos del cajón (base, lo que debía haber y lo contado), si el negocio usa la caja.
+  const shifts = await new CashDrawerService(prisma).history(organizationId, range.start, range.end);
+  addSheet(
+    wb,
+    'Turnos de caja',
+    { ...info, title: 'Turnos de caja', note: 'Cuenta a ciegas: si no cuadra, se cuenta otra vez; si tampoco, queda la diferencia y qué pasó.' },
+    [
+      { header: 'Abrió', width: 18 },
+      { header: 'Quién abrió', width: 16 },
+      { header: 'Base', kind: 'money' },
+      { header: 'Cerró', width: 18 },
+      { header: 'Quién cerró', width: 16 },
+      { header: 'Debía haber', kind: 'money', total: true },
+      { header: 'Contaron', kind: 'money', total: true },
+      { header: 'Diferencia', kind: 'money', total: true },
+      { header: 'Primer conteo', kind: 'money' },
+      { header: 'Entradas', kind: 'money', total: true },
+      { header: 'Salidas', kind: 'money', total: true },
+      { header: 'Qué pasó', width: 30 },
+      { header: 'Revisado', width: 10 },
+    ],
+    [...shifts].reverse().map((s) => [
+      `${dmy(toIsoDate(s.openedAt))} ${hm(s.openedAt)}`,
+      s.openedBy,
+      s.openingCash,
+      `${dmy(toIsoDate(s.closedAt))} ${hm(s.closedAt)}`,
+      s.closedBy,
+      s.expected,
+      s.counted,
+      s.difference,
+      s.firstCount,
+      s.moves.filter((m) => m.kind === 'IN').reduce((a, m) => a + m.amount, 0),
+      s.moves.filter((m) => m.kind === 'OUT').reduce((a, m) => a + m.amount, 0),
+      s.note ?? '',
+      s.reviewedAt ? 'Sí' : '',
+    ]),
   );
 
   return toBuffer(wb);

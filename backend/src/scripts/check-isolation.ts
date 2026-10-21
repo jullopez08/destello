@@ -145,6 +145,11 @@ async function main() {
   }
   const voided = cashier?.cancelled?.[0];
   if (voided) list.push(['Marcar revisada una anulación de otro restaurante', 'POST', `/kitchen/cashier/cancelled/${voided.id}/review`]);
+  list.push(['Abrir la caja (este negocio no atiende en mesas)', 'POST', '/kitchen/cashier/drawer/open', { openingCash: 1000 }]);
+  list.push(['Cerrar la caja del mesero con la sesión de la dueña', 'POST', '/staff/floor/drawer/close', { counted: 0 }]);
+  const luciaDrawer = lucia ? (await call(lucia, 'GET', '/kitchen/cashier/drawer')).body : null;
+  const shift = luciaDrawer?.history?.[0];
+  if (shift) list.push(['Marcar revisado un turno de caja de otro restaurante', 'POST', `/kitchen/cashier/drawer/shifts/${shift.id}/review`]);
   list.push(['Anular una comanda con la sesión de la dueña', 'POST', '/staff/floor/tickets/x/cancel', { reason: 'OTHER' }]);
   list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);
   list.push(['Ver la pantalla de cocina con la sesión de la dueña', 'GET', '/staff/kitchen']);

@@ -40,3 +40,21 @@ export class CloseTableDto {
   /** Una forma de pago o varias (dividir la cuenta); vacío solo si la mesa no consumió nada */
   @IsArray() @ArrayMaxSize(8) @ValidateNested({ each: true }) @Type(() => TablePaymentDto) payments!: TablePaymentDto[];
 }
+
+/** Abrir la caja con la base (el efectivo para dar vueltas; puede ser 0). */
+export class OpenDrawerDto {
+  @IsInt() @Min(0) @Max(100_000_000) openingCash!: number;
+}
+
+/** Efectivo que entra o sale del cajón sin ser una venta. */
+export class CashMoveDto {
+  @IsIn(['IN', 'OUT']) kind!: 'IN' | 'OUT';
+  @IsInt() @Min(1) @Max(100_000_000) amount!: number;
+  @IsString() @IsNotEmpty() @MaxLength(80) reason!: string;
+}
+
+/** Lo contado al cerrar y, si no cuadró dos veces, qué pasó. */
+export class CloseDrawerDto {
+  @IsInt() @Min(0) @Max(100_000_000) counted!: number;
+  @IsOptional() @IsString() @MaxLength(200) note?: string;
+}

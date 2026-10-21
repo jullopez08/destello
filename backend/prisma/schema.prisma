@@ -14,25 +14,25 @@ datasource db {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Organization {
-  id               String  @id @default(cuid())
+  id               String    @id @default(cuid())
   name             String
   /// Identificador para URLs (p. ej. "cocina-destello")
-  slug             String  @unique
-  active           Boolean @default(true)
+  slug             String    @unique
+  active           Boolean   @default(true)
   /// Logo subido a Cloudinary
   logoUrl          String?
   /// Paleta del panel elegida por la dueña: vainilla | fresa | lavanda | menta | durazno | cielo
-  palette          String  @default("vainilla")
+  palette          String    @default("vainilla")
   /// "¿Atiendes clientes en mesas?" (Julieth, 2026-10-19): enciende mesas y meseros. Pastelería, panadería,
   /// cocina oculta o restaurante da igual: todas tienen pedidos, domicilios, recetas y pantalla de cocina.
-  servesTables     Boolean @default(false)
+  servesTables     Boolean   @default(false)
   /// Minutos que suele tardar un plato y el máximo antes de avisar a la mesa (pantalla de cocina y mesero)
-  kitchenNormalMin Int     @default(15)
-  kitchenMaxMin    Int     @default(25)
+  kitchenNormalMin Int       @default(15)
+  kitchenMaxMin    Int       @default(25)
   /// Impuesto que cobra el negocio, ya incluido en sus precios: NONE (no responsable), INC (consumo 8 %) o IVA (19 %, franquicias)
-  salesTax                SalesTax  @default(NONE)
+  salesTax         SalesTax  @default(NONE)
   /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
-  approvalPending  Boolean @default(false)
+  approvalPending  Boolean   @default(false)
   /// Cuándo el super admin comprobó que el negocio es real (Instagram o Maps y la carta); null = por verificar.
   /// En modo `open` trabaja normal mientras tanto (Julieth, 2026-10-21).
   verifiedAt       DateTime?
@@ -63,6 +63,8 @@ model Organization {
   updatedAt               DateTime  @updatedAt
 
   users            User[]
+  cashShifts       CashShift[]
+  cashMoves        CashMove[]
   staff            StaffMember[]
   tables           DiningTable[]
   tableSessions    TableSession[]
@@ -185,19 +187,19 @@ enum KitchenTicketStatus {
 }
 
 model KitchenTicket {
-  id             String              @id @default(cuid())
-  organizationId String
-  sessionId      String
-  number         Int
-  status         KitchenTicketStatus @default(SENT)
-  sentAt         DateTime            @default(now())
-  readyAt        DateTime?
-  servedAt       DateTime?
+  id               String              @id @default(cuid())
+  organizationId   String
+  sessionId        String
+  number           Int
+  status           KitchenTicketStatus @default(SENT)
+  sentAt           DateTime            @default(now())
+  readyAt          DateTime?
+  servedAt         DateTime?
   /// Anulada desde la caja: cuándo y quién (la dueña la ve en Caja)
-  cancelledAt    DateTime?
-  cancelledBy    String?
+  cancelledAt      DateTime?
+  cancelledBy      String?
   /// Por qué se anuló (CANCEL_REASONS en restaurant/cancel-reasons.ts)
-  cancelReason   String?
+  cancelReason     String?
   /// Cuándo la dueña revisó la anulación en Caja (null = por revisar)
   cancelReviewedAt DateTime?
 
@@ -806,6 +808,8 @@ model Order {
   status         OrderStatus  @default(PENDING)
   produced       Boolean      @default(false)
   courierId      String?
+  /// Cuándo se marcó "Entregado" (el efectivo de un pedido que recogen entra al cajón de ese turno)
+  deliveredAt    DateTime?
   createdAt      DateTime     @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -877,4 +881,60 @@ model ProductionCheck {
   organization Organization @relation(fields: [organizationId], references: [id])
 
   @@id([organizationId, date, key])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Caja: turnos con base y arqueo (Julieth, 2026-10-21; como los informes de caja de Toast o Square)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Un turno de caja: se abre con la base (el efectivo para dar vueltas) y se cierra contando el efectivo a ciegas.
+model CashShift {
+  id             String    @id @default(cuid())
+  organizationId String
+  /// = organizationId mientras está abierto (null al cerrar): así no hay dos turnos abiertos a la vez
+  openKey        String?   @unique
+  openedAt       DateTime  @default(now())
+  openedBy       String
+  /// Base con la que se abre, en pesos
+  openingCash    Int
+  closedAt       DateTime?
+  closedBy       String?
+  /// Primer conteo que no cuadró (se pidió contar de nuevo)
+  firstCount     Int?
+  /// Lo contado al cerrar y lo que debía haber (base + efectivo cobrado + entradas − salidas)
+  counted        Int?
+  expected       Int?
+  /// Qué pasó, si no cuadró en el segundo conteo
+  note           String?
+  /// Cuándo la dueña revisó una diferencia
+  reviewedAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  moves        CashMove[]
+
+  @@index([organizationId, openedAt])
+}
+
+enum CashMoveKind {
+  /// Entra efectivo (p. ej. el repartidor entrega lo cobrado)
+  IN
+  /// Sale efectivo (p. ej. pago a un proveedor)
+  OUT
+}
+
+/// Efectivo que entra o sale del cajón sin ser una venta, con su motivo.
+model CashMove {
+  id             String       @id @default(cuid())
+  organizationId String
+  shiftId        String
+  kind           CashMoveKind
+  amount         Int
+  reason         String
+  by             String
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  shift        CashShift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
 }

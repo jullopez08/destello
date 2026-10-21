@@ -6,10 +6,12 @@ import { useToast } from "@/components/ui/toast"
 import { TableBill, type CloseBody } from "@/components/staff/table-bill"
 import { StuckTicket } from "@/components/staff/stuck-ticket"
 import { CancelledCard } from "./cancelled-card"
+import { CashShiftsCard } from "./cash-shifts-card"
+import { CashDrawer } from "@/components/staff/cash-drawer"
 import { api, errorMessage } from "@/lib/api"
 import { HELP } from "@/lib/kitchen/help"
 import { money } from "@/lib/kitchen/format"
-import { minutesSince, STAGES, tableStage, type Floor } from "@/lib/restaurant"
+import { minutesSince, STAGES, tableStage, type CashState, type Floor } from "@/lib/restaurant"
 import { Empty, PageHead } from "../shared"
 
 const REFRESH_MS = 10000
@@ -23,6 +25,7 @@ export function CashierView() {
   const [error, setError] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [drawer, setDrawer] = useState<CashState | null>(null)
 
   const load = useCallback(() => api<Floor>("/kitchen/cashier").then((f) => { setFloor(f); setError(null) }).catch((err) => setError(errorMessage(err))), [])
   useEffect(() => {
@@ -66,6 +69,10 @@ export function CashierView() {
         <ReportButton kind="caja" />
       </PageHead>
       {error ? <div className="err" role="alert">{error}</div> : null}
+      {/* El cajón va arriba: lo primero del turno es abrir la caja con la base. */}
+      <div style={{ display: table ? "none" : undefined, marginBottom: 16 }}>
+        <CashDrawer base="/kitchen/cashier/drawer" owner onState={setDrawer} />
+      </div>
       {table?.session ? (
         <div className="stack cashier-bill">
           <div className="row between nowrap">
@@ -110,6 +117,13 @@ export function CashierView() {
       )}
       {!table && floor?.cancelled?.length ? (
         <CancelledCard list={floor.cancelled} busy={busy} onReview={(id) => run(`/kitchen/cashier/cancelled/${id}/review`, "Anulación revisada")} />
+      ) : null}
+      {!table && drawer ? (
+        <CashShiftsCard
+          list={drawer.history}
+          busy={busy}
+          onReview={(id) => api<CashState>(`/kitchen/cashier/drawer/shifts/${id}/review`, { method: "POST" }).then((s) => { setDrawer(s); toast("Turno revisado") }).catch((err) => toast(errorMessage(err), true))}
+        />
       ) : null}
     </>
   )
