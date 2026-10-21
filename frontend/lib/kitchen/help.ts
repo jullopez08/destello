@@ -111,5 +111,6 @@ export const HELP = {
   pageCashier: "Ves las mesas abiertas y cobras cualquiera. Un mesero también puede ser encargado de caja, en Tu equipo.",
   staffCashier: "Cobra cualquier mesa, no solo las suyas. Úsalo para quien maneja la caja.",
   tableTip: "Es voluntaria: pregúntale al cliente si la incluye. Si dice que no, quítala.",
+  ticketStuck: "Si la cocina olvidó tocar Listo, marca que ya salió y se cobra. Si no se hizo, anúlala: no se cobra.",
   tablePay: "Si pagan entre varios o de dos formas, divide el pago. Por transferencia, muéstrale las llaves del negocio.",
 } as const

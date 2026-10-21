@@ -35,7 +35,7 @@ export class TableBillService {
   }
 
   private async openSession(organizationId: string, sessionId: string, waiterId?: string) {
-    const session = await this.prisma.tableSession.findUnique({ where: { id: sessionId }, include: { tickets: { include: { lines: true } } } });
+    const session = await this.prisma.tableSession.findUnique({ where: { id: sessionId }, include: { tickets: { where: { status: { not: 'CANCELLED' } }, include: { lines: true } } } });
     if (!session || session.organizationId !== organizationId) throw new NotFoundException('Mesa no encontrada.');
     if (session.status !== 'OPEN') throw new BadRequestException('Esta mesa ya se cobró.');
     if (waiterId && session.waiterId !== waiterId) throw new ForbiddenException('Esta mesa la atiende otra persona.');

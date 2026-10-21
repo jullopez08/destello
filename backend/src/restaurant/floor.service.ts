@@ -22,7 +22,8 @@ export class FloorService {
             where: { status: 'OPEN' },
             include: {
               waiter: { select: { id: true, name: true } },
-              tickets: { orderBy: { number: 'asc' }, include: { lines: { include: { presentation: { include: { items: { include: { product: true } }, sizes: true } } } } } },
+              // Las anuladas no se cobran ni se ven en la mesa (la dueña las ve en Caja).
+              tickets: { where: { status: { not: 'CANCELLED' } }, orderBy: { number: 'asc' }, include: { lines: { include: { presentation: { include: { items: { include: { product: true } }, sizes: true } } } } } },
             },
           },
         },

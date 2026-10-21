@@ -3,13 +3,16 @@
 import { useCallback, useEffect, useState } from "react"
 import { useToast } from "@/components/ui/toast"
 import { TableBill, type CloseBody } from "@/components/staff/table-bill"
+import { StuckTicket } from "@/components/staff/stuck-ticket"
 import { api, errorMessage } from "@/lib/api"
 import { HELP } from "@/lib/kitchen/help"
 import { money } from "@/lib/kitchen/format"
-import { STAGES, tableStage, type Floor } from "@/lib/restaurant"
+import { minutesSince, STAGES, tableStage, type Floor } from "@/lib/restaurant"
 import { Empty, PageHead } from "../shared"
 
 const REFRESH_MS = 10000
+const waitFmt = (m: number) => (m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60 ? `${m % 60} min` : ""}`.trim() : `${Math.floor(m / 1440)} d`)
+const timeFmt = (iso: string) => new Date(iso).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" })
 
 // La caja (Julieth, 2026-10-20): muchas veces el cliente se para y paga en la caja. La dueña ve las mesas abiertas
 // y cobra cualquiera con la misma cuenta del mesero (propina sugerida, pago dividido, llaves para transferir).
@@ -30,12 +33,24 @@ export function CashierView() {
   const open = floor?.tables.filter((t) => t.session) ?? []
   const table = open.find((t) => t.id === openId)
 
+  async function run(path: string, done: string) {
+    setBusy(true)
+    try {
+      setFloor(await api<Floor>(path, { method: "POST" }))
+      toast(done)
+    } catch (err) {
+      toast(errorMessage(err), true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function close(body: CloseBody) {
     if (!table?.session) return
     setBusy(true)
     try {
       setFloor(await api<Floor>(`/kitchen/cashier/sessions/${table.session.id}/close`, { method: "POST", body }))
-      toast(`${table.name} cobrada`)
+      toast(body.payments.length ? `${table.name} cobrada` : `${table.name} libre`)
       setOpenId(null)
     } catch (err) {
       toast(errorMessage(err), true)
@@ -55,8 +70,22 @@ export function CashierView() {
             <h2 style={{ margin: 0 }}>{table.name}</h2>
             <span className="small muted">{table.session.waiter ? `Atiende ${table.session.waiter}` : ""}</span>
           </div>
-          {table.session.tickets.some((k) => k.status === "SENT") ? <div className="callout c-peach small">Aún hay una comanda en cocina: se cobra cuando la cocina la marque lista.</div> : null}
-          <TableBill session={table.session} payKeys={floor!.payKeys} taxRate={floor!.taxRate} busy={busy} onClose={close} />
+          {table.session.tickets.filter((k) => k.status === "SENT").map((k) => (
+            <div key={k.id} className="callout c-peach small stack">
+              <span>La comanda {k.number} sigue en cocina ({waitFmt(minutesSince(k.sentAt, Date.parse(floor!.now)))}). Se cobra cuando salga.</span>
+              <StuckTicket
+                number={k.number}
+                busy={busy}
+                onOut={() => run(`/kitchen/cashier/tickets/${k.id}/out`, `Comanda ${k.number} servida`)}
+                onCancel={() => run(`/kitchen/cashier/tickets/${k.id}/cancel`, `Comanda ${k.number} anulada`)}
+              />
+            </div>
+          ))}
+          {table.session.tickets.length ? (
+            <TableBill session={table.session} payKeys={floor!.payKeys} taxRate={floor!.taxRate} busy={busy} onClose={close} />
+          ) : (
+            <button type="button" className="btn soft" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>Liberar la mesa (no consumieron nada)</button>
+          )}
         </div>
       ) : !floor ? (
         <p className="muted">Cargando…</p>
@@ -76,6 +105,17 @@ export function CashierView() {
       ) : (
         <Empty>No hay mesas abiertas.</Empty>
       )}
+      {!table && floor?.cancelled?.length ? (
+        <section className="card stack" style={{ marginTop: 16 }}>
+          <h3 style={{ margin: 0 }}>Comandas anuladas hoy</h3>
+          {floor.cancelled.map((k) => (
+            <div key={k.id} className="row between nowrap small">
+              <span>{k.table} · comanda {k.number} · {k.by ?? "—"} · {timeFmt(k.at)}</span>
+              <span className="num">{money(k.total)}</span>
+            </div>
+          ))}
+        </section>
+      ) : null}
     </>
   )
 }

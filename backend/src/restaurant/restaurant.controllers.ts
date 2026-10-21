@@ -6,10 +6,11 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RequireActiveOrganizationGuard } from '../common/guards/require-active-clinic.guard';
 import { CurrentUser, type CurrentUserData } from '../common/decorators/current-user.decorator';
 import { requireOrganization } from '../kitchen/kitchen-snapshot.service';
-import { requireKitchen, requireWaiter, StaffSessionGuard, type StaffRequest } from '../staff/staff-session.guard';
+import { requireCashier, requireKitchen, requireWaiter, StaffSessionGuard, type StaffRequest } from '../staff/staff-session.guard';
 import { AddTablesDto, CloseTableDto, RenameTableDto, SendTicketDto } from './dto/restaurant.dto';
 import { FloorService } from './floor.service';
 import { KitchenScreenService } from './kitchen-screen.service';
+import { StuckTicketsService } from './stuck-tickets.service';
 import { TableBillService } from './table-bill.service';
 import { TablesAdminService } from './tables-admin.service';
 
@@ -48,6 +49,7 @@ export class FloorController {
   constructor(
     private readonly floor: FloorService,
     private readonly bill: TableBillService,
+    private readonly stuck: StuckTicketsService,
   ) {}
 
   @Get()
@@ -86,6 +88,23 @@ export class FloorController {
     return this.view(req);
   }
 
+  // Comanda trabada en cocina: solo el encargado de caja la destraba (ya salió o anularla).
+  @Post('tickets/:id/out')
+  @HttpCode(200)
+  async out(@Req() req: StaffRequest, @Param('id') id: string) {
+    const staff = requireCashier(req);
+    await this.stuck.out(staff.organizationId, id);
+    return this.view(req);
+  }
+
+  @Post('tickets/:id/cancel')
+  @HttpCode(200)
+  async cancel(@Req() req: StaffRequest, @Param('id') id: string) {
+    const staff = requireCashier(req);
+    await this.stuck.cancel(staff.organizationId, id, staff.sub);
+    return this.view(req);
+  }
+
   @Post('tickets/:id/served')
   @HttpCode(200)
   async served(@Req() req: StaffRequest, @Param('id') id: string) {
@@ -108,13 +127,14 @@ export class CashierController {
   constructor(
     private readonly floor: FloorService,
     private readonly bill: TableBillService,
+    private readonly stuck: StuckTicketsService,
   ) {}
 
   @Get()
   async load(@CurrentUser() user: CurrentUserData) {
     const org = requireOrganization(user);
     await this.floor.servesTables(org);
-    return this.floor.load(org, undefined, true);
+    return this.view(org);
   }
 
   @Post('sessions/:id/close')
@@ -123,7 +143,32 @@ export class CashierController {
     const org = requireOrganization(user);
     await this.floor.servesTables(org);
     await this.bill.close(org, id, dto);
-    return this.floor.load(org, undefined, true);
+    return this.view(org);
+  }
+
+  // Comanda trabada en cocina: ya salió (descuenta insumos) o anularla (no se cobra).
+  @Post('tickets/:id/out')
+  @HttpCode(200)
+  async out(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    const org = requireOrganization(user);
+    await this.floor.servesTables(org);
+    await this.stuck.out(org, id);
+    return this.view(org);
+  }
+
+  @Post('tickets/:id/cancel')
+  @HttpCode(200)
+  async cancel(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    const org = requireOrganization(user);
+    await this.floor.servesTables(org);
+    await this.stuck.cancel(org, id);
+    return this.view(org);
+  }
+
+  // Las mesas y las comandas anuladas hoy (solo la dueña las ve).
+  private async view(org: string) {
+    const [floor, cancelled] = await Promise.all([this.floor.load(org, undefined, true), this.stuck.cancelledToday(org)]);
+    return { ...floor, cancelled };
   }
 }
 
