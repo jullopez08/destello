@@ -6,11 +6,12 @@ import { KitchenScreenService } from './kitchen-screen.service';
 import { FloorService } from './floor.service';
 import { FloorController, KitchenScreenController, TablesAdminController } from './restaurant.controllers';
 import { TablesAdminService } from './tables-admin.service';
+import { TableBillService } from './table-bill.service';
 
-// Restaurante (Fase 3): mesas, mesas abiertas y comandas.
+// Restaurante (Fase 3): mesas, mesas abiertas, comandas y la cuenta.
 @Module({
   imports: [PrismaModule, StaffModule, KitchenModule],
   controllers: [TablesAdminController, FloorController, KitchenScreenController],
-  providers: [TablesAdminService, FloorService, KitchenScreenService],
+  providers: [TablesAdminService, FloorService, KitchenScreenService, TableBillService],
 })
 export class RestaurantModule {}

@@ -107,4 +107,6 @@ export const HELP = {
   pageSubscription: "Pagas con Wompi: tarjeta, PSE, Nequi o Bancolombia.",
   pageSetup: "Todo lo que pongas aquí lo puedes cambiar después en Configuración.",
   pageAccounts: "Cuenta bancaria o llave Bre-B: celular, correo, cédula o el código del banco.",
+  tableTip: "Es voluntaria: pregúntale al cliente si la incluye. Si dice que no, quítala.",
+  tablePay: "Si pagan entre varios o de dos formas, divide el pago. Por transferencia, muéstrale las llaves del negocio.",
 } as const

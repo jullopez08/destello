@@ -3,14 +3,15 @@
 import { useRef, useState } from "react"
 import { api, errorMessage } from "@/lib/api"
 import { money } from "@/lib/kitchen/format"
-import { catalogPrice, minutesSince, waitLevel, type CatalogItem, type Floor, type FloorTable } from "@/lib/restaurant"
+import { catalogPrice, minutesSince, waitLevel, type CatalogItem, type Floor, type FloorTable, type PayKey } from "@/lib/restaurant"
+import { TableBill, type CloseBody } from "./table-bill"
 
 type Draft = { key: number; item: CatalogItem; productId?: string; sizeId?: string; qty: number; note: string }
 
 const STATUS = { SENT: "En cocina", READY: "Listo", SERVED: "Servido" } as const
 
-// Una mesa: abrirla, ver sus comandas con su reloj y armar la siguiente para enviarla a cocina.
-export function TableSheet({ table, catalog, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
+// Una mesa: abrirla, ver sus comandas con su reloj, armar la siguiente para enviarla a cocina, pedir la cuenta y cobrarla.
+export function TableSheet({ table, catalog, payKeys, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; payKeys: PayKey[]; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
   const [draft, setDraft] = useState<Draft[]>([])
   const nextKey = useRef(0)
   const [pick, setPick] = useState<{ itemId: string; productId: string; sizeId: string; qty: number; note: string }>({ itemId: "", productId: "", sizeId: "", qty: 1, note: "" })
@@ -50,6 +51,10 @@ export function TableSheet({ table, catalog, now, normalMin, maxMin, onFloor, on
       }),
     ).then((ok) => ok && setDraft([]))
 
+  // Cobrada (o liberada sin consumo): vuelve al mapa, donde ya sale libre.
+  const close = (body: CloseBody) =>
+    run(() => api<Floor>(`/staff/floor/sessions/${s!.id}/close`, { method: "POST", body })).then((ok) => ok && onBack())
+
   return (
     <main className="floor">
       <header className="floor-head">
@@ -88,9 +93,20 @@ export function TableSheet({ table, catalog, now, normalMin, maxMin, onFloor, on
           </section>
         )
       })}
+      {s?.mine && s.tickets.length && !s.billAt ? (
+        <button type="button" className="btn soft" disabled={busy} onClick={() => run(() => api<Floor>(`/staff/floor/sessions/${s.id}/bill`, { method: "POST" }))}>
+          Pedir la cuenta
+        </button>
+      ) : null}
+      {s?.mine && s.billAt ? <TableBill session={s} payKeys={payKeys} busy={busy} onClose={close} /> : null}
+      {s?.mine && !s.tickets.length ? (
+        <button type="button" className="linkbtn" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>
+          Liberar la mesa (no pidieron nada)
+        </button>
+      ) : null}
       {s?.mine ? (
         <section className="card stack">
-          <b>Nueva comanda</b>
+          <b>{s.billAt ? "¿Piden algo más?" : "Nueva comanda"}</b>
           <select value={pick.itemId} onChange={(e) => setPick({ ...pick, itemId: e.target.value, productId: "", sizeId: "" })} aria-label="Qué piden">
             <option value="">¿Qué piden?</option>
             {catalog.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}

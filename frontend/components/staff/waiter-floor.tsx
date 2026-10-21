@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { api, errorMessage } from "@/lib/api"
-import { minutesSince, oldestWaiting, waitLevel, type Floor } from "@/lib/restaurant"
+import { minutesSince, oldestWaiting, STAGES, tableStage, waitLevel, type Floor } from "@/lib/restaurant"
 import { beep } from "@/lib/beep"
 import { TableSheet } from "./table-sheet"
 import { BackHint } from "./back-hint"
@@ -11,7 +11,7 @@ const REFRESH_MS = 10000
 
 // El salón del mesero: todas las mesas (libres, suyas o de otro mesero) con el reloj de la comanda que más lleva en
 // cocina. Idea de Julieth (2026-10-19): el mesero también ve el tiempo, para acercarse y avisar si una mesa espera
-// mucho (las esperas sin explicación se sienten más largas).
+// mucho (las esperas sin explicación se sienten más largas). Cada mesa lleva el color de cómo va (`tableStage`).
 export function WaiterFloor({ name, organizationName, onOut }: { name: string; organizationName: string; onOut: () => void }) {
   const [floor, setFloor] = useState<Floor | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -61,7 +61,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   }, [lateIds])
 
   const table = floor?.tables.find((t) => t.id === openId)
-  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
+  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} payKeys={floor.payKeys} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
 
   return (
     <main className="floor">
@@ -95,22 +95,28 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
       ) : null}
       {!floor ? <p className="muted">Cargando…</p> : null}
       {floor && !floor.tables.length ? <p className="muted">Aún no hay mesas. Pídele a la dueña que las cree en Configuración.</p> : null}
+      {floor?.tables.length ? (
+        <div className="stage-legend small" aria-hidden="true">
+          {STAGES.map((g) => <span key={g.stage} className={`stage-dot ${g.stage}`}>{g.label}</span>)}
+        </div>
+      ) : null}
       <div className="floor-grid">
         {floor?.tables.map((t) => {
           const s = t.session
           const waiting = oldestWaiting(s)
           const mins = waiting ? minutesSince(waiting.sentAt, serverNow) : 0
           const level = waiting ? waitLevel(mins, floor.normalMin, floor.maxMin) : "ok"
+          const stage = tableStage(s)
           return (
             <button
               key={t.id}
               type="button"
-              className={`table-tile${s ? (s.mine ? " mine" : " other") : ""} ${level}`}
-              aria-label={`${t.name}, ${!s ? "libre" : s.mine ? "tuya" : `de ${s.waiter ?? "la dueña"}`}${waiting ? `, en cocina hace ${mins} minutos` : ""}`}
+              className={`table-tile ${stage}${s?.mine ? " mine" : ""} ${level}`}
+              aria-label={`${t.name}, ${STAGES.find((g) => g.stage === stage)!.label.toLowerCase()}${s ? (s.mine ? ", tuya" : `, de ${s.waiter ?? "la dueña"}`) : ""}${waiting ? `, en cocina hace ${mins} minutos` : ""}`}
               onClick={() => setOpenId(t.id)}
             >
               <b>{t.name}</b>
-              <span className="small">{!s ? "Libre" : s.mine ? "Tuya" : `De ${s.waiter ?? "la dueña"}`}</span>
+              <span className="small">{STAGES.find((g) => g.stage === stage)!.label}{s ? (s.mine ? " · Tuya" : ` · De ${s.waiter ?? "la dueña"}`) : ""}</span>
               {waiting ? <span className="table-clock num">En cocina · {mins} min</span> : null}
               {level === "late" && s?.mine ? <span className="small">Acércate y avísale</span> : null}
             </button>
