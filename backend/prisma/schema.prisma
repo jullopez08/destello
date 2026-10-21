@@ -57,6 +57,7 @@ model Organization {
   staff            StaffMember[]
   tables           DiningTable[]
   tableSessions    TableSession[]
+  tablePayments    TablePayment[]
   kitchenTickets   KitchenTicket[]
   subscription     Subscription?
   bankAccounts     BankAccount[]
@@ -114,14 +115,44 @@ model TableSession {
   waiterId       String?
   status         TableSessionStatus @default(OPEN)
   openedAt       DateTime           @default(now())
+  /// El mesero pidió la cuenta (en el mapa sale "Cuenta"); una comanda nueva lo quita
+  billAt         DateTime?
   closedAt       DateTime?
+  /// Al cobrar: lo consumido y la propina aceptada (pesos)
+  subtotal       Int?
+  tip            Int                @default(0)
 
   organization Organization    @relation(fields: [organizationId], references: [id])
   table        DiningTable     @relation(fields: [tableId], references: [id])
   waiter       StaffMember?    @relation(fields: [waiterId], references: [id], onDelete: SetNull)
   tickets      KitchenTicket[]
+  payments     TablePayment[]
 
   @@index([organizationId, status])
+}
+
+enum TablePayMethod {
+  CASH
+  /// Transferencia o llave Bre-B (es lo mismo: la llave solo la facilita)
+  TRANSFER
+  /// Tarjeta en el datáfono
+  CARD
+}
+
+/// Cómo se pagó una mesa: una forma o varias (la mitad en efectivo y la mitad por transferencia)
+model TablePayment {
+  id             String         @id @default(cuid())
+  organizationId String
+  sessionId      String
+  method         TablePayMethod
+  /// Pesos
+  amount         Int
+  createdAt      DateTime       @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  session      TableSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
 }
 
 enum KitchenTicketStatus {

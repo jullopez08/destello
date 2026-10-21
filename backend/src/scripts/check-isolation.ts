@@ -136,6 +136,8 @@ async function main() {
   }
   list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);
   list.push(['Ver la pantalla de cocina con la sesión de la dueña', 'GET', '/staff/kitchen']);
+  list.push(['Pedir la cuenta de una mesa con la sesión de la dueña', 'POST', '/staff/floor/sessions/x/bill']);
+  list.push(['Cobrar una mesa con la sesión de la dueña', 'POST', '/staff/floor/sessions/x/close', { tip: false, payments: [] }]);
 
   let failures = 0;
   for (const [label, method, path, body] of list) {

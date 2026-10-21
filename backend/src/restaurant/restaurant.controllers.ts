@@ -7,9 +7,10 @@ import { RequireActiveOrganizationGuard } from '../common/guards/require-active-
 import { CurrentUser, type CurrentUserData } from '../common/decorators/current-user.decorator';
 import { requireOrganization } from '../kitchen/kitchen-snapshot.service';
 import { requireKitchen, requireWaiter, StaffSessionGuard, type StaffRequest } from '../staff/staff-session.guard';
-import { AddTablesDto, RenameTableDto, SendTicketDto } from './dto/restaurant.dto';
+import { AddTablesDto, CloseTableDto, RenameTableDto, SendTicketDto } from './dto/restaurant.dto';
 import { FloorService } from './floor.service';
 import { KitchenScreenService } from './kitchen-screen.service';
+import { TableBillService } from './table-bill.service';
 import { TablesAdminService } from './tables-admin.service';
 
 // Mesas del negocio: solo la dueña.
@@ -44,7 +45,10 @@ export class TablesAdminController {
 @Controller('staff/floor')
 @UseGuards(StaffSessionGuard)
 export class FloorController {
-  constructor(private readonly floor: FloorService) {}
+  constructor(
+    private readonly floor: FloorService,
+    private readonly bill: TableBillService,
+  ) {}
 
   @Get()
   load(@Req() req: StaffRequest) {
@@ -61,6 +65,22 @@ export class FloorController {
   send(@Req() req: StaffRequest, @Param('id') id: string, @Body() dto: SendTicketDto) {
     const staff = requireWaiter(req);
     return this.floor.send(staff.organizationId, id, dto.lines, staff.sub);
+  }
+
+  @Post('sessions/:id/bill')
+  @HttpCode(200)
+  async requestBill(@Req() req: StaffRequest, @Param('id') id: string) {
+    const staff = requireWaiter(req);
+    await this.bill.request(staff.organizationId, id, staff.sub);
+    return this.floor.load(staff.organizationId, staff.sub);
+  }
+
+  @Post('sessions/:id/close')
+  @HttpCode(200)
+  async close(@Req() req: StaffRequest, @Param('id') id: string, @Body() dto: CloseTableDto) {
+    const staff = requireWaiter(req);
+    await this.bill.close(staff.organizationId, id, dto, staff.sub);
+    return this.floor.load(staff.organizationId, staff.sub);
   }
 
   @Post('tickets/:id/served')

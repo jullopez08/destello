@@ -35,8 +35,17 @@
 .floor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 .table-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px; min-height: 96px; border-radius: 18px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; }
 .table-tile b { font-size: 18px; }
-.table-tile.mine { background: var(--accent-soft); border-color: var(--accent-deep); }
-.table-tile.other { background: var(--bg); }
+/* Color por cómo va la mesa (pasteles; el chocolate solo en letras y el borde de las tuyas) */
+.table-tile.new, .stage-dot.new::before { background: var(--banana); }
+.table-tile.kitchen, .stage-dot.kitchen::before { background: var(--peach); }
+.table-tile.ready, .stage-dot.ready::before { background: var(--mint); }
+.table-tile.served, .stage-dot.served::before { background: var(--sky); }
+.table-tile.bill, .stage-dot.bill::before { background: var(--lilac); }
+.stage-dot.free::before { background: var(--surface); border: 1.5px solid var(--line); }
+.table-tile.mine { border-color: var(--ink); }
+.stage-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.stage-dot { display: inline-flex; align-items: center; gap: 5px; }
+.stage-dot::before { content: ""; width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; }
 .table-tile.warn { border-color: var(--peach, #f4a261); }
 .table-tile.late { background: var(--strawberry); border-color: var(--ink); }
 .table-clock { font-weight: 700; font-size: 13px; }
@@ -44,6 +53,9 @@
 .ticket.warn { border-color: var(--accent-deep); }
 .ticket.late { background: var(--strawberry); }
 .ticket-tip { margin: 4px 0 0; font-weight: 600; }
+.bill-total { font-size: 20px; padding-top: 6px; border-top: 1.5px solid var(--line); }
+.bill-part > * { flex: 1; min-width: 0; }
+.bill-part .linkbtn { flex: none; }
 .floor select, .floor input { border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px; width: 100%; min-width: 0; font-size: 16px; }
 
 /* Pantalla de cocina (tablet) */

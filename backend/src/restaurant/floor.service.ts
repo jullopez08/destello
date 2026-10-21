@@ -10,7 +10,7 @@ export class FloorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async load(organizationId: string, viewerId?: string) {
-    const [org, tables, presentations] = await Promise.all([
+    const [org, tables, presentations, keys] = await Promise.all([
       this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { kitchenNormalMin: true, kitchenMaxMin: true } }),
       this.prisma.diningTable.findMany({
         where: { organizationId },
@@ -26,6 +26,8 @@ export class FloorService {
         },
       }),
       this.catalog(organizationId),
+      // Para cobrar por transferencia: las llaves y cuentas del negocio, que el mesero le muestra al cliente.
+      this.prisma.bankAccount.findMany({ where: { organizationId }, orderBy: { createdAt: 'asc' }, select: { id: true, bank: true, type: true, number: true, owner: true } }),
     ]);
     return {
       now: new Date().toISOString(),
@@ -40,6 +42,7 @@ export class FloorService {
             ? {
                 id: s.id,
                 openedAt: s.openedAt,
+                billAt: s.billAt,
                 waiter: s.waiter?.name ?? null,
                 mine: !!viewerId && s.waiter?.id === viewerId,
                 total: s.tickets.reduce((a, k) => a + k.lines.reduce((b, l) => b + l.qty * l.unitPrice, 0), 0),
@@ -51,6 +54,7 @@ export class FloorService {
                   readyAt: k.readyAt,
                   lines: k.lines.map((l) => ({
                     qty: l.qty,
+                    unitPrice: l.unitPrice,
                     note: l.note,
                     name: [
                       l.presentation.name,
@@ -71,6 +75,7 @@ export class FloorService {
         items: p.items.map((i) => ({ productId: i.productId, name: i.product.name, surcharge: i.surcharge })),
         sizes: p.sizes.map((z) => ({ id: z.id, name: z.name, price: z.price })),
       })),
+      payKeys: keys,
     };
   }
 
@@ -92,6 +97,8 @@ export class FloorService {
     if (session.status !== 'OPEN') throw new BadRequestException('Esta mesa ya se cerró.');
     const built = buildOrderLines(lines, await this.catalog(organizationId), new Set());
     await this.prisma.$transaction(async (tx) => {
+      // Si ya habían pedido la cuenta y piden algo más, la mesa vuelve a estar atendiéndose.
+      if (session.billAt) await tx.tableSession.update({ where: { id: sessionId }, data: { billAt: null } });
       const number = (await tx.kitchenTicket.count({ where: { organizationId } })) + 1;
       await tx.kitchenTicket.create({
         data: {

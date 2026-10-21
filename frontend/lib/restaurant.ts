@@ -1,8 +1,8 @@
 // Restaurante: tipos del salón (GET /staff/floor) y reglas del reloj de cada comanda.
 
 export type TicketStatus = "SENT" | "READY" | "SERVED"
-export interface FloorTicket { id: string; number: number; status: TicketStatus; sentAt: string; readyAt: string | null; lines: { name: string; qty: number; note: string | null }[] }
-export interface FloorSession { id: string; openedAt: string; waiter: string | null; mine: boolean; total: number; tickets: FloorTicket[] }
+export interface FloorTicket { id: string; number: number; status: TicketStatus; sentAt: string; readyAt: string | null; lines: { name: string; qty: number; unitPrice: number; note: string | null }[] }
+export interface FloorSession { id: string; openedAt: string; billAt: string | null; waiter: string | null; mine: boolean; total: number; tickets: FloorTicket[] }
 export interface FloorTable { id: string; name: string; session: FloorSession | null }
 export interface CatalogItem {
   id: string
@@ -12,7 +12,38 @@ export interface CatalogItem {
   items: { productId: string; name: string; surcharge: number }[]
   sizes: { id: string; name: string; price: number }[]
 }
-export interface Floor { now: string; normalMin: number; maxMin: number; tables: FloorTable[]; catalog: CatalogItem[] }
+export interface PayKey { id: string; bank: string; type: string; number: string; owner: string }
+export interface Floor { now: string; normalMin: number; maxMin: number; tables: FloorTable[]; catalog: CatalogItem[]; payKeys: PayKey[] }
+
+/** Cómo va una mesa, para su color en el mapa (Julieth, 2026-10-20). */
+export type TableStage = "free" | "new" | "kitchen" | "ready" | "served" | "bill"
+export const STAGES: { stage: TableStage; label: string }[] = [
+  { stage: "free", label: "Libre" },
+  { stage: "new", label: "Sin pedir" },
+  { stage: "kitchen", label: "En cocina" },
+  { stage: "ready", label: "Para llevar" },
+  { stage: "served", label: "Servida" },
+  { stage: "bill", label: "Cuenta" },
+]
+
+export function tableStage(s: FloorSession | null): TableStage {
+  if (!s) return "free"
+  if (s.billAt) return "bill"
+  if (s.tickets.some((k) => k.status === "SENT")) return "kitchen"
+  if (s.tickets.some((k) => k.status === "READY")) return "ready"
+  return s.tickets.length ? "served" : "new"
+}
+
+export type PayMethod = "CASH" | "TRANSFER" | "CARD"
+export const PAY_METHODS: { method: PayMethod; label: string }[] = [
+  { method: "CASH", label: "Efectivo" },
+  { method: "TRANSFER", label: "Transferencia" },
+  { method: "CARD", label: "Tarjeta" },
+]
+
+/** Propina sugerida del 10 %, igual que `tipFor` en backend/src/restaurant/bill-rules.ts. */
+export const TIP_PERCENT = 10
+export const tipFor = (subtotal: number) => Math.round((subtotal * TIP_PERCENT) / 100)
 
 /** Pantalla de cocina (GET /staff/kitchen). */
 export interface KitchenBoard {
