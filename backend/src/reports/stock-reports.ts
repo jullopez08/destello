@@ -1,6 +1,7 @@
 import type { PrismaService } from '../prisma/prisma.service';
 import { toIsoDate } from '../kitchen/kitchen-dates';
 import { lineName, withNames } from '../restaurant/kitchen-screen.service';
+import { addMovementSheet } from './inventory-movement';
 import type { ReportRange } from './report-range';
 import { addSheet, dmy, qtyUnit, toBuffer, workbook } from './xlsx';
 
@@ -55,9 +56,9 @@ export async function ordersReport(prisma: PrismaService, organizationId: string
   return toBuffer(wb);
 }
 
-// Inventario (Julieth, 2026-10-21; como los informes de inventario de Restaurant365 o Maitre'D): lo que hay hoy con su
-// valor al costo promedio, lo que vence y lo botado en el rango. Destello no guarda cuánto había cada día, así que el
-// inventario es el de hoy; las compras del rango van en el Excel de Compras.
+// Inventario (Julieth, 2026-10-21; como los informes de inventario de Restaurant365 o Maitre'D): el movimiento del
+// periodo (inicial, compras, botado, final y gastado, con el inventario que se guarda cada noche), lo que hay hoy con
+// su valor al costo promedio, lo que vence y lo botado.
 export async function inventoryReport(prisma: PrismaService, organizationId: string, range: ReportRange) {
   const today = toIsoDate(new Date());
   const [org, supplies, supplyWaste, doughWaste] = await Promise.all([
@@ -71,6 +72,7 @@ export async function inventoryReport(prisma: PrismaService, organizationId: str
     prisma.doughWaste.findMany({ where: { organizationId, date: { gte: range.from, lte: range.to } }, orderBy: { date: 'asc' }, include: { recipe: { select: { name: true } } } }),
   ]);
   const wb = workbook();
+  await addMovementSheet(wb, prisma, organizationId, org.name, range, supplies, supplyWaste);
   addSheet(
     wb,
     'Inventario hoy',

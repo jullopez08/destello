@@ -17,6 +17,9 @@ export async function purgeOrganizationData(
   // Restaurante: comandas (sus líneas en cascada), mesas abiertas y mesas, antes que el equipo.
   await tx.kitchenTicket.deleteMany({ where: { organizationId } });
   await tx.businessMenu.deleteMany({ where: { organizationId } });
+  // Caja: entradas y salidas antes que sus turnos.
+  await tx.cashMove.deleteMany({ where: { organizationId } });
+  await tx.cashShift.deleteMany({ where: { organizationId } });
   await tx.tablePayment.deleteMany({ where: { organizationId } });
   await tx.tableSession.deleteMany({ where: { organizationId } });
   await tx.diningTable.deleteMany({ where: { organizationId } });
@@ -37,6 +40,7 @@ export async function purgeOrganizationData(
   await tx.doughWaste.deleteMany({ where: { organizationId } });
   await tx.supplyBatch.deleteMany({ where: { organizationId } });
   await tx.supplyWaste.deleteMany({ where: { organizationId } });
+  await tx.supplyStockDay.deleteMany({ where: { organizationId } });
   await tx.recipeItem.deleteMany({ where: { recipe: { organizationId } } });
   await tx.recipe.deleteMany({ where: { organizationId } });
   await tx.purchaseLine.deleteMany({ where: { purchase: { organizationId } } });
