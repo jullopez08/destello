@@ -1,4 +1,4 @@
-import { codeMatches, findUsLink, hashCode, isPdf, newCode, phoneDisplay, phoneKey, signupMode } from './signup-rules';
+import { codeMatches, findUsLink, hashCode, isPdf, newCode, pdfHasActiveContent, phoneDisplay, phoneKey, signupMode } from './signup-rules';
 
 describe('reglas de la inscripción', () => {
   it('SIGNUP_MODE: open por defecto, review y closed solo si se escriben así', () => {
@@ -44,5 +44,14 @@ describe('reglas de la inscripción', () => {
   it('la carta solo se acepta si es un PDF de verdad', () => {
     expect(isPdf(Buffer.from('%PDF-1.7 ...'))).toBe(true);
     expect(isPdf(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0]))).toBe(false);
+  });
+
+  it('rechaza una carta con código, acciones o adjuntos, aunque los escondan con #xx', () => {
+    expect(pdfHasActiveContent(Buffer.from('%PDF-1.7 1 0 obj << /Type /Page /Contents 2 0 R >>'))).toBe(false);
+    expect(pdfHasActiveContent(Buffer.from('%PDF-1.7 << /OpenAction << /S /JavaScript /JS (app.alert(1)) >> >>'))).toBe(true);
+    expect(pdfHasActiveContent(Buffer.from('%PDF-1.7 << /S /Launch /F (cmd.exe) >>'))).toBe(true);
+    expect(pdfHasActiveContent(Buffer.from('%PDF-1.7 << /Names << /EmbeddedFiles 3 0 R >> >>'))).toBe(true);
+    expect(pdfHasActiveContent(Buffer.from('%PDF-1.7 << /S /J#61vaScript >>'))).toBe(true);
+    expect(pdfHasActiveContent(Buffer.from('%PDF-1.7 << /Font /JSans >>'))).toBe(false);
   });
 });

@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, StreamableFile, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Res, StreamableFile, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
+import type { Response } from 'express';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
@@ -47,12 +48,14 @@ export class OrganizationsController {
     return this.organizationsService.findOne(id);
   }
 
-  // La carta en PDF que subió al inscribirse: el super admin la descarga y la revisa antes de aprobar.
+  // La carta en PDF que subió al inscribirse: el super admin la abre en el visor del navegador (aislado del computador)
+  // en vez de descargarla (Julieth, 2026-10-21). `nosniff`: el navegador no la trata como otra cosa.
   @Get(':id/menu')
   @Roles(Role.SUPER_ADMIN)
-  async menu(@Param('id') id: string) {
+  async menu(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
     const menu = await this.organizationsService.menu(id);
-    return new StreamableFile(menu.data, { type: 'application/pdf', disposition: `attachment; filename="carta-${menu.organizationId}.pdf"`, length: menu.size });
+    res.set({ 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store', 'Cross-Origin-Resource-Policy': 'same-origin' });
+    return new StreamableFile(menu.data, { type: 'application/pdf', disposition: `inline; filename="carta-${menu.organizationId}.pdf"`, length: menu.size });
   }
 
   @Patch(':id')

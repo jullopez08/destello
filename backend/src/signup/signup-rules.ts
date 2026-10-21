@@ -69,3 +69,10 @@ export function findUsLink(raw: string): string | null {
 /** La carta debe ser un PDF de verdad (se revisan los primeros bytes, no lo que diga el navegador). */
 export const MENU_MAX_BYTES = 5 * 1024 * 1024;
 export const isPdf = (buffer: Buffer) => buffer.length > 5 && buffer.toString('ascii', 0, 5) === '%PDF-';
+
+// Una carta no necesita código, acciones que abran programas ni archivos adjuntos (Julieth, 2026-10-21: el PDF lo
+// abre el super admin). Se buscan esas marcas del PDF, también escritas con #xx para esconderlas. No ve lo que va
+// comprimido: es una capa más; la principal es abrir la carta en el visor del navegador, que la aísla.
+const ACTIVE_PDF = /\/(JavaScript|JS|Launch|EmbeddedFile|EmbeddedFiles|RichMedia|XFA|SubmitForm|ImportData)(?![A-Za-z])/;
+export const pdfHasActiveContent = (buffer: Buffer) =>
+  ACTIVE_PDF.test(buffer.toString('latin1').replace(/#([0-9a-fA-F]{2})/g, (_, hex: string) => String.fromCharCode(parseInt(hex, 16))));
