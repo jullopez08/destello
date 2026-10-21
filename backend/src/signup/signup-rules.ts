@@ -37,3 +37,35 @@ export function phoneKey(phone: string): string {
 export function phoneDisplay(key: string): string {
   return [key.slice(0, 3), key.slice(3, 6), key.slice(6)].filter(Boolean).join(' ');
 }
+
+// "¿Dónde te encontramos?" (Julieth, 2026-10-20): el usuario de Instagram o el enlace de Google Maps del negocio, para
+// comprobar que es real. Devuelve el enlace limpio para abrirlo, o null si no es ninguno de los dos.
+const INSTAGRAM_HOSTS = ['instagram.com', 'www.instagram.com', 'm.instagram.com'];
+const MAPS_HOSTS = ['maps.app.goo.gl', 'goo.gl', 'maps.google.com', 'www.google.com', 'google.com', 'g.page', 'share.google'];
+const HANDLE = /^[a-z0-9._]{1,30}$/i;
+
+export function findUsLink(raw: string): string | null {
+  const text = raw.trim();
+  const handle = text.replace(/^@/, '');
+  if (HANDLE.test(handle) && /[a-z0-9]/i.test(handle) && !handle.includes('..')) return `https://instagram.com/${handle.toLowerCase()}`;
+  let url: URL;
+  try {
+    url = new URL(/^https?:\/\//i.test(text) ? text : `https://${text}`);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase();
+  if (INSTAGRAM_HOSTS.includes(host)) {
+    const user = url.pathname.split('/').filter(Boolean)[0] ?? '';
+    return HANDLE.test(user) ? `https://instagram.com/${user.toLowerCase()}` : null;
+  }
+  if (MAPS_HOSTS.includes(host)) {
+    const isMaps = host !== 'goo.gl' && host !== 'www.google.com' && host !== 'google.com' ? true : url.pathname.startsWith('/maps');
+    return isMaps && text.length <= 300 ? `https://${host}${url.pathname}${url.search}` : null;
+  }
+  return null;
+}
+
+/** La carta debe ser un PDF de verdad (se revisan los primeros bytes, no lo que diga el navegador). */
+export const MENU_MAX_BYTES = 5 * 1024 * 1024;
+export const isPdf = (buffer: Buffer) => buffer.length > 5 && buffer.toString('ascii', 0, 5) === '%PDF-';

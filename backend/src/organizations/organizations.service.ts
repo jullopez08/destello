@@ -17,6 +17,8 @@ const OWNER_SELECT = { id: true, name: true, email: true, active: true, termsAcc
 const ORGANIZATION_INCLUDE = {
   subscription: { include: { plan: true } },
   users: { where: { roles: { has: Role.ADMIN } }, select: OWNER_SELECT },
+  // Sin el archivo: solo si hay carta y cómo se llama.
+  menu: { select: { name: true, size: true, uploadedAt: true } },
 } as const;
 
 @Injectable()
@@ -91,6 +93,12 @@ export class OrganizationsService {
       }),
       'Ya existe una empresa con ese identificador.',
     );
+  }
+
+  async menu(id: string) {
+    const menu = await this.prisma.businessMenu.findUnique({ where: { organizationId: id } });
+    if (!menu) throw new NotFoundException('Este negocio no subió su carta.');
+    return menu;
   }
 
   // Aprueba una inscripción en revisión y le avisa a la dueña por correo (solo la primera vez).

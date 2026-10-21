@@ -5,9 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { createOrganizationWithOwner, freeSlug } from '../organizations/create-organization';
 import { StartSignupDto, VerifySignupDto } from './dto/signup.dto';
-import {
-  CODE_MINUTES, codeMatches, hashCode, MAX_CODE_ATTEMPTS, newCode, phoneDisplay, phoneKey, RESEND_WAIT_MS, signupMode,
-} from './signup-rules';
+import { CODE_MINUTES, MAX_CODE_ATTEMPTS, RESEND_WAIT_MS, codeMatches, findUsLink, hashCode, isPdf, newCode, phoneDisplay, phoneKey, signupMode } from './signup-rules';
 
 const STALE_MS = 24 * 60 * 60 * 1000;
 
@@ -26,11 +24,16 @@ export class SignupService {
     return signupMode(this.config.get<string>('SIGNUP_MODE'));
   }
 
-  async start(dto: StartSignupDto) {
+  async start(dto: StartSignupDto, menu?: Express.Multer.File) {
     if (this.mode === 'closed') throw new ForbiddenException('La inscripción está cerrada por ahora. Escríbenos por WhatsApp.');
     const email = dto.email.trim().toLowerCase();
     const whatsapp = phoneKey(dto.whatsapp);
     await this.assertAvailable(email, whatsapp);
+    // Para comprobar que el negocio es real (Julieth, 2026-10-20): dónde encontrarlo y su carta en PDF.
+    const findUs = findUsLink(dto.findUs);
+    if (!findUs) throw new BadRequestException('Escribe el usuario de Instagram (@tunegocio) o el enlace de Google Maps de tu negocio.');
+    if (!menu) throw new BadRequestException('Sube la carta de tu negocio en PDF.');
+    if (!isPdf(menu.buffer)) throw new BadRequestException('La carta debe ser un archivo PDF.');
 
     // Las solicitudes viejas sin terminar no se guardan: tienen datos personales.
     await this.prisma.signupRequest.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - STALE_MS) } } });
@@ -48,6 +51,9 @@ export class SignupService {
       servesTables: dto.servesTables,
       passwordHash: await bcrypt.hash(dto.password, 10),
       termsVersion: dto.termsVersion,
+      findUs,
+      menuName: (menu.originalname || 'carta.pdf').slice(0, 120),
+      menuPdf: Uint8Array.from(menu.buffer),
       codeHash: hashCode(code),
       codeExpiresAt: new Date(Date.now() + CODE_MINUTES * 60 * 1000),
       attempts: 0,
@@ -75,7 +81,7 @@ export class SignupService {
     if (!plan) throw new BadRequestException('La prueba gratis no está disponible. Escríbenos por WhatsApp.');
 
     return this.prisma.$transaction(async (tx) => {
-      const { owner } = await createOrganizationWithOwner(tx, {
+      const { owner, organization } = await createOrganizationWithOwner(tx, {
         name: request.businessName,
         slug: await freeSlug(tx, request.businessName),
         servesTables: request.servesTables,
@@ -84,6 +90,10 @@ export class SignupService {
         plan,
         owner: { name: request.ownerName, email, passwordHash: request.passwordHash, termsVersion: request.termsVersion },
       });
+      await tx.organization.update({ where: { id: organization.id }, data: { findUs: request.findUs || null } });
+      if (request.menuPdf) {
+        await tx.businessMenu.create({ data: { organizationId: organization.id, name: request.menuName ?? 'carta.pdf', size: request.menuPdf.length, data: request.menuPdf } });
+      }
       await tx.signupRequest.delete({ where: { email } });
       return owner;
     });

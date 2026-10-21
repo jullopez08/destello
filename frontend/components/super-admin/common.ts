@@ -22,6 +22,9 @@ export interface Organization {
   servesTables: boolean
   /** Inscrita sola con SIGNUP_MODE=review: espera "Aprobar" */
   approvalPending: boolean
+  /** Instagram o Google Maps que dio al inscribirse, y si subió su carta en PDF (para comprobar que es real) */
+  findUs: string | null
+  menu: { name: string; size: number; uploadedAt: string } | null
   createdAt: string
   dataDeletionScheduledAt: string | null
   subscription: Subscription | null

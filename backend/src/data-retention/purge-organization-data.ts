@@ -16,6 +16,7 @@ export async function purgeOrganizationData(
   // ── Cocina: de lo que más depende a lo que menos ──
   // Restaurante: comandas (sus líneas en cascada), mesas abiertas y mesas, antes que el equipo.
   await tx.kitchenTicket.deleteMany({ where: { organizationId } });
+  await tx.businessMenu.deleteMany({ where: { organizationId } });
   await tx.tablePayment.deleteMany({ where: { organizationId } });
   await tx.tableSession.deleteMany({ where: { organizationId } });
   await tx.diningTable.deleteMany({ where: { organizationId } });

@@ -10,12 +10,16 @@ import { CURRENT_TERMS_VERSION } from "@/lib/session"
 import { Art } from "./access-art"
 import { Captcha, CAPTCHA_SITE_KEY } from "./captcha"
 
+const MENU_MAX_MB = 5
+
 // Inscripción por la página (/registro): datos del negocio, código al correo y
 // al confirmarlo entra a su cocina con la prueba gratis, sin tarjeta.
 export function SignupScreen() {
   const [mode, setMode] = useState<"open" | "review" | "closed" | null>(null)
   const [step, setStep] = useState<"form" | "code">("form")
-  const [f, setF] = useState({ ownerName: "", email: "", whatsapp: "", businessName: "", servesTables: false, password: "" })
+  const [f, setF] = useState({ ownerName: "", email: "", whatsapp: "", businessName: "", servesTables: false, findUs: "", password: "" })
+  // La carta del negocio en PDF (Julieth, 2026-10-20): con "¿Dónde te encontramos?" sirve para comprobar que es real.
+  const [menu, setMenu] = useState<File | null>(null)
   const [terms, setTerms] = useState(false)
   const [code, setCode] = useState("")
   const [sentAt, setSentAt] = useState(0)
@@ -51,7 +55,10 @@ export function SignupScreen() {
     run(async () => {
       // La respuesta del captcha sirve una vez: pase lo que pase, se pide otra para el siguiente intento.
       setRound((n) => n + 1)
-      await api("/signup/start", { method: "POST", body: { ...f, email: f.email.trim(), termsVersion: CURRENT_TERMS_VERSION, ...(CAPTCHA_SITE_KEY ? { captcha } : {}) } })
+      const body = new FormData()
+      for (const [k, v] of Object.entries({ ...f, email: f.email.trim(), termsVersion: CURRENT_TERMS_VERSION, ...(CAPTCHA_SITE_KEY ? { captcha } : {}) })) body.append(k, String(v))
+      if (menu) body.append("menu", menu)
+      await api("/signup/start", { method: "POST", body })
       setSentAt(Date.now())
       setNow(Date.now())
       setCode("")
@@ -59,7 +66,15 @@ export function SignupScreen() {
     })
 
   const wait = Math.max(0, 60 - Math.floor((now - sentAt) / 1000))
-  const filled = f.ownerName.trim() && f.email.trim() && f.whatsapp.trim() && f.businessName.trim() && f.password.length >= 8 && terms
+  const filled = f.ownerName.trim() && f.email.trim() && f.whatsapp.trim() && f.businessName.trim() && f.findUs.trim() && menu && f.password.length >= 8 && terms
+
+  function pickMenu(file: File | undefined) {
+    setError(null)
+    if (!file) return setMenu(null)
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return setError("La carta debe ser un archivo PDF.")
+    if (file.size > MENU_MAX_MB * 1024 * 1024) return setError(`La carta pesa más de ${MENU_MAX_MB} MB. Guárdala más liviana e intenta de nuevo.`)
+    setMenu(file)
+  }
   const ready = filled && (!CAPTCHA_SITE_KEY || captcha)
 
   return (
@@ -96,9 +111,19 @@ export function SignupScreen() {
                 ))}
               </div>
               <span className="small muted">
-                {f.servesTables ? "Las mesas y los meseros están en camino. Ya tienes pedidos, producción e inventario." : "Pedidos, domicilios, producción e inventario. Lo puedes cambiar después."}
+                {f.servesTables ? "Mesas, meseros, caja y pantalla de cocina, además de pedidos y producción." : "Pedidos, domicilios, producción e inventario. Lo puedes cambiar después."}
               </span>
             </fieldset>
+            <label className="f">
+              ¿Dónde te encontramos?
+              <input autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="@tunegocio o enlace de Google Maps" value={f.findUs} onChange={(e) => set({ findUs: e.target.value })} required />
+              <span className="h">Tu Instagram o tu negocio en Google Maps: así sabemos que es real.</span>
+            </label>
+            <label className="f">
+              La carta de tu negocio (PDF)
+              <input type="file" accept="application/pdf,.pdf" onChange={(e) => pickMenu(e.target.files?.[0])} required />
+              <span className="h">{menu ? `${menu.name} · ${Math.max(1, Math.round(menu.size / 1024))} KB` : `Tu menú con precios, en PDF (máximo ${MENU_MAX_MB} MB).`}</span>
+            </label>
             <label className="f">
               Correo
               <input type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="tu@correo.com" value={f.email} onChange={(e) => set({ email: e.target.value })} required />
