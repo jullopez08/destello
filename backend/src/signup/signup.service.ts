@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { createOrganizationWithOwner, freeSlug } from '../organizations/create-organization';
 import { StartSignupDto, VerifySignupDto } from './dto/signup.dto';
-import { CODE_MINUTES, MAX_CODE_ATTEMPTS, RESEND_WAIT_MS, codeMatches, findUsLink, hashCode, isPdf, newCode, phoneDisplay, phoneKey, signupMode } from './signup-rules';
+import { CODE_MINUTES, MAX_CODE_ATTEMPTS, RESEND_WAIT_MS, codeMatches, findUsLink, hashCode, isPdf, newCode, pdfHasActiveContent, phoneDisplay, phoneKey, signupMode } from './signup-rules';
 
 const STALE_MS = 24 * 60 * 60 * 1000;
 
@@ -34,6 +34,7 @@ export class SignupService {
     if (!findUs) throw new BadRequestException('Escribe el usuario de Instagram (@tunegocio) o el enlace de Google Maps de tu negocio.');
     if (!menu) throw new BadRequestException('Sube la carta de tu negocio en PDF.');
     if (!isPdf(menu.buffer)) throw new BadRequestException('La carta debe ser un archivo PDF.');
+    if (pdfHasActiveContent(menu.buffer)) throw new BadRequestException('Esa carta trae código o archivos adjuntos. Guárdala de nuevo como PDF (Imprimir → Guardar como PDF) y súbela.');
 
     // Las solicitudes viejas sin terminar no se guardan: tienen datos personales.
     await this.prisma.signupRequest.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - STALE_MS) } } });

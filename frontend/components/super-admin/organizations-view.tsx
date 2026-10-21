@@ -100,7 +100,8 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                       {o.findUs || o.menu ? (
                         <div className="small row" style={{ marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
                           {o.findUs ? <a href={o.findUs} target="_blank" rel="noopener noreferrer">{o.findUs.includes("instagram.com") ? "Instagram" : "Google Maps"} ↗</a> : null}
-                          {o.menu ? <a href={`/api/organizations/${o.id}/menu`}>Carta (PDF)</a> : null}
+                          {/* Se abre en el visor del navegador (aislado), no se descarga: el PDF lo subió alguien de afuera. */}
+                          {o.menu ? <a href={`/api/organizations/${o.id}/menu`} target="_blank" rel="noopener noreferrer">Ver carta (PDF) ↗</a> : null}
                         </div>
                       ) : null}
                     </td>
