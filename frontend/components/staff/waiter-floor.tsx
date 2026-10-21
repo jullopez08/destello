@@ -1,9 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { api, errorMessage } from "@/lib/api"
 import { minutesSince, oldestWaiting, waitLevel, type Floor } from "@/lib/restaurant"
+import { beep } from "@/lib/beep"
 import { TableSheet } from "./table-sheet"
+import { BackHint } from "./back-hint"
 
 const REFRESH_MS = 10000
 
@@ -16,8 +18,15 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   const [openId, setOpenId] = useState<string | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [skew, setSkew] = useState(0)
+  // Comandas suyas que la cocina marcó "Listo": suena y salen arriba hasta que las lleve.
+  const [ready, setReady] = useState<{ id: string; table: string; number: number }[]>([])
+  const seenReady = useRef<Set<string> | null>(null)
 
   const show = useCallback((f: Floor) => {
+    const mine = f.tables.flatMap((t) => (t.session?.mine ? t.session.tickets.filter((k) => k.status === "READY").map((k) => ({ id: k.id, table: t.name, number: k.number })) : []))
+    if (seenReady.current && mine.some((k) => !seenReady.current!.has(k.id))) beep()
+    seenReady.current = new Set(mine.map((k) => k.id))
+    setReady(mine)
     setSkew(new Date(f.now).getTime() - Date.now())
     setFloor(f)
     setError(null)
@@ -36,7 +45,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
 
   const serverNow = now + skew
   const table = floor?.tables.find((t) => t.id === openId)
-  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} now={serverNow} onFloor={show} onBack={() => setOpenId(null)} />
+  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
 
   return (
     <main className="floor">
@@ -50,6 +59,15 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
         </button>
       </header>
       {error ? <div className="err" role="alert">{error}</div> : null}
+      {ready.length ? (
+        <div className="callout c-mint ready-alert" role="status">
+          {ready.map((k) => (
+            <button key={k.id} type="button" className="linkbtn" onClick={() => setOpenId(floor?.tables.find((t) => t.name === k.table)?.id ?? null)}>
+              Lista: {k.table}, comanda {k.number} ›
+            </button>
+          ))}
+        </div>
+      ) : null}
       {!floor ? <p className="muted">Cargando…</p> : null}
       {floor && !floor.tables.length ? <p className="muted">Aún no hay mesas. Pídele a la dueña que las cree en Configuración.</p> : null}
       <div className="floor-grid">
@@ -57,9 +75,15 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
           const s = t.session
           const waiting = oldestWaiting(s)
           const mins = waiting ? minutesSince(waiting.sentAt, serverNow) : 0
-          const level = waiting ? waitLevel(mins) : "ok"
+          const level = waiting ? waitLevel(mins, floor.normalMin, floor.maxMin) : "ok"
           return (
-            <button key={t.id} type="button" className={`table-tile${s ? (s.mine ? " mine" : " other") : ""} ${level}`} onClick={() => setOpenId(t.id)}>
+            <button
+              key={t.id}
+              type="button"
+              className={`table-tile${s ? (s.mine ? " mine" : " other") : ""} ${level}`}
+              aria-label={`${t.name}, ${!s ? "libre" : s.mine ? "tuya" : `de ${s.waiter ?? "la dueña"}`}${waiting ? `, en cocina hace ${mins} minutos` : ""}`}
+              onClick={() => setOpenId(t.id)}
+            >
               <b>{t.name}</b>
               <span className="small">{!s ? "Libre" : s.mine ? "Tuya" : `De ${s.waiter ?? "la dueña"}`}</span>
               {waiting ? <span className="table-clock num">En cocina · {mins} min</span> : null}
@@ -68,6 +92,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
           )
         })}
       </div>
+      <BackHint />
     </main>
   )
 }

@@ -14,20 +14,23 @@ datasource db {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Organization {
-  id              String  @id @default(cuid())
-  name            String
+  id               String  @id @default(cuid())
+  name             String
   /// Identificador para URLs (p. ej. "cocina-destello")
-  slug            String  @unique
-  active          Boolean @default(true)
+  slug             String  @unique
+  active           Boolean @default(true)
   /// Logo subido a Cloudinary
-  logoUrl         String?
+  logoUrl          String?
   /// Paleta del panel elegida por la dueña: vainilla | fresa | lavanda | menta | durazno | cielo
-  palette         String  @default("vainilla")
+  palette          String  @default("vainilla")
   /// "¿Atiendes clientes en mesas?" (Julieth, 2026-10-19): enciende mesas y meseros. Pastelería, panadería,
   /// cocina oculta o restaurante da igual: todas tienen pedidos, domicilios, recetas y pantalla de cocina.
-  servesTables    Boolean @default(false)
+  servesTables     Boolean @default(false)
+  /// Minutos que suele tardar un plato y el máximo antes de avisar a la mesa (pantalla de cocina y mesero)
+  kitchenNormalMin Int     @default(15)
+  kitchenMaxMin    Int     @default(25)
   /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
-  approvalPending Boolean @default(false)
+  approvalPending  Boolean @default(false)
 
   // Datos de la cocina (Configuración)
   whatsapp         String?

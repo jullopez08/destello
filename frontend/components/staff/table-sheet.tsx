@@ -10,7 +10,7 @@ type Draft = { key: number; item: CatalogItem; productId?: string; sizeId?: stri
 const STATUS = { SENT: "En cocina", READY: "Listo", SERVED: "Servido" } as const
 
 // Una mesa: abrirla, ver sus comandas con su reloj y armar la siguiente para enviarla a cocina.
-export function TableSheet({ table, catalog, now, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; now: number; onFloor: (f: Floor) => void; onBack: () => void }) {
+export function TableSheet({ table, catalog, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
   const [draft, setDraft] = useState<Draft[]>([])
   const nextKey = useRef(0)
   const [pick, setPick] = useState<{ itemId: string; productId: string; sizeId: string; qty: number; note: string }>({ itemId: "", productId: "", sizeId: "", qty: 1, note: "" })
@@ -66,7 +66,7 @@ export function TableSheet({ table, catalog, now, onFloor, onBack }: { table: Fl
       {s && !s.mine ? <p className="small muted">La atiende {s.waiter ?? "la dueña"}.</p> : null}
       {s?.tickets.map((k) => {
         const mins = minutesSince(k.sentAt, now)
-        const level = k.status === "SENT" ? waitLevel(mins) : "ok"
+        const level = k.status === "SENT" ? waitLevel(mins, normalMin, maxMin) : "ok"
         return (
           <section key={k.id} className={`card ticket ${level}`}>
             <div className="row between nowrap">
@@ -80,6 +80,11 @@ export function TableSheet({ table, catalog, now, onFloor, onBack }: { table: Fl
               </div>
             ))}
             {level === "late" ? <p className="small ticket-tip">Lleva {mins} minutos. Acércate a la mesa, discúlpate por la espera y revisa en cocina.</p> : null}
+            {k.status === "READY" && s.mine ? (
+              <button type="button" className="btn primary sm" disabled={busy} onClick={() => run(() => api<Floor>(`/staff/floor/tickets/${k.id}/served`, { method: "POST" }))}>
+                Servido
+              </button>
+            ) : null}
           </section>
         )
       })}

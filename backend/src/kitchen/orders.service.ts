@@ -2,10 +2,10 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
-import { consumedAmount, productionDateFor, productionPlan, toIsoDate } from './kitchen-rules';
+import { productionDateFor, toIsoDate } from './kitchen-rules';
+import { produce } from './produce';
 import { CreateEditionDto, CreateOrderDto } from './dto/kitchen.dto';
 import { buildOrderLines } from './order-lines';
-import { consumeSupply } from './supply-batches';
 
 @Injectable()
 export class OrdersService {
@@ -108,30 +108,7 @@ export class OrdersService {
       if (!pending.length) throw new BadRequestException('No hay pedidos por producir ese día.');
 
       const data = await this.snapshot.ruleData(organizationId, tx);
-      const plan = productionPlan(pending.flatMap((o) => o.lines), data);
-
-      if (plan.shortages.length) {
-        const names = plan.shortages.map((s) => data.supplies.find((x) => x.id === s.supplyId)!.name);
-        throw new BadRequestException(`Faltan insumos: ${names.join(', ')}. Registra una compra antes de producir.`);
-      }
-
-      for (const row of plan.doughRows) {
-        let take = row.fromLots;
-        for (const lot of data.lots.filter((l) => l.recipeId === row.recipeId)) {
-          if (take <= 0) break;
-          const used = Math.min(lot.left, take);
-          take -= used;
-          await tx.doughLot.update({ where: { id: lot.id }, data: { left: { decrement: used } } });
-        }
-      }
-
-      for (const need of plan.supplies) {
-        const supply = data.supplies.find((s) => s.id === need.supplyId)!;
-        // supply.stock ya es lo que no está vencido (ruleData)
-        await consumeSupply(tx, supply.id, Math.min(supply.stock, consumedAmount(supply.kind, need.need)), toIsoDate(new Date()));
-      }
-
-      await tx.doughLot.deleteMany({ where: { organizationId, left: { lte: 0.5 } } });
+      await produce(tx, organizationId, pending.flatMap((o) => o.lines), data, true);
       await tx.order.updateMany({ where: { id: { in: pending.map((o) => o.id) } }, data: { produced: true } });
     });
     return this.snapshot.load(organizationId);

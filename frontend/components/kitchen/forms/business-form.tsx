@@ -19,21 +19,23 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
   const { setUser } = useSession()
   const toast = useToast()
   const st = data.settings
-  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables })
+  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables, normalMin: String(st.kitchenNormalMin), maxMin: String(st.kitchenMaxMin) })
   const [saving, setSaving] = useState(false)
   // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
   const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
-  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables
+  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables || Number(f.normalMin) !== st.kitchenNormalMin || Number(f.maxMin) !== st.kitchenMaxMin
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (setup && !f.whatsapp.trim()) return toast("Escribe el WhatsApp del negocio.", true)
+    const normalMin = Number(f.normalMin), maxMin = Number(f.maxMin)
+    if (!(normalMin >= 1) || !(maxMin > normalMin)) return toast("El tiempo máximo debe ser mayor que el normal.", true)
     setSaving(true)
     try {
       await mutate(
         "/settings",
         "PATCH",
-        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables },
+        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables, kitchenNormalMin: normalMin, kitchenMaxMin: maxMin },
         setup ? "Negocio listo" : "Configuración guardada",
       )
       setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name, servesTables: f.servesTables }))
@@ -55,6 +57,8 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
         <Field label="Hora de corte de pedidos" help={HELP.businessCutoff} hint="Después de esta hora, el pedido pasa al siguiente día.">
           <input type="time" value={f.orderCutoff} onChange={(e) => setF({ ...f, orderCutoff: e.target.value })} required />
         </Field>
+        <Field label="Tiempo normal de un plato (min)" help={HELP.kitchenNormal}><input type="number" inputMode="numeric" min="1" max="180" value={f.normalMin} onChange={(e) => setF({ ...f, normalMin: e.target.value })} /></Field>
+        <Field label="Tiempo máximo (min)" help={HELP.kitchenMax}><input type="number" inputMode="numeric" min="2" max="240" value={f.maxMin} onChange={(e) => setF({ ...f, maxMin: e.target.value })} /></Field>
         <Field label="Margen que buscas (%)" help={HELP.businessMargin}><input type="number" min="5" max="90" value={f.targetMargin} onChange={(e) => setF({ ...f, targetMargin: e.target.value })} required /></Field>
       </div>
       <div>

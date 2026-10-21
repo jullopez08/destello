@@ -94,6 +94,9 @@ export const HELP = {
   tables: "Los meseros las ven en su celular para abrirlas y enviar comandas. Las abiertas salen en verde.",
   tableName: "Como la llaman en el salón. Ej.: «Terraza 2» o «Barra».",
 
+  kitchenNormal: "Lo que suele tardar un plato. Pasado este tiempo, la comanda se marca en la cocina y al mesero.",
+  kitchenMax: "Pasado este tiempo, Destello le sugiere al mesero acercarse a la mesa y avisar la demora.",
+
   // Lo que explica cómo funciona cada sección: va en el "?" junto al título (PageHead help), no en el subtítulo.
   pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos.",
   pageProduction: "Sale de los pedidos hasta la hora de corte. Primero se usa la masa de los lotes.",

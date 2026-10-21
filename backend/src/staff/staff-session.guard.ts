@@ -19,6 +19,12 @@ export class StaffSessionGuard implements CanActivate {
   }
 }
 
+/** Solo la pantalla de cocina. */
+export function requireKitchen(req: StaffRequest) {
+  if (req.staff.role !== StaffRole.KITCHEN) throw new ForbiddenException('Esto es para la pantalla de cocina.');
+  return req.staff;
+}
+
 /** Solo meseros (la pantalla de cocina no abre mesas ni pide). */
 export function requireWaiter(req: StaffRequest) {
   if (req.staff.role !== StaffRole.WAITER) throw new ForbiddenException('Esto es para los meseros.');

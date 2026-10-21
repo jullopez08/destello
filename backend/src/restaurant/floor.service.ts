@@ -10,7 +10,8 @@ export class FloorService {
   constructor(private readonly prisma: PrismaService) {}
 
   async load(organizationId: string, viewerId?: string) {
-    const [tables, presentations] = await Promise.all([
+    const [org, tables, presentations] = await Promise.all([
+      this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { kitchenNormalMin: true, kitchenMaxMin: true } }),
       this.prisma.diningTable.findMany({
         where: { organizationId },
         orderBy: { position: 'asc' },
@@ -28,6 +29,8 @@ export class FloorService {
     ]);
     return {
       now: new Date().toISOString(),
+      normalMin: org.kitchenNormalMin,
+      maxMin: org.kitchenMaxMin,
       tables: tables.map((t) => {
         const s = t.sessions[0];
         return {
@@ -99,6 +102,15 @@ export class FloorService {
         },
       });
     });
+    return this.load(organizationId, waiterId);
+  }
+
+  /** El mesero lleva a la mesa lo que la cocina marcó "Listo". */
+  async served(organizationId: string, ticketId: string, waiterId: string) {
+    const ticket = await this.prisma.kitchenTicket.findUnique({ where: { id: ticketId } });
+    if (!ticket || ticket.organizationId !== organizationId) throw new NotFoundException('Comanda no encontrada.');
+    if (ticket.status !== 'READY') throw new BadRequestException('La cocina todavía no la ha marcado lista.');
+    await this.prisma.kitchenTicket.update({ where: { id: ticketId }, data: { status: 'SERVED', servedAt: new Date() } });
     return this.load(organizationId, waiterId);
   }
 

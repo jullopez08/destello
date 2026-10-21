@@ -135,6 +135,7 @@ async function main() {
     list.push([`Quitar ${t.name} (otro restaurante)`, 'DELETE', `/kitchen/tables/${t.id}`]);
   }
   list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);
+  list.push(['Ver la pantalla de cocina con la sesión de la dueña', 'GET', '/staff/kitchen']);
 
   let failures = 0;
   for (const [label, method, path, body] of list) {

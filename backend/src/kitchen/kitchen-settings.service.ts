@@ -16,6 +16,9 @@ export class KitchenSettingsService {
   ) {}
 
   async updateSettings(organizationId: string, dto: UpdateKitchenSettingsDto) {
+    if (dto.kitchenNormalMin !== undefined && dto.kitchenMaxMin !== undefined && dto.kitchenMaxMin <= dto.kitchenNormalMin) {
+      throw new BadRequestException('El tiempo máximo debe ser mayor que el normal.');
+    }
     await this.prisma.organization.update({
       where: { id: organizationId },
       data: {

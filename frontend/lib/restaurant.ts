@@ -12,11 +12,16 @@ export interface CatalogItem {
   items: { productId: string; name: string; surcharge: number }[]
   sizes: { id: string; name: string; price: number }[]
 }
-export interface Floor { now: string; tables: FloorTable[]; catalog: CatalogItem[] }
+export interface Floor { now: string; normalMin: number; maxMin: number; tables: FloorTable[]; catalog: CatalogItem[] }
 
-/** Tiempos de espera por ahora fijos; en `feature/pantalla-cocina` cada negocio pone los suyos. */
-export const WAIT_NORMAL_MIN = 15
-export const WAIT_MAX_MIN = 25
+/** Pantalla de cocina (GET /staff/kitchen). */
+export interface KitchenBoard {
+  now: string
+  normalMin: number
+  maxMin: number
+  tickets: { id: string; number: number; status: TicketStatus; sentAt: string; readyAt: string | null; table: string; waiter: string | null; lines: { name: string; qty: number; note: string | null }[] }[]
+  orders: { id: string; number: number; customer: string; delivery: "DELIVERY" | "PICKUP"; lines: { name: string; qty: number }[] }[]
+}
 
 export const minutesSince = (iso: string, now: number) => Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000))
 
@@ -26,9 +31,9 @@ export function oldestWaiting(session: FloorSession | null): FloorTicket | null 
   return waiting.sort((a, b) => a.sentAt.localeCompare(b.sentAt))[0] ?? null
 }
 
-/** ok · warn (pasó el tiempo normal) · late (pasó el máximo: avisar a la mesa). */
-export function waitLevel(minutes: number): "ok" | "warn" | "late" {
-  return minutes >= WAIT_MAX_MIN ? "late" : minutes >= WAIT_NORMAL_MIN ? "warn" : "ok"
+/** ok · warn (pasó el tiempo normal) · late (pasó el máximo: avisar a la mesa). Los tiempos son de cada negocio. */
+export function waitLevel(minutes: number, normalMin: number, maxMin: number): "ok" | "warn" | "late" {
+  return minutes >= maxMin ? "late" : minutes >= normalMin ? "warn" : "ok"
 }
 
 /** Precio de una línea igual que en el servidor (`linePrice`): tamaño + recargo del sabor, o el precio. */
