@@ -64,14 +64,25 @@ export function linePrice(presentation: Omit<Shape, 'pack'>, line: Pick<OrderLin
   return (size?.price ?? presentation.price) + (flavor?.surcharge ?? 0);
 }
 
+// Impuesto del negocio (Julieth, 2026-10-20): por ley va incluido en el precio de la carta, así que de cada
+// precio una parte es de la DIAN. El margen y la ganancia se calculan sobre lo que le queda al negocio.
+export const TAX_RATE = { NONE: 0, INC: 0.08, IVA: 0.19 } as const;
+export type SalesTax = keyof typeof TAX_RATE;
+
+/** Lo que le queda al negocio de un precio con el impuesto incluido. */
+export const netPrice = (price: number, taxRate = 0) => price / (1 + taxRate);
+/** La parte del precio que es impuesto. */
+export const taxIn = (price: number, taxRate = 0) => Math.round(price - netPrice(price, taxRate));
+
 export function presentationMargin(presentation: Shape, data: KitchenRuleData): number {
-  return presentation.price ? (presentation.price - presentationCost(presentation, data)) / presentation.price : 0;
+  const net = netPrice(presentation.price, data.taxRate);
+  return net ? (net - presentationCost(presentation, data)) / net : 0;
 }
 
 export type Health = { kind: 'ok' | 'warn' | 'bad'; label: string; suggested: number | null };
 
-// Precio sugerido: el que da el margen que busca la dueña, redondeado hacia
-// arriba a los $500.
+// Precio sugerido: el que da el margen que busca la dueña, más el impuesto,
+// redondeado hacia arriba a los $500.
 export function presentationHealth(
   presentation: Shape,
   data: KitchenRuleData,
@@ -80,8 +91,8 @@ export function presentationHealth(
   const cost = presentationCost(presentation, data);
   const margin = presentationMargin(presentation, data);
   const target = targetMarginPercent / 100;
-  const suggested = Math.ceil(cost / (1 - target) / 500) * 500;
-  if (presentation.price < cost) return { kind: 'bad', label: 'Pierde dinero', suggested };
+  const suggested = Math.ceil((cost / (1 - target)) * (1 + (data.taxRate ?? 0)) / 500) * 500;
+  if (netPrice(presentation.price, data.taxRate) < cost) return { kind: 'bad', label: 'Pierde dinero', suggested };
   if (margin < target) return { kind: 'warn', label: 'Margen bajo', suggested };
   return { kind: 'ok', label: 'Margen sano', suggested: null };
 }

@@ -54,6 +54,10 @@ export class UpdateKitchenSettingsDto {
 
   @IsOptional() @IsInt() @Min(1) @Max(240)
   kitchenMaxMin?: number;
+
+  /** Impuesto incluido en los precios: ninguno, al consumo (8 %) o IVA (19 %, franquicias) */
+  @IsOptional() @IsIn(['NONE', 'INC', 'IVA'])
+  salesTax?: 'NONE' | 'INC' | 'IVA';
 }
 
 // Cuenta bancaria o llave Bre-B (type "Llave Bre-B", la llave en number y el

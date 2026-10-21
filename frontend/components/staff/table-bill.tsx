@@ -4,7 +4,8 @@ import { useRef, useState } from "react"
 import { HelpTip } from "@/components/kitchen/shared"
 import { MoneyInput } from "@/components/ui/money-input"
 import { HELP } from "@/lib/kitchen/help"
-import { money } from "@/lib/kitchen/format"
+import { money, taxName } from "@/lib/kitchen/format"
+import { taxIn } from "@/lib/kitchen/rules"
 import { PAY_METHODS, TIP_PERCENT, tipFor, type FloorSession, type PayKey, type PayMethod } from "@/lib/restaurant"
 
 export type CloseBody = { tip: boolean; payments: { method: PayMethod; amount: number }[] }
@@ -13,8 +14,8 @@ type Part = { key: number; method: PayMethod; amount: string }
 const pesos = (raw: string) => Math.round(Number(raw) || 0)
 
 // La cuenta de una mesa (Julieth, 2026-10-20): lo consumido, la propina sugerida (voluntaria) y cómo paga: una forma
-// o dividida. El servidor vuelve a calcular todo; aquí es para mostrarlo y que los pagos sumen exacto.
-export function TableBill({ session, payKeys, busy, onClose }: { session: FloorSession; payKeys: PayKey[]; busy: boolean; onClose: (body: CloseBody) => void }) {
+// o dividida. El impuesto ya va en los precios: se muestra aparte y la propina no lo paga. El servidor vuelve a calcular todo; aquí es para mostrarlo y que los pagos sumen exacto.
+export function TableBill({ session, payKeys, taxRate, busy, onClose }: { session: FloorSession; payKeys: PayKey[]; taxRate: number; busy: boolean; onClose: (body: CloseBody) => void }) {
   const [tip, setTip] = useState(true)
   const [method, setMethod] = useState<PayMethod | null>(null)
   const [given, setGiven] = useState("")
@@ -44,6 +45,12 @@ export function TableBill({ session, payKeys, busy, onClose }: { session: FloorS
         </div>
       ))}
       <div className="row between nowrap"><span>Consumo</span><span className="num">{money(session.total)}</span></div>
+      {taxRate ? (
+        <div className="row between nowrap small muted">
+          <span>Incluye {taxName(taxRate)} ({Math.round(taxRate * 100)} %)</span>
+          <span className="num">{money(taxIn(session.total, taxRate))}</span>
+        </div>
+      ) : null}
       <fieldset className="f">
         <legend className="f-label">Propina sugerida ({TIP_PERCENT} %) <HelpTip text={HELP.tableTip} /></legend>
         <div className="seg">

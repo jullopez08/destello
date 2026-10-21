@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Modal, FormError } from "@/components/ui/modal"
 import { byId, useKitchen } from "@/lib/kitchen/store"
-import { cheapestSize, presentationCost, presentationHealth, presentationMargin } from "@/lib/kitchen/rules"
-import { fmtN, money } from "@/lib/kitchen/format"
+import { cheapestSize, netPrice, presentationCost, presentationHealth, presentationMargin, taxIn } from "@/lib/kitchen/rules"
+import { fmtN, money, taxName } from "@/lib/kitchen/format"
 import type { Presentation, SaleKind } from "@/lib/kitchen/types"
 import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import type { QtyRow } from "./supply-rows"
@@ -156,6 +156,11 @@ export function PresentationForm({ presentation }: { presentation?: Presentation
             </span>
             <span className={`chip ${health.kind}`}>{health.label} · {fmtN(presentationMargin(tmp, rules) * 100)} %</span>
           </div>
+          {rules.taxRate ? (
+            <div className="small" style={{ marginTop: 6 }}>
+              De {money(tmp.price)}, {money(taxIn(tmp.price, rules.taxRate))} son {taxName(rules.taxRate)}: te quedan <b>{money(netPrice(tmp.price, rules.taxRate))}</b>.
+            </div>
+          ) : null}
           {health.suggested ? (
             <div className="small" style={{ marginTop: 6 }}>
               Precio sugerido: <b>{money(health.suggested)}</b>

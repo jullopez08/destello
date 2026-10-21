@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { api, errorMessage } from "@/lib/api"
 import { useToast } from "@/components/ui/toast"
 import type { KitchenSnapshot, Order, OrderLine } from "./types"
-import { KitchenRuleData, productionPlan, usableLots } from "./rules"
+import { KitchenRuleData, productionPlan, TAX_RATE, usableLots } from "./rules"
 import { usableStock } from "./batches"
 
 interface KitchenValue {
@@ -69,6 +69,7 @@ export function KitchenProvider({ children, fallback }: { children: React.ReactN
         lots: usableLots(data.lots, data.today),
         products: data.products,
         presentations: data.presentations,
+        taxRate: TAX_RATE[data.settings.salesTax] ?? 0,
       },
     [data],
   )

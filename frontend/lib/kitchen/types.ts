@@ -1,7 +1,7 @@
 // Forma de GET /kitchen (backend: KitchenSnapshotService.load).
 // Cantidades en g, ml o und; dinero en pesos; días "AAAA-MM-DD".
 
-import type { SupplyKind } from "./rules"
+import type { SalesTax, SupplyKind } from "./rules"
 
 export type CardColor = "banana" | "strawberry" | "lilac" | "peach" | "sky" | "mint"
 export type CookieLook = "" | "choco" | "roll" | "bread" | "pump" | "star"
@@ -19,6 +19,8 @@ export interface KitchenSettings {
   /** Minutos que suele tardar un plato y el máximo antes de avisar a la mesa */
   kitchenNormalMin: number
   kitchenMaxMin: number
+  /** Impuesto incluido en los precios (Configuración → El negocio) */
+  salesTax: SalesTax
   /** false: el panel solo muestra los primeros pasos (setup-view) */
   setupDone: boolean
 }

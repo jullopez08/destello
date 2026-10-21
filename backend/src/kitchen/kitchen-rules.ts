@@ -68,6 +68,8 @@ export interface KitchenRuleData {
   lots: RuleLot[];
   products: RuleProduct[];
   presentations: RulePresentation[];
+  /** Impuesto incluido en los precios (0, 0.08 o 0.19): el margen se calcula sin él */
+  taxRate?: number;
 }
 
 export interface OrderLineInput {

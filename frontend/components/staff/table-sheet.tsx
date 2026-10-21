@@ -11,7 +11,7 @@ type Draft = { key: number; item: CatalogItem; productId?: string; sizeId?: stri
 const STATUS = { SENT: "En cocina", READY: "Listo", SERVED: "Servido" } as const
 
 // Una mesa: abrirla, ver sus comandas con su reloj, armar la siguiente para enviarla a cocina, pedir la cuenta y cobrarla.
-export function TableSheet({ table, catalog, payKeys, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; payKeys: PayKey[]; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
+export function TableSheet({ table, catalog, payKeys, taxRate, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; payKeys: PayKey[]; taxRate: number; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
   const [draft, setDraft] = useState<Draft[]>([])
   const nextKey = useRef(0)
   const [pick, setPick] = useState<{ itemId: string; productId: string; sizeId: string; qty: number; note: string }>({ itemId: "", productId: "", sizeId: "", qty: 1, note: "" })
@@ -98,7 +98,7 @@ export function TableSheet({ table, catalog, payKeys, now, normalMin, maxMin, on
           Pedir la cuenta
         </button>
       ) : null}
-      {s?.mine && s.billAt ? <TableBill session={s} payKeys={payKeys} busy={busy} onClose={close} /> : null}
+      {s?.mine && s.billAt ? <TableBill session={s} payKeys={payKeys} taxRate={taxRate} busy={busy} onClose={close} /> : null}
       {s?.mine && !s.tickets.length ? (
         <button type="button" className="linkbtn" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>
           Liberar la mesa (no pidieron nada)

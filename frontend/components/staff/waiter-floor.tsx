@@ -61,7 +61,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   }, [lateIds])
 
   const table = floor?.tables.find((t) => t.id === openId)
-  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} payKeys={floor.payKeys} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
+  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} payKeys={floor.payKeys} taxRate={floor.taxRate} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
 
   return (
     <main className="floor">

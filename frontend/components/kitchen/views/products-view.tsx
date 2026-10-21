@@ -4,8 +4,8 @@ import { Icon } from "@/components/ui/icon"
 import { HELP } from "@/lib/kitchen/help"
 import { Cookie } from "@/components/ui/cookie"
 import { byId, useKitchen } from "@/lib/kitchen/store"
-import { presentationCost, presentationHealth, presentationMargin, productCost } from "@/lib/kitchen/rules"
-import { fmtN, grams, money } from "@/lib/kitchen/format"
+import { presentationCost, presentationHealth, presentationMargin, productCost, taxIn } from "@/lib/kitchen/rules"
+import { fmtN, grams, money, taxName } from "@/lib/kitchen/format"
 import { Empty, PageHead, useModal } from "../shared"
 import { ProductForm } from "../forms/product-forms"
 import { PresentationForm } from "../forms/presentation-form"
@@ -88,7 +88,10 @@ export function ProductsView() {
                       {main}
                       <div className="muted">{sub}</div>
                     </td>
-                    <td className="r num c-hero" data-label="Precio"><b>{priceLabel(pr)}</b></td>
+                    <td className="r num c-hero" data-label="Precio">
+                      <b>{priceLabel(pr)}</b>
+                      {rules.taxRate ? <div className="small muted">Incluye {money(taxIn(pr.price, rules.taxRate))} de {taxName(rules.taxRate)}</div> : null}
+                    </td>
                     <td className="r num" data-label="Costo">{money(c)}</td>
                     <td className="r num" data-label="Margen">{fmtN(presentationMargin(pr, rules) * 100)} %</td>
                     <td className="c-badge" data-label="Estado">
