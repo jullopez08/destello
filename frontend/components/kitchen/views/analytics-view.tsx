@@ -61,7 +61,7 @@ export function AnalyticsView() {
         <div className="card">
           <h2>¿Qué días tienes más trabajo?</h2>
           <p className="small muted">{tables ? "Pedidos y mesas" : "Pedidos"} por día, últimas 8 semanas.</p>
-          <WeekdayBars counts={weekdays} />
+          <WeekdayBars counts={weekdays} food={data.settings.makesMeals} />
         </div>
         <div className="card">
           <h2>¿Qué vendes más y qué casi no?</h2>

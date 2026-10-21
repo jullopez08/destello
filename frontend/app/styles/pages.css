@@ -64,6 +64,16 @@
 .dbar .col span::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 9px; border-radius: 50%; background: #b8732f; border: 2.5px solid #f6d4a0; box-sizing: border-box; }
 .dbar.best .col span::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 32%; max-height: 42px; background: #6b3a22;
   border-radius: 10px 10px 45% 55% / 10px 10px 35% 45%; }
+/* Negocios de comida (Julieth, 2026-10-21): cada columna es un espárrago, tallo verde con sus escamas, la punta
+   arriba y la base más clara; el día de más trabajo lleva salsa holandesa por encima. */
+.dbars.food .col span { width: 44%; border-radius: 5px 5px 3px 3px; background-color: #7cc25a;
+  background-image: linear-gradient(to top, #e3f1cf 0 9px, transparent 9px), repeating-linear-gradient(to bottom, transparent 0 15px, #5a9c3e 15px 17px);
+  box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.35), inset -2px 0 0 rgba(40, 90, 30, 0.25); overflow: visible; }
+.dbars.food .col span::before { top: -14px; left: -2px; right: -2px; height: 20px; border: 0; border-radius: 50% 50% 35% 35% / 75% 75% 25% 25%;
+  background: repeating-linear-gradient(to bottom, #5a9c3e 0 4px, #4a8a33 4px 6px); }
+.dbars.food .dbar.best .col span::after { top: 2px; left: -3px; right: -3px; height: 26%; max-height: 34px; background: #f3c96b;
+  border-radius: 6px 6px 45% 55% / 6px 6px 40% 50%; }
+.dbars.food .col { margin-top: 14px; }
 
 .dbar .t { font-size: 12px; font-weight: 600; text-transform: capitalize; }
 @media (max-width: 560px) { .stat .v { font-size: 21px; } .summary p { font-size: 15px; } }

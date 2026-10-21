@@ -50,13 +50,14 @@ export function Stat({ label, value, hint, now, before, beforeText }: { label: s
 }
 
 // Pedidos por día de producción: ayuda a saber qué días habrá más trabajo.
-export function WeekdayBars({ counts }: { counts: number[] }) {
+/** `food`: negocio de comida (espárragos); si no, de postres y panes (barquillos). */
+export function WeekdayBars({ counts, food = false }: { counts: number[]; food?: boolean }) {
   const order = [1, 2, 3, 4, 5, 6, 0]
   const max = Math.max(1, ...counts)
   const top = order.reduce((a, d) => (counts[d] > counts[a] ? d : a), order[0])
   return (
     <>
-      <div className="dbars" role="list" aria-label="Pedidos por día de la semana">
+      <div className={`dbars${food ? " food" : ""}`} role="list" aria-label="Pedidos por día de la semana">
         {order.map((d) => (
           <div className={`dbar${d === top && counts[d] ? " best" : ""}`} role="listitem" key={d}>
             <span className="n num">{counts[d]}</span>
