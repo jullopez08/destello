@@ -5,6 +5,7 @@ import { api, errorMessage } from "@/lib/api"
 import { minutesSince, oldestWaiting, STAGES, tableStage, waitLevel, type Floor } from "@/lib/restaurant"
 import { beep } from "@/lib/beep"
 import { TableSheet } from "./table-sheet"
+import { CashDrawer } from "./cash-drawer"
 import { BackHint } from "./back-hint"
 
 const REFRESH_MS = 10000
@@ -16,6 +17,8 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   const [floor, setFloor] = useState<Floor | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+  // El encargado de caja abre y cierra el cajón desde aquí.
+  const [drawer, setDrawer] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const [skew, setSkew] = useState(0)
   // Comandas suyas que la cocina marcó "Listo": suena y salen arriba hasta que las lleve.
@@ -63,13 +66,27 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   const table = floor?.tables.find((t) => t.id === openId)
   if (floor && table) return <TableSheet table={table} catalog={floor.catalog} payKeys={floor.payKeys} taxRate={floor.taxRate} cashier={floor.cashier} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
 
+  if (drawer && floor?.cashier)
+    return (
+      <main className="floor">
+        <header className="floor-head">
+          <button type="button" className="btn ghost sm" onClick={() => setDrawer(false)}>‹ Mesas</button>
+          <h2>Caja</h2>
+          <span />
+        </header>
+        <CashDrawer base="/staff/floor/drawer" owner={false} />
+      </main>
+    )
+
   return (
     <main className="floor">
       <header className="floor-head">
         <div>
           <div className="small muted">{organizationName}</div>
           <h2>Hola, {name}</h2>
-          {floor?.cashier ? <span className="chip lilac">Encargado de caja</span> : null}
+          {floor?.cashier ? (
+            <button type="button" className="btn soft sm" onClick={() => setDrawer(true)}>Caja: abrir o cerrar</button>
+          ) : null}
         </div>
         <button type="button" className="btn ghost sm" onClick={async () => { await api("/staff/logout", { method: "POST" }).catch(() => {}); onOut() }}>
           Cerrar turno

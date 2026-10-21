@@ -92,3 +92,15 @@ export function catalogPrice(item: CatalogItem, productId?: string, sizeId?: str
   const flavor = item.items.find((i) => i.productId === productId)
   return (size?.price ?? item.price) + (flavor?.surcharge ?? 0)
 }
+
+/** El cajón (GET /kitchen/cashier/drawer o /staff/floor/drawer). `expected`, `tables` y `pickups` solo para la dueña. */
+export interface CashMoveRow { id: string; kind: "IN" | "OUT"; amount: number; reason: string; by: string; at: string }
+export interface CashShiftOpen { id: string; openedAt: string; openedBy: string; openingCash: number; recount: boolean; moves: CashMoveRow[]; expected?: number; tables?: number; pickups?: number }
+export interface CashShiftDone {
+  id: string; openedAt: string; openedBy: string; openingCash: number; closedAt: string; closedBy: string
+  expected: number; counted: number; difference: number; firstCount: number | null; note: string | null; reviewedAt: string | null
+  moves: { kind: "IN" | "OUT"; amount: number; reason: string; by: string; at: string }[]
+}
+export interface CashState { shift: CashShiftOpen | null; history: CashShiftDone[] }
+/** Respuesta al cerrar: cuadra, contar de nuevo, o la diferencia para explicar (cash-rules.ts) */
+export type CashOutcome = { kind: "close" } | { kind: "recount" } | { kind: "explain"; difference: number }

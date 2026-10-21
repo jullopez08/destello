@@ -82,7 +82,7 @@ export class OrdersService {
     if (order.status !== OrderStatus.ON_THE_WAY && !pickupReady) {
       throw new BadRequestException('Este pedido todavía no se puede marcar como entregado.');
     }
-    await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.DELIVERED } });
+    await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.DELIVERED, deliveredAt: new Date() } });
     return this.snapshot.load(organizationId);
   }
 

@@ -241,3 +241,8 @@
 .cancelled-card { margin-top: 16px; }
 .cancelled-item { gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
 .cancelled-item .btn { align-self: flex-start; }
+/* Caja: cajón y turnos (Julieth, 2026-10-21) */
+.cash-drawer textarea { width: 100%; }
+.cash-shifts { margin-top: 16px; }
+.cash-shift { gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cash-shift .btn { align-self: flex-start; }

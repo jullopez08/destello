@@ -116,5 +116,9 @@ export const HELP = {
   cancelledTickets: "Lo anulado no se cobró ni se descontó del inventario. Revisa cada una y fíjate si alguien anula mucho.",
   reportFrom: "El primer día que entra en el Excel.",
   reportTo: "El último día que entra. Máximo un año a la vez.",
+  cashOpening: "El efectivo con el que empiezas para dar vueltas. Puede ser 0.",
+  cashMove: "Efectivo que no es una venta: un pago a un proveedor, o lo que trae el repartidor de los domicilios.",
+  cashCount: "Cuenta los billetes y las monedas del cajón, base incluida. No verás cuánto debería haber hasta contar.",
+  cashShifts: "Cada turno con su base, lo que debía haber y lo contado. Revisa los que no cuadraron.",
   tablePay: "Si pagan entre varios o de dos formas, divide el pago. Por transferencia, muéstrale las llaves del negocio.",
 } as const
