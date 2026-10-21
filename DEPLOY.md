@@ -54,7 +54,7 @@ navegador ──https──> borde de Railway ──> PANEL (frontend, Next.js) 
 |---|---|
 | `BACKEND_URL` | `http://${{backend.RAILWAY_PRIVATE_DOMAIN}}:3101` |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | la llave pública de Turnstile (va con la secreta del backend) |
-| `NEXT_PUBLIC_CONTACT_WHATSAPP` | el WhatsApp de Destello, solo números con 57 (botones de contacto y "No pudimos comprobar tu negocio") |
+| `NEXT_PUBLIC_CONTACT_WHATSAPP` | `573018990546` (WhatsApp de Destello: botones de contacto y "No pudimos comprobar tu negocio") |
 | `NEXT_PUBLIC_ANDROID_APK_URL` | vacío hasta la Fase 10 |
 
 Las `NEXT_PUBLIC_*` quedan escritas en el panel al armarlo: si se cambian, hay que volver a desplegar el panel.
