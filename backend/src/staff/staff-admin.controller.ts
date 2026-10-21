@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -6,7 +6,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RequireActiveOrganizationGuard } from '../common/guards/require-active-clinic.guard';
 import { CurrentUser, type CurrentUserData } from '../common/decorators/current-user.decorator';
 import { requireOrganization } from '../kitchen/kitchen-snapshot.service';
-import { CreateStaffDto } from './dto/staff.dto';
+import { CreateStaffDto, StaffCashierDto } from './dto/staff.dto';
 import { StaffAdminService } from './staff-admin.service';
 
 // Tu equipo (Configuración): solo la dueña, con su empresa activa.
@@ -36,6 +36,11 @@ export class StaffAdminController {
   @HttpCode(200)
   newLink(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
     return this.staff.newLink(requireOrganization(user), id);
+  }
+
+  @Patch(':id/cashier')
+  setCashier(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: StaffCashierDto) {
+    return this.staff.setCashier(requireOrganization(user), id, dto.cashier);
   }
 
   @Delete(':id/devices/:deviceId')

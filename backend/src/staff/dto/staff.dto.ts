@@ -1,5 +1,5 @@
 import { StaffRole } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsString, Length, Matches, MaxLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsNotEmpty, IsString, Length, Matches, MaxLength } from 'class-validator';
 
 const PIN = /^\d{4}$/;
 const PIN_MESSAGE = 'El PIN tiene 4 números.';
@@ -8,6 +8,11 @@ const PIN_MESSAGE = 'El PIN tiene 4 números.';
 export class CreateStaffDto {
   @IsString() @IsNotEmpty() @MaxLength(60) name!: string;
   @IsEnum(StaffRole) role!: StaffRole;
+}
+
+/** "Encargado de caja": el mesero cobra cualquier mesa */
+export class StaffCashierDto {
+  @IsBoolean() cashier!: boolean;
 }
 
 export class StaffLinkDto {

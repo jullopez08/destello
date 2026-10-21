@@ -52,42 +52,78 @@ export class FloorController {
 
   @Get()
   load(@Req() req: StaffRequest) {
-    return this.floor.load(req.staff.organizationId, req.staff.sub);
+    return this.view(req);
   }
 
   @Post('tables/:id/open')
-  open(@Req() req: StaffRequest, @Param('id') id: string) {
+  async open(@Req() req: StaffRequest, @Param('id') id: string) {
     const staff = requireWaiter(req);
-    return this.floor.open(staff.organizationId, id, staff.sub);
+    await this.floor.open(staff.organizationId, id, staff.sub);
+    return this.view(req);
   }
 
   @Post('sessions/:id/tickets')
-  send(@Req() req: StaffRequest, @Param('id') id: string, @Body() dto: SendTicketDto) {
+  async send(@Req() req: StaffRequest, @Param('id') id: string, @Body() dto: SendTicketDto) {
     const staff = requireWaiter(req);
-    return this.floor.send(staff.organizationId, id, dto.lines, staff.sub);
+    await this.floor.send(staff.organizationId, id, dto.lines);
+    return this.view(req);
   }
 
+  // El encargado de caja pide la cuenta y cobra cualquier mesa; los demás meseros, solo las suyas.
   @Post('sessions/:id/bill')
   @HttpCode(200)
   async requestBill(@Req() req: StaffRequest, @Param('id') id: string) {
     const staff = requireWaiter(req);
-    await this.bill.request(staff.organizationId, id, staff.sub);
-    return this.floor.load(staff.organizationId, staff.sub);
+    await this.bill.request(staff.organizationId, id, staff.cashier ? undefined : staff.sub);
+    return this.view(req);
   }
 
   @Post('sessions/:id/close')
   @HttpCode(200)
   async close(@Req() req: StaffRequest, @Param('id') id: string, @Body() dto: CloseTableDto) {
     const staff = requireWaiter(req);
-    await this.bill.close(staff.organizationId, id, dto, staff.sub);
-    return this.floor.load(staff.organizationId, staff.sub);
+    await this.bill.close(staff.organizationId, id, dto, staff.cashier ? undefined : staff.sub);
+    return this.view(req);
   }
 
   @Post('tickets/:id/served')
   @HttpCode(200)
-  served(@Req() req: StaffRequest, @Param('id') id: string) {
+  async served(@Req() req: StaffRequest, @Param('id') id: string) {
     const staff = requireWaiter(req);
-    return this.floor.served(staff.organizationId, id, staff.sub);
+    await this.floor.served(staff.organizationId, id);
+    return this.view(req);
+  }
+
+  private view(req: StaffRequest) {
+    return this.floor.load(req.staff.organizationId, req.staff.sub, req.staff.role === 'WAITER' && req.staff.cashier);
+  }
+}
+
+// La caja en el panel de la dueña (Julieth, 2026-10-20: muchas veces el cliente se para y paga en la caja): ve las
+// mesas abiertas y cobra cualquiera, con la misma cuenta del mesero.
+@Controller('kitchen/cashier')
+@UseGuards(JwtAuthGuard, RolesGuard, RequireActiveOrganizationGuard)
+@Roles(Role.ADMIN)
+export class CashierController {
+  constructor(
+    private readonly floor: FloorService,
+    private readonly bill: TableBillService,
+  ) {}
+
+  @Get()
+  async load(@CurrentUser() user: CurrentUserData) {
+    const org = requireOrganization(user);
+    await this.floor.servesTables(org);
+    return this.floor.load(org, undefined, true);
+  }
+
+  @Post('sessions/:id/close')
+  @HttpCode(200)
+  async close(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: CloseTableDto) {
+    const org = requireOrganization(user);
+    await this.floor.servesTables(org);
+    await this.bill.close(org, id, dto);
+    return this.floor.load(org, undefined, true);
   }
 }
 

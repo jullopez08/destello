@@ -127,6 +127,7 @@ async function main() {
     list.push([`Nuevo PIN para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/pin`]);
     list.push([`Enlace nuevo para ${m.name} (otro restaurante)`, 'POST', `/kitchen/staff/${m.id}/link`]);
     if (m.devices[0]) list.push([`Desconectar el aparato de ${m.name}`, 'DELETE', `/kitchen/staff/${m.id}/devices/${m.devices[0].id}`]);
+    list.push([`Hacer encargado de caja a ${m.name} (otro restaurante)`, 'PATCH', `/kitchen/staff/${m.id}/cashier`, { cashier: true }]);
     list.push([`Quitar a ${m.name} (otro restaurante)`, 'DELETE', `/kitchen/staff/${m.id}`]);
   }
   const tables = lucia ? (await call(lucia, 'GET', '/kitchen/tables')).body : [];
@@ -137,6 +138,7 @@ async function main() {
   list.push(['Ver el salón de los meseros con la sesión de la dueña', 'GET', '/staff/floor']);
   list.push(['Ver la pantalla de cocina con la sesión de la dueña', 'GET', '/staff/kitchen']);
   list.push(['Pedir la cuenta de una mesa con la sesión de la dueña', 'POST', '/staff/floor/sessions/x/bill']);
+  list.push(['Ver la caja (este negocio no atiende en mesas)', 'GET', '/kitchen/cashier']);
   list.push(['Cobrar una mesa con la sesión de la dueña', 'POST', '/staff/floor/sessions/x/close', { tip: false, payments: [] }]);
 
   let failures = 0;

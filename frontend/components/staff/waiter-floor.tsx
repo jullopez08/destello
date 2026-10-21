@@ -61,7 +61,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
   }, [lateIds])
 
   const table = floor?.tables.find((t) => t.id === openId)
-  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} payKeys={floor.payKeys} taxRate={floor.taxRate} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
+  if (floor && table) return <TableSheet table={table} catalog={floor.catalog} payKeys={floor.payKeys} taxRate={floor.taxRate} cashier={floor.cashier} now={serverNow} normalMin={floor.normalMin} maxMin={floor.maxMin} onFloor={show} onBack={() => setOpenId(null)} />
 
   return (
     <main className="floor">
@@ -69,6 +69,7 @@ export function WaiterFloor({ name, organizationName, onOut }: { name: string; o
         <div>
           <div className="small muted">{organizationName}</div>
           <h2>Hola, {name}</h2>
+          {floor?.cashier ? <span className="chip lilac">Encargado de caja</span> : null}
         </div>
         <button type="button" className="btn ghost sm" onClick={async () => { await api("/staff/logout", { method: "POST" }).catch(() => {}); onOut() }}>
           Cerrar turno

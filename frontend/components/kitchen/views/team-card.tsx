@@ -55,6 +55,9 @@ export function TeamCard() {
       />,
     )
 
+  const setCashier = (m: StaffMember, cashier: boolean) =>
+    api<StaffMember[]>(`/kitchen/staff/${m.id}/cashier`, { method: "PATCH", body: { cashier } }).then(setList).catch((err) => toast(errorMessage(err), true))
+
   const remove = (m: StaffMember) =>
     push(
       <StaffConfirm
@@ -92,6 +95,12 @@ export function TeamCard() {
                   <div className="small muted">Sin aparato conectado</div>
                 )}
                 {m.linkLockedUntil && new Date(m.linkLockedUntil) > new Date() ? <div className="small muted">Enlace bloqueado 15 min por PIN equivocados</div> : null}
+                {m.role === "WAITER" ? (
+                  <label className="row small nowrap" style={{ gap: 8, marginTop: 4 }}>
+                    <input type="checkbox" checked={m.cashier} onChange={(e) => setCashier(m, e.target.checked)} style={{ width: 18, height: 18, accentColor: "var(--accent-deep)" }} />
+                    Encargado de caja <HelpTip text={HELP.staffCashier} />
+                  </label>
+                ) : null}
               </div>
               <div className="row">
                 <button type="button" className="btn soft sm" onClick={() => changeLink(m)}>{m.hasLink ? "Cambiar enlace" : "Crear enlace"}</button>

@@ -7,7 +7,7 @@ import { api } from "@/lib/api"
 import type { MySubscription } from "@/lib/billing"
 import { useSession } from "@/lib/session"
 import { KitchenProvider, useKitchen } from "@/lib/kitchen/store"
-import { PAGES, TAB_PAGES } from "@/lib/kitchen/pages"
+import { PAGES, pagesFor, TAB_PAGES } from "@/lib/kitchen/pages"
 import { initials, longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
 import { PayBanner } from "@/components/billing/pay-banner"
@@ -24,6 +24,7 @@ import { RecipesView } from "./views/recipes-view"
 import { ProductsView } from "./views/products-view"
 import { EditionsView } from "./views/editions-view"
 import { AnalyticsView } from "./views/analytics-view"
+import { CashierView } from "./views/cashier-view"
 import { SettingsView } from "./views/settings-view"
 import { SetupView } from "./views/setup-view"
 import { SectionTip, Tour } from "./tour"
@@ -115,6 +116,7 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
   const view = {
     hoy: <TodayView />,
     pedidos: <OrdersView tab={orderTab} setTab={setOrderTab} />,
+    caja: data.settings.servesTables ? <CashierView /> : <TodayView />,
     produccion: <ProductionView day={prodDay} setDay={setProdDay} />,
     proveedores: <SuppliersView query={supplierQuery} setQuery={setSupplierQuery} />,
     insumos: <SuppliesView tab={supplyTab} setTab={setSupplyTab} query={supplyQuery} setQuery={setSupplyQuery} />,
@@ -166,7 +168,7 @@ function Shell({ page, locked, cutoff, today, voice, mic, children }: { page: st
           <div className="avatar only-mobile" aria-hidden="true">{initials(user?.name ?? "")}</div>
         </div>
         <nav className="nav" aria-label="Secciones">
-          {PAGES.map(([k, t, icon]) => (
+          {pagesFor(!!user?.servesTables).map(([k, t, icon]) => (
             <a key={k} href={`#${k}`} className={k === page ? "on" : ""} aria-current={k === page ? "page" : undefined} aria-disabled={locked && k !== "suscripcion" ? true : undefined}>
               <Icon name={icon} />
               <span>{t}</span>

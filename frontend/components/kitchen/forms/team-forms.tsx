@@ -10,7 +10,7 @@ import { Field, useModal } from "../shared"
 
 export type StaffRole = "WAITER" | "KITCHEN"
 export interface StaffDevice { id: string; label: string; lastSeenAt: string; lockedUntil: string | null }
-export interface StaffMember { id: string; name: string; role: StaffRole; hasPin: boolean; hasLink: boolean; linkLockedUntil: string | null; devices: StaffDevice[] }
+export interface StaffMember { id: string; name: string; role: StaffRole; hasPin: boolean; hasLink: boolean; linkLockedUntil: string | null; cashier: boolean; devices: StaffDevice[] }
 export interface Created { list: StaffMember[]; id: string; pin: string; token: string }
 
 export const ROLE_NAME: Record<StaffRole, string> = { WAITER: "Mesero", KITCHEN: "Pantalla de cocina" }

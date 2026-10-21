@@ -85,7 +85,7 @@ export class StaffAuthService {
   }
 
   /** Revisa la sesión en cada llamada: aparato desconectado o persona quitada = fuera, sin esperar a que venza. */
-  async session(token: string | undefined): Promise<StaffSession & { organizationId: string; role: StaffMember['role'] }> {
+  async session(token: string | undefined): Promise<StaffSession & { organizationId: string; role: StaffMember['role']; cashier: boolean }> {
     if (!token) throw new UnauthorizedException('Entra con tu PIN.');
     let payload: StaffSession;
     try {
@@ -97,7 +97,7 @@ export class StaffAuthService {
     const device = await this.prisma.staffDevice.findUnique({ where: { id: payload.dev }, include: { staff: true } });
     if (!device || device.staffId !== payload.sub) throw new UnauthorizedException('Este aparato fue desconectado.');
     const org = await this.activeOrganization(device.staff.organizationId);
-    return { ...payload, organizationId: org.id, role: device.staff.role };
+    return { ...payload, organizationId: org.id, role: device.staff.role, cashier: device.staff.cashier };
   }
 
   async profile(staffId: string) {
