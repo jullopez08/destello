@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 
 const USER_INCLUDE = {
-  organization: { select: { name: true, palette: true, logoUrl: true, servesTables: true, approvalPending: true } },
+  organization: { select: { name: true, palette: true, logoUrl: true, servesTables: true, approvalPending: true, rejectedAt: true } },
 } as const;
 
 type UserWithOrganization = Prisma.UserGetPayload<{ include: typeof USER_INCLUDE }>;
@@ -118,6 +118,7 @@ export class AuthService {
       logoUrl: organization?.logoUrl ?? null,
       servesTables: organization?.servesTables ?? false,
       approvalPending: organization?.approvalPending ?? false,
+      rejected: !!organization?.rejectedAt,
     };
   }
 }

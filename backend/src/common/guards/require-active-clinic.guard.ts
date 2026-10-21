@@ -25,12 +25,17 @@ export class RequireActiveOrganizationGuard implements CanActivate {
 
     const organization = await this.prisma.organization.findUnique({
       where: { id: user.organizationId },
-      select: { active: true, approvalPending: true },
+      select: { active: true, approvalPending: true, rejectedAt: true },
     });
 
     // Inscrita sola con SIGNUP_MODE=review: espera la aprobación del super admin.
     if (organization?.approvalPending) {
       throw new ForbiddenException({ statusCode: 403, error: 'approval_pending', message: 'Tu negocio está en revisión. Te avisamos cuando esté listo.' });
+    }
+
+    // El super admin revisó su Instagram o Maps y la carta, y no parece real.
+    if (organization?.rejectedAt) {
+      throw new ForbiddenException({ statusCode: 403, error: 'business_rejected', message: 'No pudimos comprobar tu negocio. Escríbenos para revisarlo.' });
     }
 
     if (organization && !organization.active) {

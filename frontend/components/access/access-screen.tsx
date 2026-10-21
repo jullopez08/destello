@@ -9,6 +9,7 @@ import { api, ApiError, errorMessage } from "@/lib/api"
 import { isSuperAdmin, SessionProvider, useSession } from "@/lib/session"
 import { KitchenApp } from "@/components/kitchen/kitchen-app"
 import { SuperAdminApp } from "@/components/super-admin/super-admin-app"
+import { contactHref } from "@/lib/contact"
 
 export function AccessScreen() {
   return (
@@ -26,6 +27,7 @@ function Router() {
   if (!user) return <LoginScreen />
   if (needsTerms) return <TermsScreen />
   if (user.approvalPending) return <PendingScreen />
+  if (user.rejected) return <RejectedScreen />
   return isSuperAdmin(user) ? <SuperAdminApp /> : <KitchenApp />
 }
 
@@ -177,6 +179,27 @@ function PendingScreen() {
           <h2>Estamos revisando tu negocio</h2>
           <p className="muted">Ya creaste la cuenta de {user?.organizationName}. En cuanto la aprobemos, esta pantalla te lleva a tu cocina y te avisamos por correo.</p>
           <button className="btn primary" type="submit">Revisar de nuevo</button>
+          <button type="button" className="linkbtn" onClick={logout}>Salir</button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+// El super admin revisó su Instagram o Maps y la carta y no pudo comprobar que el negocio es real.
+// Sus datos siguen guardados: al verificarla, "Revisar de nuevo" la lleva a su cocina.
+function RejectedScreen() {
+  const { user, logout } = useSession()
+  const message = `Hola, soy de ${user?.organizationName ?? "mi negocio"} y quiero que revisen mi cuenta de Destello.`
+  return (
+    <div className="login">
+      <Art />
+      <section className="form">
+        <form onSubmit={(e) => { e.preventDefault(); window.location.reload() }}>
+          <h2>No pudimos comprobar tu negocio</h2>
+          <p className="muted">Tu cuenta de {user?.organizationName} está en pausa y tus datos siguen guardados. Escríbenos y la revisamos.</p>
+          <a className="btn primary" href={contactHref(message)}>Escribirnos por WhatsApp</a>
+          <button className="btn ghost" type="submit">Revisar de nuevo</button>
           <button type="button" className="linkbtn" onClick={logout}>Salir</button>
         </form>
       </section>

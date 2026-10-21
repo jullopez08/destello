@@ -46,6 +46,7 @@ async function main() {
   const org = await prisma.organization.create({
     data: {
       name: 'Cocina Destello',
+      verifiedAt: new Date(),
       slug: 'cocina-destello',
       palette: 'vainilla',
       whatsapp: '300 555 1020',
@@ -202,7 +203,7 @@ async function main() {
 
 
   // ── Panadería La Espiga: recién creada, en prueba ──
-  const espiga = await prisma.organization.create({ data: { name: 'Panadería La Espiga', slug: 'panaderia-la-espiga', palette: 'fresa' } });
+  const espiga = await prisma.organization.create({ data: { name: 'Panadería La Espiga', slug: 'panaderia-la-espiga', palette: 'fresa', verifiedAt: new Date() } });
   const espigaOwner = await prisma.user.create({
     data: { email: 'espiga@destello.test', name: 'Marta Cárdenas', password, roles: [Role.ADMIN], organizationId: espiga.id },
   });

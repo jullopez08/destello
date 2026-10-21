@@ -53,6 +53,7 @@ export class OrganizationsService {
           slug: dto.slug,
           palette: dto.palette,
           servesTables: dto.servesTables,
+          verified: true,
           plan,
           owner: { name: dto.ownerName, email: dto.ownerEmail, passwordHash },
         });
@@ -101,15 +102,24 @@ export class OrganizationsService {
     return menu;
   }
 
-  // Aprueba una inscripción en revisión y le avisa a la dueña por correo (solo la primera vez).
+  // Verifica el negocio (Instagram o Maps y la carta): entra si estaba en revisión o en "No es real".
+  // A la inscripción en revisión le avisa a la dueña por correo (solo la primera vez).
   async approve(id: string) {
     const organization = await this.findOne(id);
     const { count } = await this.prisma.organization.updateMany({ where: { id, approvalPending: true }, data: { approvalPending: false } });
+    await this.prisma.organization.update({ where: { id }, data: { verifiedAt: new Date(), rejectedAt: null } });
     const owners = organization.users.filter((u) => u.active).map((u) => u.email);
     if (count && owners.length) {
       const site = (this.config.get<string>('FRONTEND_URL') ?? 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '');
       await this.email.sendApprovedNotice(owners, organization.name, `${site}/access`);
     }
+    return this.findOne(id);
+  }
+
+  // "No es real": la cuenta queda en pausa con sus datos (403 business_rejected) hasta que se verifique.
+  async reject(id: string) {
+    await this.findOne(id);
+    await this.prisma.organization.update({ where: { id }, data: { rejectedAt: new Date(), verifiedAt: null, approvalPending: false } });
     return this.findOne(id);
   }
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { api, SESSION_EXPIRED_EVENT, TERMS_REQUIRED_EVENT } from "./api"
+import { api, BUSINESS_REJECTED_EVENT, SESSION_EXPIRED_EVENT, TERMS_REQUIRED_EVENT } from "./api"
 import { applyPalette } from "./palettes"
 
 export type Role = "SUPER_ADMIN" | "ADMIN"
@@ -20,6 +20,8 @@ export interface SessionUser {
   servesTables: boolean
   /** Inscrita por la página y esperando la aprobación del super admin */
   approvalPending: boolean
+  /** El super admin la marcó "No es real": la cuenta queda en pausa con sus datos */
+  rejected: boolean
   /** Cuándo terminó o saltó la guía del panel; null = se le muestra */
   tourCompletedAt: string | null
   /** Secciones cuya tarjeta de primera vez ya cerró */
@@ -78,11 +80,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       applyPalette(null)
     }
     const onTerms = () => setTermsFlag(true)
+    const onRejected = () => setUserState((current) => (current ? { ...current, rejected: true } : current))
     window.addEventListener(SESSION_EXPIRED_EVENT, onExpired)
     window.addEventListener(TERMS_REQUIRED_EVENT, onTerms)
+    window.addEventListener(BUSINESS_REJECTED_EVENT, onRejected)
     return () => {
       window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired)
       window.removeEventListener(TERMS_REQUIRED_EVENT, onTerms)
+      window.removeEventListener(BUSINESS_REJECTED_EVENT, onRejected)
     }
   }, [signIn])
 

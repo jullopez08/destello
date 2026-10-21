@@ -11,6 +11,8 @@ export interface NewOrganization {
   servesTables?: boolean;
   whatsapp?: string;
   approvalPending?: boolean;
+  /** Creada por el super admin: ya la conoce, nace verificada */
+  verified?: boolean;
   plan: Plan;
   owner: { name: string; email: string; passwordHash: string; termsVersion?: string };
 }
@@ -27,6 +29,7 @@ export async function createOrganizationWithOwner(tx: Prisma.TransactionClient, 
       servesTables: input.servesTables ?? false,
       whatsapp: input.whatsapp,
       approvalPending: input.approvalPending ?? false,
+      verifiedAt: input.verified ? new Date() : null,
     },
   });
 

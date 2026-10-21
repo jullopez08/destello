@@ -114,7 +114,7 @@ export class StaffAuthService {
 
   private async activeOrganization(organizationId: string) {
     const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
-    if (!org.active || org.approvalPending) throw new ForbiddenException('El negocio no tiene el acceso activo. Avísale a la dueña.');
+    if (!org.active || org.approvalPending || org.rejectedAt) throw new ForbiddenException('El negocio no tiene el acceso activo. Avísale a la dueña.');
     return org;
   }
 
