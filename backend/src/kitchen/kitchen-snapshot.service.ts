@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { CurrentUserData } from '../common/decorators/current-user.decorator';
 import { addDays, KitchenRuleData, productionDateFor, toIsoDate } from './kitchen-rules';
 import { usableStock } from './supply-batches';
+import { WAITER_STATS_DAYS, waiterStats } from './waiter-stats';
 
 type Db = PrismaService | Prisma.TransactionClient;
 
@@ -32,7 +33,7 @@ export class KitchenSnapshotService {
     const today = toIsoDate(new Date());
     const since = addDays(today, -70);
 
-    const [organization, accounts, couriers, suppliers, supplies, batches, supplyWaste, purchases, recipes, lots, waste, products, presentations, orders, editions, checks] =
+    const [organization, accounts, couriers, suppliers, supplies, batches, supplyWaste, purchases, recipes, lots, waste, products, presentations, orders, editions, checks, closedTables] =
       await Promise.all([
         db.organization.findUnique({ where: { id: organizationId } }),
         db.bankAccount.findMany({ where: { organizationId }, orderBy: { createdAt: 'asc' } }),
@@ -54,6 +55,11 @@ export class KitchenSnapshotService {
         }),
         db.edition.findMany({ where: { organizationId }, include: { presentations: true }, orderBy: { startDate: 'asc' } }),
         db.productionCheck.findMany({ where: { organizationId, date: { gte: addDays(today, -1) } } }),
+        // Mesas cobradas en 4 semanas, para la analítica de los meseros (solo la ve la dueña).
+        db.tableSession.findMany({
+          where: { organizationId, status: 'CLOSED', closedAt: { gte: new Date(Date.now() - WAITER_STATS_DAYS * 86_400_000) } },
+          select: { waiterId: true, closedAt: true, subtotal: true, tip: true, waiter: { select: { name: true } } },
+        }),
       ]);
 
     if (!organization) {
@@ -84,6 +90,10 @@ export class KitchenSnapshotService {
         /** false: el panel solo muestra los primeros pasos */
         setupDone: organization.setupCompletedAt !== null,
       },
+      /** Mesas por día de cada mesero (últimas 4 semanas); vacío si el negocio no atiende en mesas */
+      waiters: organization.servesTables
+        ? waiterStats(closedTables.map((t) => ({ waiterId: t.waiterId, waiter: t.waiter?.name ?? null, closedAt: t.closedAt!, subtotal: t.subtotal ?? 0, tip: t.tip })))
+        : [],
       accounts: accounts.map(({ id, bank, type, number, owner }) => ({ id, bank, type, number, owner })),
       couriers: couriers.map(({ id, name, phone, position }) => ({ id, name, phone, position })),
       suppliers: suppliers.map(({ id, name, contact, phone, email, address, notes, color }) => ({ id, name, contact, phone, email, address, notes, color })),

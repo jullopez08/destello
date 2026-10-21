@@ -145,10 +145,15 @@ export interface Edition {
   presentationIds: string[]
 }
 
+/** Analítica de los meseros (últimas 4 semanas): mesas por día de trabajo. */
+export interface WaiterStat { id: string; name: string; tables: number; days: number; perDay: number; avgSale: number; tips: number }
+
 export interface KitchenSnapshot {
   today: string
   nextProductionDate: string
   settings: KitchenSettings
+  /** Vacío si el negocio no atiende en mesas */
+  waiters: WaiterStat[]
   accounts: BankAccount[]
   couriers: Courier[]
   suppliers: Supplier[]

@@ -9,6 +9,7 @@ import { Stat, Summary, WeekdayBars } from "./analytics-charts"
 import { WeekLine } from "./analytics-line"
 import { SellerPie } from "./analytics-pie"
 import { DoughCards } from "./analytics-dough"
+import { WaiterCard } from "./analytics-waiters"
 
 // ── Analítica: cómo van las ventas, qué se vende y qué no deja ganancia ──
 
@@ -107,6 +108,7 @@ export function AnalyticsView() {
           <p className="small muted" style={{ marginTop: 10 }}>Precio sugerido para ganar el {data.settings.targetMargin} %.</p>
         </div>
         <DoughCards least={least} />
+        {data.settings.servesTables ? <WaiterCard waiters={data.waiters} /> : null}
       </div>
     </>
   )
