@@ -70,7 +70,7 @@ export function TeamCard() {
       <div className="row between">
         <h2 style={{ margin: 0 }}>Tu equipo <HelpTip text={HELP.staffTeam} /></h2>
       </div>
-      <p className="small muted" style={{ margin: 0 }}>{tables ? "Meseros y pantallas de cocina." : "Pantallas de cocina. Los meseros salen si atiendes en mesas."}</p>
+      <p className="small muted" style={{ margin: 0 }}>{tables ? "Solo si alguien más te ayuda en la cocina o en las mesas." : "Solo si alguien más te ayuda en la cocina."}</p>
       {list === null ? <p className="small muted">Cargando…</p> : null}
       {list?.length ? (
         <div className="list">

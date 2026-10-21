@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { api, errorMessage } from "@/lib/api"
 import { beep } from "@/lib/beep"
-import { minutesSince, waitLevel, type KitchenBoard } from "@/lib/restaurant"
+import { addDays } from "@/lib/kitchen/dates"
+import { longDate } from "@/lib/kitchen/format"
+import { minutesSince, waitLevel, type BoardOrder, type KitchenBoard } from "@/lib/restaurant"
 import { BackHint } from "./back-hint"
 
 const REFRESH_MS = 8000
 
 // Pantalla de cocina (tablet del negocio): comandas de las mesas, la que más espera primero, con su reloj; y los
-// pedidos de hoy (domicilio o recoger). "Listo" descuenta los insumos y le avisa al mesero. Suena al llegar una nueva.
+// pedidos de hoy (domicilio o recoger) y, abajo, los del siguiente día de producción. "Listo" descuenta los insumos y le avisa al mesero. Suena al llegar una nueva.
 export function KitchenScreen({ name, organizationName }: { name: string; organizationName: string }) {
   const [board, setBoard] = useState<KitchenBoard | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -64,7 +66,7 @@ export function KitchenScreen({ name, organizationName }: { name: string; organi
       </header>
       {error ? <div className="err" role="alert">{error}</div> : null}
       {!board ? <p className="muted">Cargando…</p> : null}
-      {board && !waiting.length && !board.orders.length ? <p className="muted">Nada por preparar. Las comandas nuevas aparecen aquí solas.</p> : null}
+      {board && !waiting.length && !board.orders.length && !board.next ? <p className="muted">Nada por preparar. Las comandas nuevas aparecen aquí solas.</p> : null}
       <div className="kitchen-grid">
         {waiting.map((t) => {
           const mins = minutesSince(t.sentAt, serverNow)
@@ -92,23 +94,35 @@ export function KitchenScreen({ name, organizationName }: { name: string; organi
       {board?.orders.length ? (
         <section className="stack">
           <h3 style={{ margin: 0 }}>Pedidos para hoy</h3>
-          <div className="kitchen-grid">
-            {board.orders.map((o) => (
-              <section key={o.id} className="card ticket">
-                <div className="row between nowrap">
-                  <b>{o.delivery === "DELIVERY" ? "Domicilio" : "Recoge"}</b>
-                  <span className="small muted">#{o.number}</span>
-                </div>
-                <div className="small muted">{o.customer}</div>
-                {o.lines.map((l, i) => <div key={i} className="kitchen-line"><b className="num">{l.qty}×</b> {l.name}</div>)}
-              </section>
-            ))}
-          </div>
+          <OrderCards orders={board.orders} />
           <p className="small muted">Los pedidos se marcan como producidos en Producción, desde el panel.</p>
+        </section>
+      ) : null}
+      {board?.next ? (
+        <section className="stack">
+          <h3 style={{ margin: 0 }}>{board.next.date === addDays(board.today, 1) ? "Para mañana" : `Para el ${longDate(board.next.date).toLowerCase()}`}</h3>
+          <OrderCards orders={board.next.orders} />
         </section>
       ) : null}
       {done.length ? <p className="small muted">Listas hace poco: {done.map((t) => `${t.table} (comanda ${t.number})`).join(", ")}.</p> : null}
       <BackHint />
     </main>
+  )
+}
+
+function OrderCards({ orders }: { orders: BoardOrder[] }) {
+  return (
+    <div className="kitchen-grid">
+      {orders.map((o) => (
+        <section key={o.id} className="card ticket">
+          <div className="row between nowrap">
+            <b>{o.delivery === "DELIVERY" ? "Domicilio" : "Recoge"}</b>
+            <span className="small muted">#{o.number}</span>
+          </div>
+          <div className="small muted">{o.customer}</div>
+          {o.lines.map((l, i) => <div key={i} className="kitchen-line"><b className="num">{l.qty}×</b> {l.name}</div>)}
+        </section>
+      ))}
+    </div>
   )
 }
