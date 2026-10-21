@@ -4,6 +4,7 @@ import { useState } from "react"
 import { money } from "@/lib/kitchen/format"
 import type { Seller } from "@/lib/kitchen/analytics"
 import { Cherry, SliceDrawing } from "./pie-patterns"
+import { Basil, PizzaSlice } from "./pizza-patterns"
 
 // Torta de dona para «lo que más vendes» y «lo que casi no se vende»: cada
 // tajada es una cosa de la lista, del tamaño de lo que dejó frente a las demás
@@ -32,7 +33,8 @@ function slices(list: Seller[], max: number): Slice[] {
   })
 }
 
-export function SellerPie({ list, max = 5, offset = 0 }: { list: Seller[]; max?: number; offset?: number }) {
+/** `food`: negocio de comida (pizza); si no, de postres y panes (dona glaseada). */
+export function SellerPie({ list, max = 5, offset = 0, food = false }: { list: Seller[]; max?: number; offset?: number; food?: boolean }) {
   const parts = slices(list, max)
   const [sel, setSel] = useState(0)
   const s = parts[sel] ?? parts[0]
@@ -57,8 +59,8 @@ export function SellerPie({ list, max = 5, offset = 0 }: { list: Seller[]; max?:
                 onMouseEnter={() => setSel(i)}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setSel(i)}
               >
-                <SliceDrawing i={i + offset} start={p.start} end={p.end} />
-                {i === sel ? <Cherry angle={mid} /> : null}
+                {food ? <PizzaSlice i={i + offset} start={p.start} end={p.end} /> : <SliceDrawing i={i + offset} start={p.start} end={p.end} />}
+                {i === sel ? (food ? <Basil angle={mid} /> : <Cherry angle={mid} />) : null}
                 {p.end - p.start >= 0.42 ? (
                   // El porcentaje va en una etiqueta crema para leerse sobre la cobertura.
                   <g transform={`translate(${100 + 68 * Math.sin(mid)} ${100 - 68 * Math.cos(mid)})`} className="pct">
