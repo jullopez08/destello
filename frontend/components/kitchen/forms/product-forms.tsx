@@ -30,10 +30,10 @@ export function ProductForm({ product }: { product?: Product }) {
   const [mode, setMode] = useState<Product["mode"]>(product?.mode ?? "LOT")
   const [recipeId, setRecipeId] = useState(product?.recipeId ?? "")
   const [g, setG] = useState(product ? String(product.grams) : "")
-  // Con mesas salen primero los platos, y un producto nuevo empieza como plato (Julieth, 2026-10-21).
-  const tables = data.settings.servesTables
-  const looks = tables ? [...DISH_LOOKS, ...BAKERY_LOOKS] : [...BAKERY_LOOKS, ...DISH_LOOKS]
-  const [look, setLook] = useState<CookieLook>(product?.look ?? (tables ? "plate" : ""))
+  // Si prepara sobre todo comida, salen primero los platos y un producto nuevo empieza como plato (Julieth, 2026-10-21).
+  const meals = data.settings.makesMeals
+  const looks = meals ? [...DISH_LOOKS, ...BAKERY_LOOKS] : [...BAKERY_LOOKS, ...DISH_LOOKS]
+  const [look, setLook] = useState<CookieLook>(product?.look ?? (meals ? "plate" : ""))
   const [extras, setExtras] = useState<ExtraRow[]>(
     product?.extras.length ? product.extras.map((e) => ({ ref: e.recipeId ? `r:${e.recipeId}` : `s:${e.supplyId}`, qty: String(e.qty) })) : [blankExtra()],
   )

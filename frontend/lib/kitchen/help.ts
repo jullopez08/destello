@@ -90,6 +90,7 @@ export const HELP = {
   staffKitchen: "Un nombre para reconocer la tablet. Ej.: «Cocina» o «Barra».",
 
   businessTables: "Sí: se encienden las mesas y los meseros. Pedidos, domicilios y recetas los tienen todos.",
+  businessMakes: "Solo cambia los dibujos: galletas y panes, o platos. Una cocina oculta va en Comida.",
 
   tables: "Los meseros las ven en su celular para abrirlas y enviar comandas. Las abiertas salen en verde.",
   tableName: "Como la llaman en el salón. Ej.: «Terraza 2» o «Barra».",

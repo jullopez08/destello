@@ -26,6 +26,9 @@ model Organization {
   /// "¿Atiendes clientes en mesas?" (Julieth, 2026-10-19): enciende mesas y meseros. Pastelería, panadería,
   /// cocina oculta o restaurante da igual: todas tienen pedidos, domicilios, recetas y pantalla de cocina.
   servesTables     Boolean   @default(false)
+  /// "¿Qué preparas sobre todo?" (Julieth, 2026-10-21): comida (restaurante, cocina oculta) o postres y panes. Solo
+  /// cambia los dibujos (logo, figuras, la torta de Analítica); las mesas van aparte.
+  makesMeals       Boolean   @default(false)
   /// Minutos que suele tardar un plato y el máximo antes de avisar a la mesa (pantalla de cocina y mesero)
   kitchenNormalMin Int       @default(15)
   kitchenMaxMin    Int       @default(25)
@@ -290,6 +293,7 @@ model SignupRequest {
   passwordHash  String
   businessName  String
   servesTables  Boolean
+  makesMeals    Boolean  @default(false)
   /// Solo dígitos, para no dar dos pruebas al mismo número
   whatsapp      String
   termsVersion  String

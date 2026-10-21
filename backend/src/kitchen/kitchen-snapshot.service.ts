@@ -86,6 +86,7 @@ export class KitchenSnapshotService {
         targetMargin: organization.targetMargin,
         palette: organization.palette,
         servesTables: organization.servesTables,
+        makesMeals: organization.makesMeals,
         kitchenNormalMin: organization.kitchenNormalMin,
         kitchenMaxMin: organization.kitchenMaxMin,
         salesTax: organization.salesTax,

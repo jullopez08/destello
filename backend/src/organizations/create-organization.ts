@@ -9,6 +9,8 @@ export interface NewOrganization {
   palette?: string;
   /** ¿Atiende clientes en mesas? (enciende mesas y meseros) */
   servesTables?: boolean;
+  /** ¿Prepara sobre todo comida? Sin decirlo, lo mismo que las mesas */
+  makesMeals?: boolean;
   whatsapp?: string;
   approvalPending?: boolean;
   /** Creada por el super admin: ya la conoce, nace verificada */
@@ -27,6 +29,7 @@ export async function createOrganizationWithOwner(tx: Prisma.TransactionClient, 
       slug: input.slug,
       palette: input.palette ?? 'vainilla',
       servesTables: input.servesTables ?? false,
+      makesMeals: input.makesMeals ?? input.servesTables ?? false,
       whatsapp: input.whatsapp,
       approvalPending: input.approvalPending ?? false,
       verifiedAt: input.verified ? new Date() : null,

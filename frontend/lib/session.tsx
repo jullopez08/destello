@@ -18,6 +18,8 @@ export interface SessionUser {
   termsAcceptedAt: string | null
   /** "¿Atiendes clientes en mesas?" (enciende mesas y meseros) */
   servesTables: boolean
+  /** "¿Qué preparas sobre todo?": comida (dibujos de platos) o postres y panes */
+  makesMeals: boolean
   /** Inscrita por la página y esperando la aprobación del super admin */
   approvalPending: boolean
   /** El super admin la marcó "No es real": la cuenta queda en pausa con sus datos */
