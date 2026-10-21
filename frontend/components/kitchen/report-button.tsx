@@ -13,7 +13,7 @@ const TITLES: Record<ReportKind, [string, string]> = {
   caja: ["Cierre de caja", "Lo cobrado cada día por forma de pago, propinas, anuladas y cada cobro."],
   contador: ["Ventas para el contador", "Ventas sin impuesto, el impuesto y las propinas aparte, por día y por bimestre."],
   pedidos: ["Pedidos", "Cada pedido con su cliente, productos, valor y estado."],
-  inventario: ["Inventario", "Lo que hay hoy con su valor y lo que vence. Las fechas son para lo botado."],
+  inventario: ["Inventario", "Inicial, compras, botado, final y lo gastado en esas fechas; lo que hay hoy y lo que vence."],
   compras: ["Compras", "Cada compra y el total por proveedor."],
 }
 

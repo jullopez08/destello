@@ -65,6 +65,7 @@ model Organization {
   users            User[]
   cashShifts       CashShift[]
   cashMoves        CashMove[]
+  supplyStockDays  SupplyStockDay[]
   staff            StaffMember[]
   tables           DiningTable[]
   tableSessions    TableSession[]
@@ -516,6 +517,7 @@ model Supply {
   linePacks     OrderLine[]
   batches       SupplyBatch[]
   waste         SupplyWaste[]
+  stockDays     SupplyStockDay[]
 
   @@index([organizationId])
 }
@@ -937,4 +939,24 @@ model CashMove {
   shift        CashShift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+}
+
+/// Cuánto había de cada insumo al final de cada día, y a qué costo (Julieth, 2026-10-21). Lo guarda el cron de la
+/// noche: con él, el Excel de inventario da el inicial, el final y lo que se gastó en un periodo.
+model SupplyStockDay {
+  id             String @id @default(cuid())
+  organizationId String
+  supplyId       String
+  /// "AAAA-MM-DD", hora de Bogotá
+  date           String
+  /// g, ml o und, igual que Supply.stock
+  stock          Float
+  /// Costo promedio por g, ml o und ese día
+  cost           Float
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  supply       Supply       @relation(fields: [supplyId], references: [id], onDelete: Cascade)
+
+  @@unique([supplyId, date])
+  @@index([organizationId, date])
 }
