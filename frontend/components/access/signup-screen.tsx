@@ -5,7 +5,7 @@ import Link from "next/link"
 import { PasswordInput } from "@/components/ui/password-input"
 import { api, errorMessage } from "@/lib/api"
 import { contactHref, TRIAL_MESSAGE } from "@/lib/contact"
-import { phoneInput } from "@/lib/kitchen/format"
+import { phoneInput, phoneProblem } from "@/lib/kitchen/format"
 import { CURRENT_TERMS_VERSION } from "@/lib/session"
 import { Art } from "./access-art"
 import { Captcha, CAPTCHA_SITE_KEY } from "./captcha"
@@ -53,6 +53,8 @@ export function SignupScreen() {
 
   const sendCode = () =>
     run(async () => {
+      const badPhone = phoneProblem(f.whatsapp)
+      if (badPhone) throw new Error(badPhone)
       // La respuesta del captcha sirve una vez: pase lo que pase, se pide otra para el siguiente intento.
       setRound((n) => n + 1)
       const body = new FormData()
