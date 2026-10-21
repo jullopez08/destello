@@ -1,5 +1,6 @@
 "use client"
 
+import { ReportButton } from "../report-button"
 import { Icon } from "@/components/ui/icon"
 import { HELP } from "@/lib/kitchen/help"
 import { byId, lineLabel, orderTotal, useKitchen } from "@/lib/kitchen/store"
@@ -72,6 +73,7 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
   return (
     <>
       <PageHead title="Pedidos" sub="Registra tus pedidos y sigue su entrega." help={HELP.pageOrders}>
+        <ReportButton kind="pedidos" />
         <button className="btn primary only-desktop" data-tour="nuevo-pedido" onClick={() => open(<OrderForm />)}>
           <Icon name="plus" />
           Nuevo pedido

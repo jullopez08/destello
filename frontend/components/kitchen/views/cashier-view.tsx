@@ -1,5 +1,6 @@
 "use client"
 
+import { ReportButton } from "../report-button"
 import { useCallback, useEffect, useState } from "react"
 import { useToast } from "@/components/ui/toast"
 import { TableBill, type CloseBody } from "@/components/staff/table-bill"
@@ -61,7 +62,9 @@ export function CashierView() {
 
   return (
     <>
-      <PageHead title="Caja" sub="Cobra las mesas cuando el cliente paga en la caja." help={HELP.pageCashier} />
+      <PageHead title="Caja" sub="Cobra las mesas cuando el cliente paga en la caja." help={HELP.pageCashier}>
+        <ReportButton kind="caja" />
+      </PageHead>
       {error ? <div className="err" role="alert">{error}</div> : null}
       {table?.session ? (
         <div className="stack cashier-bill">

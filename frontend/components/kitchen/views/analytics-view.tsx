@@ -1,5 +1,6 @@
 "use client"
 
+import { ReportButton } from "../report-button"
 import { useKitchen } from "@/lib/kitchen/store"
 import { netPrice, presentationCost, presentationHealth } from "@/lib/kitchen/rules"
 import { analytics } from "@/lib/kitchen/analytics"
@@ -33,7 +34,11 @@ export function AnalyticsView() {
 
   return (
     <>
-      <PageHead title="Analítica" sub="Tus ventas, lo más vendido y tu ganancia." />
+      <PageHead title="Analítica" sub="Tus ventas, lo más vendido y tu ganancia.">
+        {/* Sin mesas no hay sección Caja: el cierre de caja de los pedidos se descarga aquí. */}
+        {tables ? null : <ReportButton kind="caja" label="Cierre de caja" />}
+        <ReportButton kind="contador" label="Excel para el contador" />
+      </PageHead>
       <Summary now={now} before={before} today={data.today} tables={tables} />
       <div className="grid g4 stats" style={{ marginTop: 16 }}>
         <Stat label="Vendiste" value={money(now.sales)} hint="Últimas 4 semanas, sin domicilios" now={now.sales} before={before.sales} beforeText={money(before.sales)} />

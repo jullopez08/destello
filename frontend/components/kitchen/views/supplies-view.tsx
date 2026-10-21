@@ -1,5 +1,6 @@
 "use client"
 
+import { ReportButton } from "../report-button"
 import { Icon } from "@/components/ui/icon"
 import { HELP } from "@/lib/kitchen/help"
 import { byId, useKitchen } from "@/lib/kitchen/store"
@@ -35,6 +36,7 @@ export function SuppliesView({ tab, setTab, query, setQuery }: { tab: SupplyTab;
   return (
     <>
       <PageHead title="Insumos" sub="Lo que tienes de cada insumo." help={HELP.pageSupplies}>
+        <ReportButton kind="inventario" />
         <button className="btn soft" onClick={() => open(<PerishableReview />)}>Revisar vencimientos</button>
         <button className="btn primary" onClick={() => open(<SupplyForm />)}>
           <Icon name="plus" />
