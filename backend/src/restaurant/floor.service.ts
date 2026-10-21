@@ -5,12 +5,13 @@ import { TAX_RATE } from '../kitchen/kitchen-costs';
 import { TicketLineDto } from './dto/restaurant.dto';
 
 // El salón: mesas, mesas abiertas y sus comandas, y lo que se puede pedir. Lo ve el mesero (todas las mesas, para
-// saber cuáles están libres) y cada cambio responde con el salón completo, como el estado de la cocina.
+// saber cuáles están libres) y la caja (la dueña o el mesero encargado de caja, `cashier`: cobra cualquier mesa).
+// Cada cambio responde con el salón completo, como el estado de la cocina.
 @Injectable()
 export class FloorService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async load(organizationId: string, viewerId?: string) {
+  async load(organizationId: string, viewerId?: string, cashier = false) {
     const [org, tables, presentations, keys] = await Promise.all([
       this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { kitchenNormalMin: true, kitchenMaxMin: true, salesTax: true } }),
       this.prisma.diningTable.findMany({
@@ -34,6 +35,8 @@ export class FloorService {
       now: new Date().toISOString(),
       normalMin: org.kitchenNormalMin,
       maxMin: org.kitchenMaxMin,
+      /** Quien mira cobra cualquier mesa (caja) */
+      cashier,
       /** Para mostrar en la cuenta cuánto es impuesto (ya va incluido en los precios) */
       taxRate: TAX_RATE[org.salesTax],
       tables: tables.map((t) => {
@@ -89,11 +92,10 @@ export class FloorService {
     const open = await this.prisma.tableSession.findFirst({ where: { tableId, status: 'OPEN' } });
     if (open) throw new BadRequestException(`${table.name} ya está abierta.`);
     await this.prisma.tableSession.create({ data: { organizationId, tableId, waiterId } });
-    return this.load(organizationId, waiterId);
   }
 
   /** "Enviar a cocina": una comanda con el precio que pone el servidor (nunca el que mande el celular). */
-  async send(organizationId: string, sessionId: string, lines: TicketLineDto[], waiterId: string) {
+  async send(organizationId: string, sessionId: string, lines: TicketLineDto[]) {
     await this.servesTables(organizationId);
     const session = await this.prisma.tableSession.findUnique({ where: { id: sessionId } });
     if (!session || session.organizationId !== organizationId) throw new NotFoundException('Mesa no encontrada.');
@@ -112,16 +114,14 @@ export class FloorService {
         },
       });
     });
-    return this.load(organizationId, waiterId);
   }
 
   /** El mesero lleva a la mesa lo que la cocina marcó "Listo". */
-  async served(organizationId: string, ticketId: string, waiterId: string) {
+  async served(organizationId: string, ticketId: string) {
     const ticket = await this.prisma.kitchenTicket.findUnique({ where: { id: ticketId } });
     if (!ticket || ticket.organizationId !== organizationId) throw new NotFoundException('Comanda no encontrada.');
     if (ticket.status !== 'READY') throw new BadRequestException('La cocina todavía no la ha marcado lista.');
     await this.prisma.kitchenTicket.update({ where: { id: ticketId }, data: { status: 'SERVED', servedAt: new Date() } });
-    return this.load(organizationId, waiterId);
   }
 
   private catalog(organizationId: string) {
@@ -132,7 +132,7 @@ export class FloorService {
     });
   }
 
-  private async servesTables(organizationId: string) {
+  async servesTables(organizationId: string) {
     const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { servesTables: true } });
     if (!org.servesTables) throw new ForbiddenException('Este negocio no atiende en mesas.');
   }

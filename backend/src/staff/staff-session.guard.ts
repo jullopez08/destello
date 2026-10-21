@@ -4,7 +4,7 @@ import type { Request } from 'express';
 import { StaffAuthService, type StaffSession } from './staff-auth.service';
 import { SESSION_COOKIE } from './staff-rules';
 
-export type StaffRequest = Request & { staff: StaffSession & { organizationId: string; role: StaffRole } };
+export type StaffRequest = Request & { staff: StaffSession & { organizationId: string; role: StaffRole; cashier: boolean } };
 
 // Rutas del equipo (meseros y cocina): revisa la cookie `staff_session` en cada llamada (aparato desconectado,
 // persona quitada o empresa sin acceso = fuera) y deja la sesión en `req.staff`. Nunca acepta la sesión de la dueña.

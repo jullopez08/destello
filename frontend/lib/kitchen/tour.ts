@@ -50,6 +50,7 @@ export const SECTION_TIPS: Record<string, [string, string]> = {
   recetas: ["Recetas y masas", "¿Haces masa por adelantado? Regístrala como lote y sabrás hasta cuándo dura."],
   productos: ["Lo que vendes", "Mira cuánto te deja cada uno antes de ponerle precio."],
   ediciones: ["Ediciones especiales", "Abre una para Navidad o Amor y Amistad, con fechas y cupo."],
+  caja: ["La caja", "Cobra aquí las mesas cuando el cliente paga en la caja."],
   analitica: ["Cómo va tu negocio", "Mira qué no te deja ganancia para decidir qué cambiar."],
   configuracion: ["Tu negocio", "Aquí cambias la hora de corte, tus llaves Bre-B, los repartidores, los colores y el logo."],
 }

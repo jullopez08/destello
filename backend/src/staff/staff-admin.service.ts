@@ -19,13 +19,14 @@ export class StaffAdminService {
         devices: { orderBy: { createdAt: 'asc' }, select: { id: true, label: true, lastSeenAt: true, lockedUntil: true } },
       },
     });
-    return staff.map(({ id, name, role, pinHash, linkHash, linkLockedUntil, devices }) => ({
+    return staff.map(({ id, name, role, pinHash, linkHash, linkLockedUntil, cashier, devices }) => ({
       id,
       name,
       role,
       hasPin: !!pinHash,
       hasLink: !!linkHash,
       linkLockedUntil,
+      cashier,
       devices,
     }));
   }
@@ -60,6 +61,14 @@ export class StaffAdminService {
     const token = newSecret();
     await this.prisma.staffMember.update({ where: { id }, data: { linkHash: sha256(token), linkFails: 0, linkLockedUntil: null } });
     return { token };
+  }
+
+  /** Encargado de caja (solo meseros): cobra cualquier mesa. Se aplica en su siguiente llamada (la sesión lo lee de la BD). */
+  async setCashier(organizationId: string, id: string, cashier: boolean) {
+    const staff = await this.own(organizationId, id);
+    if (staff.role !== 'WAITER') throw new BadRequestException('Solo un mesero puede ser encargado de caja.');
+    await this.prisma.staffMember.update({ where: { id }, data: { cashier } });
+    return this.list(organizationId);
   }
 
   async removeDevice(organizationId: string, id: string, deviceId: string) {

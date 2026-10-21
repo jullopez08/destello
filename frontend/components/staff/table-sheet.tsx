@@ -11,13 +11,15 @@ type Draft = { key: number; item: CatalogItem; productId?: string; sizeId?: stri
 const STATUS = { SENT: "En cocina", READY: "Listo", SERVED: "Servido" } as const
 
 // Una mesa: abrirla, ver sus comandas con su reloj, armar la siguiente para enviarla a cocina, pedir la cuenta y cobrarla.
-export function TableSheet({ table, catalog, payKeys, taxRate, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; payKeys: PayKey[]; taxRate: number; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
+export function TableSheet({ table, catalog, payKeys, taxRate, cashier, now, normalMin, maxMin, onFloor, onBack }: { table: FloorTable; catalog: CatalogItem[]; payKeys: PayKey[]; taxRate: number; cashier: boolean; now: number; normalMin: number; maxMin: number; onFloor: (f: Floor) => void; onBack: () => void }) {
   const [draft, setDraft] = useState<Draft[]>([])
   const nextKey = useRef(0)
   const [pick, setPick] = useState<{ itemId: string; productId: string; sizeId: string; qty: number; note: string }>({ itemId: "", productId: "", sizeId: "", qty: 1, note: "" })
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const s = table.session
+  // Sus mesas las cobra él; el encargado de caja cobra cualquiera.
+  const charges = !!s && (s.mine || cashier)
   const item = catalog.find((c) => c.id === pick.itemId)
 
   async function run(action: () => Promise<Floor>) {
@@ -93,12 +95,12 @@ export function TableSheet({ table, catalog, payKeys, taxRate, now, normalMin, m
           </section>
         )
       })}
-      {s?.mine && s.tickets.length && !s.billAt ? (
+      {s && charges && s.tickets.length > 0 && !s.billAt ? (
         <button type="button" className="btn soft" disabled={busy} onClick={() => run(() => api<Floor>(`/staff/floor/sessions/${s.id}/bill`, { method: "POST" }))}>
           Pedir la cuenta
         </button>
       ) : null}
-      {s?.mine && s.billAt ? <TableBill session={s} payKeys={payKeys} taxRate={taxRate} busy={busy} onClose={close} /> : null}
+      {s && charges && s.billAt ? <TableBill session={s} payKeys={payKeys} taxRate={taxRate} busy={busy} onClose={close} /> : null}
       {s?.mine && !s.tickets.length ? (
         <button type="button" className="linkbtn" disabled={busy} onClick={() => close({ tip: false, payments: [] })}>
           Liberar la mesa (no pidieron nada)

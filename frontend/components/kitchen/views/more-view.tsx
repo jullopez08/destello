@@ -1,14 +1,14 @@
 "use client"
 
 import { Icon } from "@/components/ui/icon"
-import { MORE_COLORS, PAGES, TAB_PAGES } from "@/lib/kitchen/pages"
+import { MORE_COLORS, pagesFor, TAB_PAGES } from "@/lib/kitchen/pages"
 import { useSession } from "@/lib/session"
 import { VoiceToggle } from "../voice-listener"
 
 /** "Más" en el celular: las secciones que no caben en la barra de abajo. */
 export function MoreView() {
-  const pages = PAGES.filter(([k]) => !TAB_PAGES.includes(k))
   const { user, logout } = useSession()
+  const pages = pagesFor(!!user?.servesTables).filter(([k]) => !TAB_PAGES.includes(k))
   return (
     <div className="stack">
       <div className="head">

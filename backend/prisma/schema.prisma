@@ -219,6 +219,8 @@ model StaffMember {
   /// PIN equivocados al abrir el enlace en un aparato nuevo: 5 seguidos lo bloquean 15 minutos
   linkFails       Int       @default(0)
   linkLockedUntil DateTime?
+  /// Mesero encargado de caja: cobra cualquier mesa, no solo las suyas
+  cashier         Boolean   @default(false)
   createdAt       DateTime  @default(now())
 
   organization Organization   @relation(fields: [organizationId], references: [id])
