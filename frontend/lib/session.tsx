@@ -33,7 +33,7 @@ export interface SessionUser {
 // Versión de los términos que acepta la dueña: la fecha "Última actualización"
 // de /terminos y /privacidad. Cambiarla no obliga a aceptar de nuevo; solo
 // queda registrada la que se aceptó.
-export const CURRENT_TERMS_VERSION = "2026-10-11"
+export const CURRENT_TERMS_VERSION = "2026-10-21"
 
 type Status = "loading" | "anonymous" | "authenticated"
 
