@@ -7,7 +7,6 @@ import { dateLabel, grams, longDate, money, qty } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
 import { Empty, Kpi, PageHead, useModal } from "../shared"
 import { OrderForm } from "../forms/order-forms"
-import { VoiceCard, VoiceToggle } from "../voice-listener"
 import { LotAlerts } from "./lot-alerts"
 import { SupplyAlerts } from "./supply-batches-view"
 import { useSession } from "@/lib/session"
@@ -39,16 +38,12 @@ export function TodayView() {
     <>
       <PageHead title={firstName ? `${greeting()}, ${firstName}` : greeting()} sub={`Así va la cocina hoy, ${longDate(today)}.`}>
         <div className="row only-desktop">
-          <div data-tour="voz"><VoiceToggle /></div>
           <button className="btn primary" data-tour="nuevo-pedido" onClick={() => open(<OrderForm />)}>
             <Icon name="plus" />
             Nuevo pedido
           </button>
         </div>
       </PageHead>
-      <div className="only-mobile" style={{ marginBottom: 14 }} data-tour="voz">
-        <VoiceCard />
-      </div>
       <LotAlerts />
       <SupplyAlerts />
       <div className="grid g4" data-tour="hoy-cifras">

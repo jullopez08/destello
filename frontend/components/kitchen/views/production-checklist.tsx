@@ -3,7 +3,7 @@
 import { Cookie } from "@/components/ui/cookie"
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { fmtN, grams } from "@/lib/kitchen/format"
-import { pluralName } from "@/lib/kitchen/voice"
+import { pluralName } from "@/lib/kitchen/format"
 import type { ProductionPlan } from "@/lib/kitchen/rules"
 
 type Item = { key: string; label: string; sub: string; look?: string }

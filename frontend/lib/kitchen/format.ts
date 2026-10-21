@@ -67,3 +67,12 @@ export function phoneInput(v: string): string {
   if (d.length > 10) return v
   return [d.slice(0, 3), d.slice(3, 6), d.slice(6)].filter(Boolean).join(" ")
 }
+
+/** Plural de la primera palabra: galleta → galletas, pan → panes, rollo → rollos. */
+export function pluralName(name: string, count: number): string {
+  const lower = name.trim().toLowerCase()
+  if (count === 1) return lower
+  const [first, ...rest] = lower.split(" ")
+  const plural = /[aeiouáéó]$/.test(first) ? `${first}s` : /z$/.test(first) ? `${first.slice(0, -1)}ces` : `${first}es`
+  return [plural, ...rest].join(" ")
+}
