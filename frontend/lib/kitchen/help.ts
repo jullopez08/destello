@@ -19,7 +19,7 @@ export const HELP = {
   productRecipe: "La masa con que se hace. Si no existe, créala aquí.",
   productGrams: "Cuánto pesa cada unidad antes de hornear. Ej.: 20 g.",
   productExtras: "Lo que lleva además de la masa: rellenos, chips, capacillos. Opcional.",
-  productLook: "El dibujo de galleta que sale en tus listas. Solo es para reconocerlo.",
+  productLook: "El dibujo que sale en tus listas: galletas, panes o platos. Solo es para reconocerlo.",
 
   // Lo que se vende
   saleKind: "Caja: siempre lo mismo. Por unidad: el cliente elige sabores. Por tamaño: tortas y postres.",

@@ -20,7 +20,8 @@ const blankExtra = (): ExtraRow => ({ ref: "", qty: "" })
 
 // ── Producto: una unidad de lo que se hornea ──
 
-const LOOKS: [CookieLook, string][] = [["", "Clásica"], ["choco", "Chocolate"], ["roll", "Rollo"], ["bread", "Pan"], ["pump", "Calabaza"], ["star", "Dorada"]]
+const BAKERY_LOOKS: [CookieLook, string][] = [["", "Clásica"], ["choco", "Chocolate"], ["roll", "Rollo"], ["bread", "Pan"], ["pump", "Calabaza"], ["star", "Dorada"]]
+const DISH_LOOKS: [CookieLook, string][] = [["plate", "Plato"], ["burger", "Hamburguesa"], ["pizza", "Pizza"], ["soup", "Sopa"], ["coffee", "Café"], ["drink", "Bebida"]]
 
 export function ProductForm({ product }: { product?: Product }) {
   const { data, mutate } = useKitchen()
@@ -29,7 +30,10 @@ export function ProductForm({ product }: { product?: Product }) {
   const [mode, setMode] = useState<Product["mode"]>(product?.mode ?? "LOT")
   const [recipeId, setRecipeId] = useState(product?.recipeId ?? "")
   const [g, setG] = useState(product ? String(product.grams) : "")
-  const [look, setLook] = useState<CookieLook>(product?.look ?? "")
+  // Con mesas salen primero los platos, y un producto nuevo empieza como plato (Julieth, 2026-10-21).
+  const tables = data.settings.servesTables
+  const looks = tables ? [...DISH_LOOKS, ...BAKERY_LOOKS] : [...BAKERY_LOOKS, ...DISH_LOOKS]
+  const [look, setLook] = useState<CookieLook>(product?.look ?? (tables ? "plate" : ""))
   const [extras, setExtras] = useState<ExtraRow[]>(
     product?.extras.length ? product.extras.map((e) => ({ ref: e.recipeId ? `r:${e.recipeId}` : `s:${e.supplyId}`, qty: String(e.qty) })) : [blankExtra()],
   )
@@ -110,7 +114,7 @@ export function ProductForm({ product }: { product?: Product }) {
       <div>
         <Eyebrow help={HELP.productLook}>Figura</Eyebrow>
         <div className="seg">
-          {LOOKS.map(([k, t]) => (
+          {looks.map(([k, t]) => (
             <label key={k || "classic"}>
               <input type="radio" name="look" checked={look === k} onChange={() => setLook(k)} />
               <span className="row" style={{ gap: 6, display: "inline-flex" }}>

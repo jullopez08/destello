@@ -22,7 +22,8 @@ import {
 // Todos los formularios de la cocina. Cantidades en g, ml o und; dinero en pesos.
 
 export const CARD_COLORS = ['banana', 'strawberry', 'lilac', 'peach', 'sky', 'mint'] as const;
-export const COOKIE_LOOKS = ['', 'choco', 'roll', 'bread', 'pump', 'star'] as const;
+/** Figuras: galletas y panes, y los platos de restaurante (con mesas, Julieth 2026-10-21). */
+export const COOKIE_LOOKS = ['', 'choco', 'roll', 'bread', 'pump', 'star', 'plate', 'pizza', 'burger', 'coffee', 'soup', 'drink'] as const;
 export const SALE_KINDS = ['BOX', 'UNIT', 'SIZES'] as const;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 

@@ -98,6 +98,13 @@ tr.click:hover td { background: var(--bg); }
 .cookie.pizza { background: radial-gradient(circle at 34% 36%, #d8452f 0 7%, transparent 8%), radial-gradient(circle at 64% 32%, #d8452f 0 6%, transparent 7%), radial-gradient(circle at 58% 64%, #d8452f 0 7%, transparent 8%), radial-gradient(circle at 32% 66%, #d8452f 0 5%, transparent 6%), radial-gradient(circle at 50% 50%, #ffd36b 0 56%, #e9a64a 60% 72%); }
 .cookie.plate { background: radial-gradient(circle at 42% 44%, #8cc56a 0 12%, transparent 13%), radial-gradient(circle at 58% 56%, #e9784f 0 13%, transparent 14%), radial-gradient(circle at 46% 60%, #f3c96b 0 9%, transparent 10%), radial-gradient(circle at 50% 50%, #ffffff 0 44%, #efe6d8 46% 48%, #ffffff 50% 66%, #e8dccb 72%); }
 
+/* Restaurante (Julieth, 2026-10-21): con mesas, el negocio tiene platos además de galletas. Mismo estilo: vistos
+   desde arriba, con sombra suave; la hamburguesa, de lado. */
+.cookie.burger { border-radius: 50% 50% 34% 34%; background: radial-gradient(circle at 34% 18%, #fff4dc 0 3%, transparent 4%), radial-gradient(circle at 60% 14%, #fff4dc 0 3%, transparent 4%), linear-gradient(to bottom, #f2b25c 0 40%, #7cc25a 40% 47%, #e9784f 47% 52%, #6b3a22 52% 68%, #f3c96b 68% 73%, #e2a14e 73%); }
+.cookie.coffee { background: radial-gradient(circle at 50% 50%, #f2d9b8 0 14%, #c8956a 15% 24%, #6b3a22 25% 50%, #ffffff 52% 62%, #e8dccb 70%); }
+.cookie.soup { background: radial-gradient(circle at 40% 42%, #7cc25a 0 6%, transparent 7%), radial-gradient(circle at 60% 58%, #7cc25a 0 5%, transparent 6%), radial-gradient(circle at 56% 38%, #fff4dc 0 5%, transparent 6%), radial-gradient(circle at 50% 50%, #f2a65a 0 46%, #ffffff 48% 64%, #e8dccb 72%); }
+.cookie.drink { background: radial-gradient(circle at 66% 32%, #c8e86a 0 10%, #8cc56a 11% 13%, transparent 14%), radial-gradient(circle at 40% 56%, rgba(255, 255, 255, 0.7) 0 7%, transparent 8%), radial-gradient(circle at 50% 50%, #ff8fa3 0 52%, #f2f7f7 54% 64%, #d7e4e4 72%); }
+
 /* ---------- Ventanas ---------- */
 /* Ventana: solo el cuerpo hace scroll (antes también el velo y la página de atrás: doble scroll y un hueco al deslizar). */
 .veil { position: fixed; inset: 0; background: rgba(255, 244, 222, 0.72); backdrop-filter: blur(3px); display: grid; grid-template-rows: 100%; place-items: center; padding: 16px; z-index: 50; overflow: hidden; overflow: clip; overscroll-behavior: contain; }
@@ -125,7 +132,7 @@ label.f span.h { font-weight: 400; color: var(--ink-2); font-size: 12px; }
 .seg input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 /* El radio escondido va dentro de su opción: al enfocarlo, Chrome en Android desplazaba el fondo de la
    ventana (.veil) y la ventana se subía sin poder bajarla (Julieth, 2026-10-19). */
-.seg span { display: inline-block; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13px; }
+.seg label > span { display: inline-block; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13px; }
 .seg input:checked + span { background: var(--accent); color: var(--on-accent); border-color: var(--accent-deep); }
 .seg input:focus-visible + span { outline: 3px solid var(--accent-deep); }
 .lines { display: flex; flex-direction: column; gap: 8px; }

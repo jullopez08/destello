@@ -155,7 +155,7 @@ function Shell({ page, locked, cutoff, today, children }: { page: string; locked
             // eslint-disable-next-line @next/next/no-img-element
             <img src={user.logoUrl} alt="" />
           ) : (
-            <Cookie size={38} />
+            <Cookie look={user?.servesTables ? "plate" : ""} size={38} />
           )}
           <div style={{ minWidth: 0, flex: 1 }}>
             <b>{user?.organizationName ?? "Destello"}</b>
