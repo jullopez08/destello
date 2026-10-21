@@ -30,7 +30,7 @@ const nextConfig = {
               "default-src 'self'",
               // 'unsafe-inline': Next lo necesita para su script de hidratación.
               // checkout.wompi.co es el widget de pago (WompiCheckout).
-              `script-src 'self' 'unsafe-inline' https://checkout.wompi.co${isDev ? " 'unsafe-eval'" : ""}`,
+              `script-src 'self' 'unsafe-inline' https://checkout.wompi.co https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
               "style-src 'self' 'unsafe-inline'",
               // Logos de las pastelerías en Cloudinary
               "img-src 'self' data: blob: https://res.cloudinary.com",
@@ -41,7 +41,8 @@ const nextConfig = {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "connect-src 'self' https://checkout.wompi.co https://sandbox.wompi.co https://production.wompi.co",
-              "frame-src https://checkout.wompi.co",
+              // challenges.cloudflare.com: captcha invisible de la inscripción (Turnstile).
+              "frame-src https://checkout.wompi.co https://challenges.cloudflare.com",
               ...(isDev ? [] : ["upgrade-insecure-requests"]),
             ].join("; "),
           },
