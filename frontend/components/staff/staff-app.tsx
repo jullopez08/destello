@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Cookie } from "@/components/ui/cookie"
 import { api, ApiError, errorMessage } from "@/lib/api"
 import { applyPalette } from "@/lib/palettes"
@@ -11,7 +12,7 @@ import { KitchenScreen } from "./kitchen-screen"
 interface Profile { name: string; role: "WAITER" | "KITCHEN"; organizationName: string; palette: string | null; makesMeals?: boolean }
 type State = { kind: "loading" } | { kind: "nodevice"; message: string } | { kind: "pin"; profile: Profile } | { kind: "in"; profile: Profile }
 
-const NO_DEVICE = "Este aparato no está conectado. Abre el enlace que te mandó la dueña."
+const NO_DEVICE = "Este aparato aún no está conectado. Abre una vez el enlace que te mandó la dueña por WhatsApp; después basta con entrar aquí y escribir tu PIN."
 
 // Lo que ve un mesero o la pantalla de cocina (/equipo). El aparato ya quedó conectado con su enlace y su PIN:
 // cada turno (12 h) se escribe el PIN otra vez, también en la cocina (Julieth, 2026-10-20).
@@ -42,7 +43,14 @@ export function StaffApp() {
   }, [])
 
   if (state.kind === "loading") return <Screen><p className="muted">Cargando…</p></Screen>
-  if (state.kind === "nodevice") return <Screen><h2>Destello</h2><p className="muted">{state.message}</p></Screen>
+  if (state.kind === "nodevice")
+    return (
+      <Screen>
+        <h2>Destello</h2>
+        <p className="muted">{state.message}</p>
+        <Link href="/access" className="linkbtn">Soy la dueña: entrar con mi correo</Link>
+      </Screen>
+    )
   if (state.kind === "pin") return <PinPad profile={state.profile} send={(pin) => api<Profile>("/staff/login", { method: "POST", body: { pin } })} onIn={(profile) => setState({ kind: "in", profile })} />
   const out = () => setState({ kind: "pin", profile: state.profile })
   if (state.profile.role === "WAITER") return <WaiterFloor name={state.profile.name} organizationName={state.profile.organizationName} onOut={out} />

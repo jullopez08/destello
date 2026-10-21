@@ -92,6 +92,8 @@ function LoginScreen() {
               {mode === "login" ? "¿Olvidaste tu contraseña?" : "Volver a entrar"}
             </button>
             <Link href="/registro" className="linkbtn">¿Aún no tienes cuenta? Prueba 15 días gratis</Link>
+            {/* Meseros y cocina entran con su PIN, no con correo (Julieth, 2026-10-21): la app instalada abre aquí. */}
+            {mode === "login" ? <Link href="/equipo" className="btn soft">¿Eres del equipo? Entra con tu PIN</Link> : null}
             <p className="small muted">
               Al entrar aceptas los <Link href="/terminos">Términos</Link> y la <Link href="/privacidad">Política de privacidad</Link>.
             </p>
