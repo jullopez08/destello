@@ -1,6 +1,6 @@
 // Guía del panel (Julieth, 2026-10-19). Investigación: las guías largas casi no ayudan (NN/g) y se abandonan
 // pasados 5 a 7 pasos; mejor explicar cada sección cuando se llega a ella. Por eso:
-// · TOUR_STEPS: 6 pasos al terminar los primeros pasos (lo de todos los días).
+// · TOUR_STEPS: 5 pasos al terminar los primeros pasos (lo de todos los días).
 // · SECTION_TIPS: una tarjeta la primera vez que entra a cada sección.
 // Textos: título de 2 a 4 palabras y una sola frase que dice qué puede hacer. Las tarjetas de sección dicen qué
 // conviene hacer ahí (el subtítulo ya dice para qué sirve: no se repite).
@@ -14,14 +14,8 @@ export interface TourStep {
 }
 
 export const TOUR_STEPS: TourStep[] = [
-  { page: "hoy", title: "¡Tu cocina está lista!", text: "Te muestro lo de todos los días en 6 pasos." },
+  { page: "hoy", title: "¡Tu cocina está lista!", text: "Te muestro lo de todos los días en 5 pasos." },
   { page: "hoy", targets: ["[data-tour=hoy-cifras]"], title: "Tu día en cifras", text: "Toca una cifra para ver el detalle." },
-  {
-    page: "hoy",
-    targets: [".tab-mic", "[data-tour=voz]"],
-    title: "Pregúntale en voz alta",
-    text: "Di «Oye Destello, ¿cuánto produzco hoy?» y te responde.",
-  },
   {
     page: "pedidos",
     targets: ["[data-tour=nuevo-pedido]"],

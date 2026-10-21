@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { LandingHero, LandingNav } from "@/components/landing/landing-hero"
-import { LandingHow, LandingProblem, LandingSegments, LandingVoice } from "@/components/landing/landing-sections"
+import { LandingHow, LandingProblem, LandingSegments } from "@/components/landing/landing-sections"
 import { LandingPricing, LandingVideo } from "@/components/landing/landing-offer"
 import { LandingContact, LandingFaq, LandingFooter, LandingInstall } from "@/components/landing/landing-extra"
 import "./styles/landing.css"
@@ -20,7 +20,6 @@ export default function Home() {
         <LandingSegments />
         <LandingProblem />
         <LandingHow />
-        <LandingVoice />
         <LandingVideo />
         <LandingPricing />
         <LandingInstall />

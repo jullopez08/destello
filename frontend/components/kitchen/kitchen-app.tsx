@@ -12,7 +12,6 @@ import { initials, longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
 import { PayBanner } from "@/components/billing/pay-banner"
 import { Empty, ModalHost } from "./shared"
-import { VoiceIndicator, VoiceMicButton, VoiceProvider } from "./voice-listener"
 import { MoreView } from "./views/more-view"
 import { TodayView } from "./views/today-view"
 import { OrdersView, type OrderTab } from "./views/orders-view"
@@ -131,18 +130,16 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
   }[page]
 
   return (
-    <VoiceProvider>
-      <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today} voice={<VoiceIndicator />} mic={<VoiceMicButton />}>
+      <Shell page={page} cutoff={data.settings.orderCutoff} today={data.today}>
         <PayBanner subscription={subscription} page={page} />
         <SectionTip page={page} />
         {view}
         <Tour />
       </Shell>
-    </VoiceProvider>
   )
 }
 
-function Shell({ page, locked, cutoff, today, voice, mic, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; voice?: React.ReactNode; mic?: React.ReactNode; children: React.ReactNode }) {
+function Shell({ page, locked, cutoff, today, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; children: React.ReactNode }) {
   const { user, logout } = useSession()
 
   useEffect(() => {
@@ -189,7 +186,6 @@ function Shell({ page, locked, cutoff, today, voice, mic, children }: { page: st
               </span>
             ) : null}
             {today ? <span className="pill num">{longDate(today)}</span> : null}
-            {voice}
           </div>
           <div className="who">
             <div style={{ textAlign: "right" }}>
@@ -202,13 +198,13 @@ function Shell({ page, locked, cutoff, today, voice, mic, children }: { page: st
         </div>
         {children}
       </main>
-      {locked ? null : <TabBar page={page} mic={mic} />}
+      {locked ? null : <TabBar page={page} />}
     </div>
   )
 }
 
 /** Barra fija de abajo en el celular (en el computador se oculta y queda el menú lateral). */
-function TabBar({ page, mic }: { page: string; mic?: React.ReactNode }) {
+function TabBar({ page }: { page: string }) {
   const tab = (k: string, title: string) => (
     <a href={`#${k}`} className={k === page ? "on" : ""} aria-current={k === page ? "page" : undefined}>
       <span className="ico"><Icon name={k as "hoy"} /></span>
@@ -220,7 +216,6 @@ function TabBar({ page, mic }: { page: string; mic?: React.ReactNode }) {
     <nav className="tabbar" aria-label="Secciones principales">
       {tab("hoy", "Hoy")}
       {tab("pedidos", "Pedidos")}
-      <div className="mic-slot">{mic}</div>
       {tab("produccion", "Producción")}
       <a href="#mas" className={moreOn ? "on" : ""} aria-current={page === "mas" ? "page" : undefined}>
         <span className="ico">

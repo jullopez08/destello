@@ -2,7 +2,7 @@ import { Cookie } from "@/components/ui/cookie"
 import { Icon } from "@/components/ui/icon"
 import { contactHref, RESTAURANT_MESSAGE } from "@/lib/contact"
 
-// ── Página de presentación: para quién es, el problema, cómo funciona y la voz ──
+// ── Página de presentación: para quién es, el problema y cómo funciona ──
 // Tarjetas tipo "sabor" (referencia OLIPOP): un círculo ilustrado, un título y una sola frase.
 // Los ejemplos cuadran con el panel (caja x9: cuesta $3.850, se vende en $20.000 → 81 %).
 
@@ -86,22 +86,6 @@ export function LandingHow() {
           </li>
         ))}
       </ol>
-    </section>
-  )
-}
-
-export function LandingVoice() {
-  return (
-    <section className="lp-section">
-      <div className="card c-banana lp-voice">
-        <div className="lp-voice-mic" aria-hidden="true"><Icon name="mic" size={34} /></div>
-        <div className="stack" style={{ gap: 10 }}>
-          <span className="eyebrow">Con las manos ocupadas</span>
-          <h2>«Oye Destello, ¿qué me falta para mañana?»</h2>
-          <p>Pregúntale en voz alta mientras cocinas y te responde.</p>
-          <p className="small muted">En Chrome y Edge, con el panel abierto.</p>
-        </div>
-      </div>
     </section>
   )
 }
