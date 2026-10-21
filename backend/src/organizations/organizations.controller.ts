@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, StreamableFile, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -45,6 +45,14 @@ export class OrganizationsController {
   @Roles(Role.SUPER_ADMIN)
   findOne(@Param('id') id: string) {
     return this.organizationsService.findOne(id);
+  }
+
+  // La carta en PDF que subió al inscribirse: el super admin la descarga y la revisa antes de aprobar.
+  @Get(':id/menu')
+  @Roles(Role.SUPER_ADMIN)
+  async menu(@Param('id') id: string) {
+    const menu = await this.organizationsService.menu(id);
+    return new StreamableFile(menu.data, { type: 'application/pdf', disposition: `attachment; filename="carta-${menu.organizationId}.pdf"`, length: menu.size });
   }
 
   @Patch(':id')

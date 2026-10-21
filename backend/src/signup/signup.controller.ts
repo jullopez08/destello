@@ -1,4 +1,6 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from '../auth/auth.service';
@@ -6,6 +8,7 @@ import { setSessionCookie } from '../auth/session-cookie.util';
 import { StartSignupDto, VerifySignupDto } from './dto/signup.dto';
 import { SignupService } from './signup.service';
 import { CaptchaService } from './captcha.service';
+import { MENU_MAX_BYTES } from './signup-rules';
 
 // Rutas públicas de la inscripción, con límite de intentos por IP.
 @Controller('signup')
@@ -26,9 +29,11 @@ export class SignupController {
   @HttpCode(200)
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 5, ttl: 15 * 60 * 1000 } })
-  async start(@Body() dto: StartSignupDto, @Req() req: Request) {
+  // Va con la carta del negocio en PDF (campo `menu`), así que llega como multipart.
+  @UseInterceptors(FileInterceptor('menu', { storage: memoryStorage(), limits: { fileSize: MENU_MAX_BYTES, files: 1 } }))
+  async start(@Body() dto: StartSignupDto, @UploadedFile() menu: Express.Multer.File | undefined, @Req() req: Request) {
     await this.captcha.check(dto.captcha, req.ip);
-    return this.signup.start(dto);
+    return this.signup.start(dto, menu);
   }
 
   // Código correcto: nace el negocio y queda con la sesión abierta.

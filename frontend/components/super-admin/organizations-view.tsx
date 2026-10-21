@@ -93,6 +93,12 @@ export function OrganizationsView({ orgs, plans, reload }: { orgs: Organization[
                       <span className={`chip ${tone}`}>{label}</span>
                       {!o.active ? <div className="small" style={{ color: "var(--cherry)", marginTop: 4 }}>Bloqueada</div> : null}
                       {o.approvalPending ? <span className="chip warn" style={{ marginTop: 4 }}>En revisión</span> : null}
+                      {o.findUs || o.menu ? (
+                        <div className="small row" style={{ marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
+                          {o.findUs ? <a href={o.findUs} target="_blank" rel="noopener noreferrer">{o.findUs.includes("instagram.com") ? "Instagram" : "Google Maps"} ↗</a> : null}
+                          {o.menu ? <a href={`/api/organizations/${o.id}/menu`}>Carta (PDF)</a> : null}
+                        </div>
+                      ) : null}
                     </td>
                     <td className="small num">{s ? dateFmt(s.currentPeriodEnd) : "—"}</td>
                     <td>

@@ -36,6 +36,8 @@ model Organization {
 
   // Datos de la cocina (Configuración)
   whatsapp         String?
+  /// Instagram o Google Maps que dio al inscribirse (el super admin lo revisa antes de aprobar)
+  findUs           String?
   /// "HH:mm": los pedidos tomados después pasan al siguiente día de producción
   orderCutoff      String    @default("12:00")
   /// Días en que el negocio está cerrado (no produce ni entrega), 0 = domingo … 6 = sábado
@@ -59,6 +61,7 @@ model Organization {
   staff            StaffMember[]
   tables           DiningTable[]
   tableSessions    TableSession[]
+  menu             BusinessMenu?
   tablePayments    TablePayment[]
   kitchenTickets   KitchenTicket[]
   subscription     Subscription?
@@ -247,6 +250,20 @@ model StaffDevice {
 
 /// Inscripción por la página (POST /signup/start) esperando el código del correo.
 /// Al verificarlo se crea la empresa y se borra la solicitud.
+/// La carta del negocio en PDF (Julieth, 2026-10-20): se pide al inscribirse para comprobar que el negocio es real y
+/// servirá para el bot de WhatsApp. Aparte de Organization para no cargar el archivo en cada consulta.
+model BusinessMenu {
+  id             String   @id @default(cuid())
+  organizationId String   @unique
+  name           String
+  /// Bytes
+  size           Int
+  data           Bytes
+  uploadedAt     DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+}
+
 model SignupRequest {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -258,6 +275,11 @@ model SignupRequest {
   /// Solo dígitos, para no dar dos pruebas al mismo número
   whatsapp      String
   termsVersion  String
+  /// Instagram o Google Maps del negocio, para comprobar que es real
+  findUs        String   @default("")
+  /// La carta en PDF (pasa a BusinessMenu al confirmar el código)
+  menuName      String?
+  menuPdf       Bytes?
   /// sha256 del código de 6 dígitos
   codeHash      String
   codeExpiresAt DateTime
