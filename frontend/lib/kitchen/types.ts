@@ -4,7 +4,7 @@
 import type { SalesTax, SupplyKind } from "./rules"
 
 export type CardColor = "banana" | "strawberry" | "lilac" | "peach" | "sky" | "mint"
-export type CookieLook = "" | "choco" | "roll" | "bread" | "pump" | "star"
+export type CookieLook = "" | "choco" | "roll" | "bread" | "pump" | "star" | "plate" | "pizza" | "burger" | "coffee" | "soup" | "drink"
 
 export interface KitchenSettings {
   name: string

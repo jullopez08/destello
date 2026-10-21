@@ -8,7 +8,7 @@ import { applyPalette } from "@/lib/palettes"
 import { WaiterFloor } from "./waiter-floor"
 import { KitchenScreen } from "./kitchen-screen"
 
-interface Profile { name: string; role: "WAITER" | "KITCHEN"; organizationName: string; palette: string | null }
+interface Profile { name: string; role: "WAITER" | "KITCHEN"; organizationName: string; palette: string | null; servesTables?: boolean }
 type State = { kind: "loading" } | { kind: "nodevice"; message: string } | { kind: "pin"; profile: Profile } | { kind: "in"; profile: Profile }
 
 const NO_DEVICE = "Este aparato no está conectado. Abre el enlace que te mandó la dueña."
@@ -49,11 +49,12 @@ export function StaffApp() {
   return <KitchenScreen name={state.profile.name} organizationName={state.profile.organizationName} />
 }
 
-function Screen({ children }: { children: React.ReactNode }) {
+// Con mesas, el dibujo es un plato servido; si no, una galleta (Julieth, 2026-10-21).
+function Screen({ children, dish = false }: { children: React.ReactNode; dish?: boolean }) {
   return (
     <main className="staff-screen">
       <div className="staff-card card">
-        <Cookie size={48} />
+        <Cookie look={dish ? "plate" : ""} size={48} />
         {children}
       </div>
     </main>
@@ -83,7 +84,7 @@ function PinPad({ profile, send, onIn }: { profile: Profile; send: (pin: string)
   }
 
   return (
-    <Screen>
+    <Screen dish={profile.servesTables}>
       <div className="small muted">{profile.organizationName}</div>
       <h2>Hola, {profile.name}</h2>
       <p className="muted">Escribe tu PIN para empezar el turno.</p>
