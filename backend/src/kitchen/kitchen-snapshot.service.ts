@@ -5,6 +5,7 @@ import type { CurrentUserData } from '../common/decorators/current-user.decorato
 import { addDays, KitchenRuleData, productionDateFor, toIsoDate } from './kitchen-rules';
 import { usableStock } from './supply-batches';
 import { WAITER_STATS_DAYS, waiterStats } from './waiter-stats';
+import { tableAnalytics } from './table-analytics';
 
 type Db = PrismaService | Prisma.TransactionClient;
 
@@ -65,6 +66,8 @@ export class KitchenSnapshotService {
     if (!organization) {
       throw new NotFoundException('Empresa no encontrada.');
     }
+    // Ventas de las mesas y tiempo de cada plato (Analítica), solo si atiende en mesas.
+    const tables = organization.servesTables ? await tableAnalytics(db, organizationId) : { tableSales: { days: [], lines: [] }, dishTimes: [] };
 
     const checkMap: Record<string, Record<string, boolean>> = {};
     for (const c of checks) {
@@ -90,6 +93,10 @@ export class KitchenSnapshotService {
         /** false: el panel solo muestra los primeros pasos */
         setupDone: organization.setupCompletedAt !== null,
       },
+      /** Lo vendido en mesas cobradas (70 días, por día y plato; sin propina) y cuántas mesas por día */
+      tableSales: tables.tableSales,
+      /** Minutos promedio en cocina de la comanda de cada plato (4 semanas) */
+      dishTimes: tables.dishTimes,
       /** Mesas por día de cada mesero (últimas 4 semanas); vacío si el negocio no atiende en mesas */
       waiters: organization.servesTables
         ? waiterStats(closedTables.map((t) => ({ waiterId: t.waiterId, waiter: t.waiter?.name ?? null, closedAt: t.closedAt!, subtotal: t.subtotal ?? 0, tip: t.tip })))
