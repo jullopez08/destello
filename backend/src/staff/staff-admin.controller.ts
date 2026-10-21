@@ -32,10 +32,10 @@ export class StaffAdminController {
     return this.staff.newPin(requireOrganization(user), id);
   }
 
-  @Post(':id/invite')
+  @Post(':id/link')
   @HttpCode(200)
-  invite(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
-    return this.staff.invite(requireOrganization(user), id);
+  newLink(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.staff.newLink(requireOrganization(user), id);
   }
 
   @Delete(':id/devices/:deviceId')

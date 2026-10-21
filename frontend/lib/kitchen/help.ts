@@ -85,7 +85,7 @@ export const HELP = {
 
   supplyQuickPrice: "Lo que te costó la última vez. Las compras lo van ajustando.",
 
-  staffTeam: "Cada uno entra con un enlace que le mandas. Si pierde el celular o se va, desconéctalo aquí.",
+  staffTeam: "Cada uno entra con su enlace y su PIN, desde cualquier navegador. Si ves un aparato que no reconoces, desconéctalo y cambia el enlace.",
   staffName: "Como le dicen en el restaurante. Así sale en sus mesas.",
   staffKitchen: "Un nombre para reconocer la tablet. Ej.: «Cocina» o «Barra».",
 

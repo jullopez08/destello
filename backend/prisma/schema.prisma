@@ -167,32 +167,24 @@ model TicketLine {
 }
 
 model StaffMember {
-  id             String    @id @default(cuid())
-  organizationId String
-  name           String
-  role           StaffRole
-  /// bcrypt del PIN de 4 dígitos; solo meseros
-  pinHash        String?
-  createdAt      DateTime  @default(now())
+  id              String    @id @default(cuid())
+  organizationId  String
+  name            String
+  role            StaffRole
+  /// bcrypt del PIN de 4 dígitos (meseros y cocina)
+  pinHash         String?
+  /// sha256 del enlace fijo (sirve muchas veces, siempre con el PIN); cambiarlo deja sin servir el anterior
+  linkHash        String?   @unique
+  /// PIN equivocados al abrir el enlace en un aparato nuevo: 5 seguidos lo bloquean 15 minutos
+  linkFails       Int       @default(0)
+  linkLockedUntil DateTime?
+  createdAt       DateTime  @default(now())
 
   organization Organization   @relation(fields: [organizationId], references: [id])
   devices      StaffDevice[]
-  invites      StaffInvite[]
   sessions     TableSession[]
 
   @@index([organizationId])
-}
-
-/// Enlace para amarrar un aparato: un solo uso, vence en 48 h; se guarda el sha256, nunca el enlace.
-model StaffInvite {
-  id        String    @id @default(cuid())
-  staffId   String
-  tokenHash String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  staff StaffMember @relation(fields: [staffId], references: [id], onDelete: Cascade)
 }
 
 /// Aparato amarrado (cookie httpOnly `staff_device` = id.secreto; se guarda el sha256 del secreto).

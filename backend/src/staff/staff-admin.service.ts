@@ -3,10 +3,10 @@ import { StaffRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStaffDto } from './dto/staff.dto';
-import { INVITE_MS, newPin, newSecret, sha256 } from './staff-rules';
+import { newPin, newSecret, sha256 } from './staff-rules';
 
 // Lo que hace la dueña con su equipo (Configuración → Tu equipo): crear meseros y pantallas de cocina,
-// mandarles el enlace, cambiar el PIN, desconectar aparatos y quitar a alguien. Todo dentro de su empresa.
+// mandarles su enlace fijo, cambiar el enlace o el PIN, desconectar aparatos y quitar a alguien. Todo dentro de su empresa.
 @Injectable()
 export class StaffAdminService {
   constructor(private readonly prisma: PrismaService) {}
@@ -17,16 +17,16 @@ export class StaffAdminService {
       orderBy: { createdAt: 'asc' },
       include: {
         devices: { orderBy: { createdAt: 'asc' }, select: { id: true, label: true, lastSeenAt: true, lockedUntil: true } },
-        invites: { where: { usedAt: null, expiresAt: { gt: new Date() } }, select: { expiresAt: true } },
       },
     });
-    return staff.map(({ id, name, role, pinHash, devices, invites }) => ({
+    return staff.map(({ id, name, role, pinHash, linkHash, linkLockedUntil, devices }) => ({
       id,
       name,
       role,
       hasPin: !!pinHash,
+      hasLink: !!linkHash,
+      linkLockedUntil,
       devices,
-      inviteExpiresAt: invites[0]?.expiresAt ?? null,
     }));
   }
 
@@ -36,34 +36,30 @@ export class StaffAdminService {
     if (dto.role === StaffRole.WAITER && !organization.servesTables) {
       throw new BadRequestException('Los meseros son para negocios que atienden en mesas. Actívalo en Configuración.');
     }
-    // El PIN se muestra solo esta vez (se guarda cifrado): la dueña se lo dice al mesero.
-    const pin = dto.role === StaffRole.WAITER ? newPin() : null;
+    // El PIN y el enlace se muestran solo esta vez (se guardan cifrados): van en el mensaje de WhatsApp.
+    const pin = newPin();
+    const token = newSecret();
     const staff = await this.prisma.staffMember.create({
-      data: { organizationId, name: dto.name.trim(), role: dto.role, pinHash: pin ? await bcrypt.hash(pin, 10) : null },
+      data: { organizationId, name: dto.name.trim(), role: dto.role, pinHash: await bcrypt.hash(pin, 10), linkHash: sha256(token) },
     });
-    return { list: await this.list(organizationId), id: staff.id, pin };
+    return { list: await this.list(organizationId), id: staff.id, pin, token };
   }
 
   /** PIN nuevo (el anterior deja de servir); se muestra solo esta vez. */
   async newPin(organizationId: string, id: string) {
-    const staff = await this.own(organizationId, id);
-    if (staff.role !== StaffRole.WAITER) throw new BadRequestException('La pantalla de cocina no usa PIN.');
+    await this.own(organizationId, id);
     const pin = newPin();
-    await this.prisma.staffMember.update({ where: { id }, data: { pinHash: await bcrypt.hash(pin, 10) } });
+    await this.prisma.staffMember.update({ where: { id }, data: { pinHash: await bcrypt.hash(pin, 10), linkFails: 0, linkLockedUntil: null } });
     return { pin };
   }
 
-  /** Enlace nuevo de un solo uso (48 h). Los anteriores sin usar dejan de servir. Solo se muestra esta vez:
+  /** Enlace fijo nuevo: el anterior deja de servir (los aparatos ya conectados siguen). Solo se muestra esta vez:
    *  se devuelve el token y el panel arma el enlace con su propia dirección (la que ve la dueña). */
-  async invite(organizationId: string, id: string) {
+  async newLink(organizationId: string, id: string) {
     await this.own(organizationId, id);
     const token = newSecret();
-    const expiresAt = new Date(Date.now() + INVITE_MS);
-    await this.prisma.$transaction([
-      this.prisma.staffInvite.deleteMany({ where: { staffId: id, usedAt: null } }),
-      this.prisma.staffInvite.create({ data: { staffId: id, tokenHash: sha256(token), expiresAt } }),
-    ]);
-    return { token, expiresAt };
+    await this.prisma.staffMember.update({ where: { id }, data: { linkHash: sha256(token), linkFails: 0, linkLockedUntil: null } });
+    return { token };
   }
 
   async removeDevice(organizationId: string, id: string, deviceId: string) {

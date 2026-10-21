@@ -11,8 +11,8 @@ import { InviteView, NewPinForm, ROLE_NAME, StaffConfirm, StaffForm, type Create
 
 const seen = (iso: string) => new Date(iso).toLocaleDateString("es-CO", { day: "numeric", month: "short" })
 
-// Tu equipo (solo restaurantes): meseros con PIN y pantallas de cocina. Cada uno entra con un enlace de un solo uso
-// que amarra su aparato; desde aquí se desconecta un aparato o se quita a alguien (Julieth eligió esta forma, 2026-10-19).
+// Tu equipo: meseros y pantallas de cocina. Cada uno entra con su enlace fijo y su PIN (Julieth, 2026-10-20); cada
+// aparato que entra queda en la lista (y a la dueña le llega un correo), y desde aquí se desconecta o se quita a alguien.
 export function TeamCard() {
   const { open, push } = useModal()
   // La pantalla de cocina es para todos; los meseros, solo si atiende en mesas.
@@ -24,30 +24,32 @@ export function TeamCard() {
     api<StaffMember[]>("/kitchen/staff").then(setList).catch((err) => toast(errorMessage(err), true))
   }, [toast])
 
-  async function invite(m: StaffMember, pin?: string | null) {
-    try {
-      const { token } = await api<{ token: string }>(`/kitchen/staff/${m.id}/invite`, { method: "POST" })
-      // Con la dirección que ve la dueña (192.168… en pruebas, el dominio en producción).
-      const url = `${window.location.origin}/equipo/${token}`
-      setList(await api<StaffMember[]>("/kitchen/staff"))
-      open(<InviteView member={m} url={url} pin={pin} />)
-    } catch (err) {
-      toast(errorMessage(err), true)
-    }
+  const linkUrl = (token: string) => `${window.location.origin}/equipo/${token}`
+
+  // Enlace nuevo: el de antes deja de servir. Con la dirección que ve la dueña (192.168… en pruebas, el dominio después).
+  async function newLink(m: StaffMember) {
+    const { token } = await api<{ token: string }>(`/kitchen/staff/${m.id}/link`, { method: "POST" })
+    setList(await api<StaffMember[]>("/kitchen/staff"))
+    return <InviteView member={m} url={linkUrl(token)} />
   }
 
+  const changeLink = (m: StaffMember) =>
+    m.hasLink
+      ? push(<StaffConfirm title="Cambiar enlace" text="El enlace de ahora deja de servir. Los aparatos conectados siguen." label="Cambiar" run={() => newLink(m)} />)
+      : newLink(m).then(open).catch((err) => toast(errorMessage(err), true))
+
   // Recién creado: sale de una vez su enlace y su PIN (es lo siguiente que hay que hacer).
-  const created = ({ list: next, id, pin }: Created) => {
+  const created = ({ list: next, id, pin, token }: Created) => {
     setList(next)
     const member = next.find((m) => m.id === id)
-    if (member) void invite(member, pin)
+    if (member) open(<InviteView member={member} url={linkUrl(token)} pin={pin} />)
   }
 
   const removeDevice = (m: StaffMember, d: StaffMember["devices"][number]) =>
     push(
       <StaffConfirm
         title="Desconectar aparato"
-        text={`${d.label} de ${m.name} dejará de entrar. Para volver a usarlo necesita un enlace nuevo.`}
+        text={`${d.label} de ${m.name} dejará de entrar. Si no lo reconoces, cambia también el enlace.`}
         label="Desconectar"
         run={async () => setList(await api<StaffMember[]>(`/kitchen/staff/${m.id}/devices/${d.id}`, { method: "DELETE" }))}
       />,
@@ -87,12 +89,13 @@ export function TeamCard() {
                     </div>
                   ))
                 ) : (
-                  <div className="small muted">{m.inviteExpiresAt ? "Enlace enviado, sin abrir" : "Sin aparato conectado"}</div>
+                  <div className="small muted">Sin aparato conectado</div>
                 )}
+                {m.linkLockedUntil && new Date(m.linkLockedUntil) > new Date() ? <div className="small muted">Enlace bloqueado 15 min por PIN equivocados</div> : null}
               </div>
               <div className="row">
-                <button type="button" className="btn soft sm" onClick={() => invite(m)}>Enviar enlace</button>
-                {m.role === "WAITER" ? <button type="button" className="btn ghost sm" onClick={() => open(<NewPinForm member={m} />)}>Nuevo PIN</button> : null}
+                <button type="button" className="btn soft sm" onClick={() => changeLink(m)}>{m.hasLink ? "Cambiar enlace" : "Crear enlace"}</button>
+                <button type="button" className="btn ghost sm" onClick={() => open(<NewPinForm member={m} />)}>Nuevo PIN</button>
                 <button type="button" className="iconbtn" aria-label={`Quitar a ${m.name}`} onClick={() => remove(m)}>
                   <Icon name="trash" />
                 </button>

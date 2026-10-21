@@ -10,19 +10,19 @@ import { Field, useModal } from "../shared"
 
 export type StaffRole = "WAITER" | "KITCHEN"
 export interface StaffDevice { id: string; label: string; lastSeenAt: string; lockedUntil: string | null }
-export interface StaffMember { id: string; name: string; role: StaffRole; hasPin: boolean; devices: StaffDevice[]; inviteExpiresAt: string | null }
-export interface Created { list: StaffMember[]; id: string; pin: string | null }
+export interface StaffMember { id: string; name: string; role: StaffRole; hasPin: boolean; hasLink: boolean; linkLockedUntil: string | null; devices: StaffDevice[] }
+export interface Created { list: StaffMember[]; id: string; pin: string; token: string }
 
 export const ROLE_NAME: Record<StaffRole, string> = { WAITER: "Mesero", KITCHEN: "Pantalla de cocina" }
 
-// Agregar un mesero o una pantalla de cocina. El PIN del mesero lo genera Destello (Julieth, 2026-10-19).
+// Agregar un mesero o una pantalla de cocina. El PIN lo genera Destello (Julieth, 2026-10-19; la cocina también, 2026-10-20).
 export function StaffForm({ role, onDone }: { role: StaffRole; onDone: (created: Created) => void }) {
   const { close } = useModal()
   const [name, setName] = useState(role === "KITCHEN" ? "Cocina" : "")
   return (
     <Modal
       title={role === "WAITER" ? "Nuevo mesero" : "Nueva pantalla de cocina"}
-      sub={role === "WAITER" ? "Destello le crea su PIN." : "Una tablet fija que muestra los pedidos."}
+      sub={role === "WAITER" ? "Destello le crea su enlace y su PIN." : "Una tablet fija que muestra los pedidos, con enlace y PIN."}
       onClose={close}
       onSubmit={async () => {
         if (!name.trim()) throw new FormError("Escribe el nombre.")
@@ -48,18 +48,20 @@ function PinBox({ name, pin }: { name: string; pin: string }) {
   )
 }
 
-// El enlace (y el PIN, si es nuevo) solo se ven una vez. Julieth pidió que el PIN vaya en el mensaje de WhatsApp
-// (2026-10-19): el enlace sirve una sola vez, así que si otro lo usa primero, al mesero no le abre y se nota.
+// El enlace (y el PIN, si es nuevo) solo se ven una vez y van juntos en el mensaje de WhatsApp. El enlace es fijo
+// (Julieth, 2026-10-20): sirve siempre con el PIN, en cualquier navegador; así no hay que pedir otro cada vez.
 export function InviteView({ member, url, pin }: { member: StaffMember; url: string; pin?: string | null }) {
   const { close } = useModal()
   const toast = useToast()
-  const text = `Hola ${member.name}, este es tu enlace para entrar a la ${member.role === "WAITER" ? "app de meseros" : "pantalla de cocina"}. Ábrelo en ${member.role === "WAITER" ? "tu celular" : "la tablet de la cocina"}: ${url}${pin ? `
-Tu PIN es ${pin}. No se lo compartas a nadie.` : ""}`
+  const where = member.role === "WAITER" ? "la app de meseros" : "la pantalla de cocina"
+  const text = `Hola ${member.name}, este es tu enlace para entrar a ${where}. Guárdalo: sirve siempre, con tu PIN.
+${url}
+${pin ? `Tu PIN es ${pin}. No se lo compartas a nadie.` : "Tu PIN sigue igual."}`
   // Solo para nosotros, probando en local: el panel abierto en localhost da enlaces que solo sirven en este
   // computador. En producción nunca sale (Julieth, 2026-10-19).
   const local = process.env.NODE_ENV !== "production" && /\/\/(localhost|127\.0\.0\.1)/.test(url)
   return (
-    <Modal title={`Enlace de ${member.name}`} sub="Sirve una sola vez y vence en 48 horas." submit="Listo" hideCancel onClose={close} onSubmit={close}>
+    <Modal title={`Enlace de ${member.name}`} sub="Sirve siempre, con su PIN." submit="Listo" hideCancel onClose={close} onSubmit={close}>
       {pin ? <PinBox name={member.name} pin={pin} /> : null}
       <div className="invite-link num">{url}</div>
       <div className="row">
@@ -72,7 +74,7 @@ Tu PIN es ${pin}. No se lo compartas a nadie.` : ""}`
         </a>
       </div>
       {local ? <div className="callout c-peach small">Este enlace dice «localhost»: solo abre en este computador. Para probar en el celular, abre el panel con la dirección de red del computador (ej. http://192.168.1.1:3100).</div> : null}
-      <p className="small muted">{member.role === "WAITER" ? (pin ? "El mensaje lleva el enlace y su PIN." : "Después de abrirlo, entra con su PIN.") : "La tablet queda conectada; la puedes desconectar aquí."}</p>
+      <p className="small muted">{pin ? "El mensaje lleva el enlace y su PIN." : "El enlace de antes ya no sirve."}</p>
     </Modal>
   )
 }
@@ -100,11 +102,11 @@ export function NewPinForm({ member }: { member: StaffMember }) {
   )
 }
 
-// Quitar a alguien del equipo o desconectar un aparato.
-export function StaffConfirm({ title, text, label, run }: { title: string; text: string; label: string; run: () => Promise<void> }) {
-  const { close } = useModal()
+// Quitar a alguien, desconectar un aparato o cambiar el enlace (este devuelve la ventana que sigue: el enlace nuevo).
+export function StaffConfirm({ title, text, label, run }: { title: string; text: string; label: string; run: () => Promise<React.ReactNode | void> }) {
+  const { open, close } = useModal()
   return (
-    <Modal title={title} submit={label} danger onClose={close} onSubmit={async () => { await run(); close() }}>
+    <Modal title={title} submit={label} danger onClose={close} onSubmit={async () => { const next = await run(); if (next) open(next); else close() }}>
       <p>{text}</p>
     </Modal>
   )
