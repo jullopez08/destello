@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildOrderLines } from '../kitchen/order-lines';
+import { TAX_RATE } from '../kitchen/kitchen-costs';
 import { TicketLineDto } from './dto/restaurant.dto';
 
 // El salón: mesas, mesas abiertas y sus comandas, y lo que se puede pedir. Lo ve el mesero (todas las mesas, para
@@ -11,7 +12,7 @@ export class FloorService {
 
   async load(organizationId: string, viewerId?: string) {
     const [org, tables, presentations, keys] = await Promise.all([
-      this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { kitchenNormalMin: true, kitchenMaxMin: true } }),
+      this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { kitchenNormalMin: true, kitchenMaxMin: true, salesTax: true } }),
       this.prisma.diningTable.findMany({
         where: { organizationId },
         orderBy: { position: 'asc' },
@@ -33,6 +34,8 @@ export class FloorService {
       now: new Date().toISOString(),
       normalMin: org.kitchenNormalMin,
       maxMin: org.kitchenMaxMin,
+      /** Para mostrar en la cuenta cuánto es impuesto (ya va incluido en los precios) */
+      taxRate: TAX_RATE[org.salesTax],
       tables: tables.map((t) => {
         const s = t.sessions[0];
         return {

@@ -1,7 +1,7 @@
 // Cálculos de Analítica. Todo sale de los pedidos no cancelados y del costo
 // actual de cada cosa (la ganancia es aproximada: usa el costo de hoy).
 
-import { addDays, presentationCost, productCost } from "./rules"
+import { addDays, netPrice, presentationCost, productCost } from "./rules"
 import type { KitchenRuleData } from "./rules"
 import type { KitchenSnapshot, Order, OrderLine } from "./types"
 
@@ -52,7 +52,8 @@ function period(orders: Order[], rules: KitchenRuleData, start: string, end: str
   const list = orders.filter((o) => o.orderedOn >= start && o.orderedOn <= end)
   const total = list.reduce((a, o) => a + sales(o), 0)
   const cost = list.reduce((a, o) => a + o.lines.reduce((x, l) => x + lineCost(l, rules), 0), 0)
-  return { start, end, sales: total, profit: total - cost, orders: list.length }
+  // La ganancia es sin el impuesto incluido en los precios: esa parte es de la DIAN.
+  return { start, end, sales: total, profit: Math.round(netPrice(total, rules.taxRate)) - cost, orders: list.length }
 }
 
 export function analytics(data: KitchenSnapshot, rules: KitchenRuleData) {

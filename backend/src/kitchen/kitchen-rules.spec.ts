@@ -3,8 +3,11 @@ import {
   averageCostAfterPurchase,
   consumedAmount,
   KitchenRuleData,
+  netPrice,
   presentationCost,
   presentationHealth,
+  presentationMargin,
+  taxIn,
   productionDateFor,
   productionPlan,
   recipeCostPerGram,
@@ -57,6 +60,24 @@ describe('kitchen rules — costos', () => {
 
   it('una caja con buen margen no trae precio sugerido', () => {
     expect(presentationHealth(data.presentations[0], data, 50)).toEqual({ kind: 'ok', label: 'Margen sano', suggested: null });
+  });
+
+  it('el impuesto al consumo va incluido en el precio: de $28.000, $2.074 son impuesto', () => {
+    expect(taxIn(28000, 0.08)).toBe(2074);
+    expect(Math.round(netPrice(28000, 0.08))).toBe(25926);
+    expect(taxIn(28000, 0)).toBe(0);
+  });
+
+  it('con impuesto, el margen se calcula sobre lo que le queda al negocio y el sugerido lo suma', () => {
+    const box = data.presentations[0];
+    const taxed = { ...data, taxRate: 0.08 };
+    const cost = presentationCost(box, data);
+    expect(presentationMargin(box, taxed)).toBeCloseTo((box.price / 1.08 - cost) / (box.price / 1.08));
+    expect(presentationMargin(box, taxed)).toBeLessThan(presentationMargin(box, data));
+    const plain = presentationHealth(data.presentations[1], data, 50).suggested!;
+    const withTax = presentationHealth(data.presentations[1], taxed, 50).suggested!;
+    expect(withTax).toBeGreaterThan(plain);
+    expect(withTax).toBeGreaterThanOrEqual(presentationCost(data.presentations[1], data) * 2 * 1.08);
   });
 });
 

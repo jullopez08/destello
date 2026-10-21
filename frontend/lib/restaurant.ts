@@ -13,7 +13,7 @@ export interface CatalogItem {
   sizes: { id: string; name: string; price: number }[]
 }
 export interface PayKey { id: string; bank: string; type: string; number: string; owner: string }
-export interface Floor { now: string; normalMin: number; maxMin: number; tables: FloorTable[]; catalog: CatalogItem[]; payKeys: PayKey[] }
+export interface Floor { now: string; normalMin: number; maxMin: number; taxRate: number; tables: FloorTable[]; catalog: CatalogItem[]; payKeys: PayKey[] }
 
 /** Cómo va una mesa, para su color en el mapa (Julieth, 2026-10-20). */
 export type TableStage = "free" | "new" | "kitchen" | "ready" | "served" | "bill"

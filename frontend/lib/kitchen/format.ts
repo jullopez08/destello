@@ -4,6 +4,8 @@ import { addDays } from "./rules"
 export const fmtN = (n: number, d = 0) => Number(n || 0).toLocaleString("es-CO", { maximumFractionDigits: d })
 // Espacio que no se parte: el "$" nunca queda solo en una línea y el número en la otra.
 export const money = (n: number) => "$ " + fmtN(Math.round(n))
+/** Cómo se llama el impuesto según la tarifa (0.08 al consumo, 0.19 IVA). */
+export const taxName = (rate: number) => (rate >= 0.19 ? "IVA" : "impuesto al consumo")
 
 // Cantidades en g/ml/und: desde 1000 se muestran en kg o litros.
 export function qty(n: number, kind: SupplyKind | undefined): string {

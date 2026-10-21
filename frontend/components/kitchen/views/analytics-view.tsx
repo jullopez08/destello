@@ -1,7 +1,7 @@
 "use client"
 
 import { useKitchen } from "@/lib/kitchen/store"
-import { presentationCost, presentationHealth } from "@/lib/kitchen/rules"
+import { netPrice, presentationCost, presentationHealth } from "@/lib/kitchen/rules"
 import { analytics } from "@/lib/kitchen/analytics"
 import { money } from "@/lib/kitchen/format"
 import { Empty, PageHead } from "../shared"
@@ -24,7 +24,7 @@ export function AnalyticsView() {
   const least = sellers.filter((s) => s.share < fair / 2).reverse()
   const flagged = data.presentations
     .filter((p) => p.active)
-    .map((p) => ({ p, h: presentationHealth(p, rules, data.settings.targetMargin), c: presentationCost(p, rules) }))
+    .map((p) => ({ p, h: presentationHealth(p, rules, data.settings.targetMargin), c: presentationCost(p, rules), net: netPrice(p.price, rules.taxRate) }))
     .filter((x) => x.h.kind !== "ok")
 
   return (
@@ -91,7 +91,7 @@ export function AnalyticsView() {
                   <div>
                     <b>{x.p.name}</b>
                     <div className="small muted">
-                      Lo vendes en {money(x.p.price)} y te cuesta {money(x.c)}: {x.p.price >= x.c ? `te quedan ${money(x.p.price - x.c)}` : `pierdes ${money(x.c - x.p.price)}`}.
+                      Lo vendes en {money(x.p.price)} y te cuesta {money(x.c)}: {x.net >= x.c ? `te quedan ${money(x.net - x.c)}` : `pierdes ${money(x.c - x.net)}`}{rules.taxRate ? ", sin el impuesto" : ""}.
                     </div>
                   </div>
                   <div className="fix">

@@ -7,7 +7,15 @@ import { useSession } from "@/lib/session"
 import { useKitchen } from "@/lib/kitchen/store"
 import { HELP } from "@/lib/kitchen/help"
 import { DAYS, phoneInput } from "@/lib/kitchen/format"
+import type { SalesTax } from "@/lib/kitchen/rules"
 import { Eyebrow, Field, Seg } from "../shared"
+
+const TAX_OPTIONS: [SalesTax, string][] = [["NONE", "Ninguno"], ["INC", "Al consumo 8 %"], ["IVA", "IVA 19 %"]]
+const TAX_HINT: Record<SalesTax, string> = {
+  NONE: "Persona natural, un solo local y ventas del año pasado por debajo de 3.500 UVT.",
+  INC: "El de casi todos los restaurantes, panaderías y pastelerías, también a domicilio.",
+  IVA: "Solo si tu negocio es una franquicia.",
+}
 
 // Lunes primero, como se lee la semana; DAYS empieza en domingo (getDay).
 const WEEK = [1, 2, 3, 4, 5, 6, 0]
@@ -19,11 +27,11 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
   const { setUser } = useSession()
   const toast = useToast()
   const st = data.settings
-  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables, normalMin: String(st.kitchenNormalMin), maxMin: String(st.kitchenMaxMin) })
+  const [f, setF] = useState({ name: st.name, whatsapp: st.whatsapp ?? "", orderCutoff: st.orderCutoff, targetMargin: String(st.targetMargin), closedDays: st.closedDays, servesTables: st.servesTables, normalMin: String(st.kitchenNormalMin), maxMin: String(st.kitchenMaxMin), salesTax: st.salesTax })
   const [saving, setSaving] = useState(false)
   // "Guardar cambios" solo se habilita si algo cambió frente a lo guardado.
   const sameDays = f.closedDays.length === st.closedDays.length && f.closedDays.every((d) => st.closedDays.includes(d))
-  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables || Number(f.normalMin) !== st.kitchenNormalMin || Number(f.maxMin) !== st.kitchenMaxMin
+  const dirty = f.name.trim() !== st.name || f.whatsapp !== (st.whatsapp ?? "") || f.orderCutoff !== st.orderCutoff || Number(f.targetMargin) !== st.targetMargin || !sameDays || f.servesTables !== st.servesTables || Number(f.normalMin) !== st.kitchenNormalMin || Number(f.maxMin) !== st.kitchenMaxMin || f.salesTax !== st.salesTax
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
@@ -35,7 +43,7 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
       await mutate(
         "/settings",
         "PATCH",
-        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables, kitchenNormalMin: normalMin, kitchenMaxMin: maxMin },
+        { name: f.name.trim() || st.name, whatsapp: f.whatsapp, orderCutoff: f.orderCutoff, closedDays: f.closedDays, targetMargin: Math.min(90, Math.max(5, Number(f.targetMargin) || 50)), servesTables: f.servesTables, kitchenNormalMin: normalMin, kitchenMaxMin: maxMin, salesTax: f.salesTax },
         setup ? "Negocio listo" : "Configuración guardada",
       )
       setUser((u) => ({ ...u, organizationName: f.name.trim() || st.name, servesTables: f.servesTables }))
@@ -60,6 +68,11 @@ export function BusinessForm({ setup, onSaved }: { setup?: boolean; onSaved?: ()
         <Field label="Tiempo normal de un plato (min)" help={HELP.kitchenNormal}><input type="number" inputMode="numeric" min="1" max="180" value={f.normalMin} onChange={(e) => setF({ ...f, normalMin: e.target.value })} /></Field>
         <Field label="Tiempo máximo (min)" help={HELP.kitchenMax}><input type="number" inputMode="numeric" min="2" max="240" value={f.maxMin} onChange={(e) => setF({ ...f, maxMin: e.target.value })} /></Field>
         <Field label="Margen que buscas (%)" help={HELP.businessMargin}><input type="number" min="5" max="90" value={f.targetMargin} onChange={(e) => setF({ ...f, targetMargin: e.target.value })} required /></Field>
+      </div>
+      <div>
+        <Eyebrow help={HELP.businessTax}>¿Qué impuesto cobras?</Eyebrow>
+        <Seg name="sales-tax" value={f.salesTax} onChange={(v) => setF({ ...f, salesTax: v })} options={TAX_OPTIONS} />
+        <p className="small muted" style={{ marginTop: 6 }}>{TAX_HINT[f.salesTax]}</p>
       </div>
       <div>
         <Eyebrow help={HELP.businessTables}>¿Atiendes clientes en mesas?</Eyebrow>

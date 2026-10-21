@@ -29,6 +29,8 @@ model Organization {
   /// Minutos que suele tardar un plato y el máximo antes de avisar a la mesa (pantalla de cocina y mesero)
   kitchenNormalMin Int     @default(15)
   kitchenMaxMin    Int     @default(25)
+  /// Impuesto que cobra el negocio, ya incluido en sus precios: NONE (no responsable), INC (consumo 8 %) o IVA (19 %, franquicias)
+  salesTax                SalesTax  @default(NONE)
   /// Inscrita sola con SIGNUP_MODE=review: no entra a la cocina hasta que el super admin la apruebe
   approvalPending  Boolean @default(false)
 
@@ -129,6 +131,14 @@ model TableSession {
   payments     TablePayment[]
 
   @@index([organizationId, status])
+}
+
+enum SalesTax {
+  NONE
+  /// Impuesto nacional al consumo de restaurantes, 8 %
+  INC
+  /// IVA 19 %: restaurantes bajo franquicia
+  IVA
 }
 
 enum TablePayMethod {
