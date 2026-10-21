@@ -18,6 +18,7 @@ export async function purgeOrganizationData(
   await tx.kitchenTicket.deleteMany({ where: { organizationId } });
   await tx.businessMenu.deleteMany({ where: { organizationId } });
   // Caja: entradas y salidas antes que sus turnos.
+  await tx.cashReceipt.deleteMany({ where: { organizationId } });
   await tx.cashMove.deleteMany({ where: { organizationId } });
   await tx.cashShift.deleteMany({ where: { organizationId } });
   await tx.tablePayment.deleteMany({ where: { organizationId } });

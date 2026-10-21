@@ -1,4 +1,7 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Req, Res, StreamableFile, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
+import { memoryStorage } from 'multer';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -8,9 +11,12 @@ import { CurrentUser, type CurrentUserData } from '../common/decorators/current-
 import { requireOrganization } from '../kitchen/kitchen-snapshot.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { requireCashier, StaffSessionGuard, type StaffRequest } from '../staff/staff-session.guard';
-import { CashDrawerService } from './cash-drawer.service';
+import { CashDrawerService, RECEIPT_MAX_BYTES } from './cash-drawer.service';
 import { CashMoveDto, CloseDrawerDto, OpenDrawerDto } from './dto/restaurant.dto';
 import { FloorService } from './floor.service';
+
+/** La foto de la factura de una salida va en multipart (campo `receipt`). */
+const RECEIPT_UPLOAD = FileInterceptor('receipt', { storage: memoryStorage(), limits: { fileSize: RECEIPT_MAX_BYTES, files: 1 } });
 
 // El cajón desde Caja, en el panel de la dueña: ve cuánto debería haber y revisa las diferencias.
 @Controller('kitchen/cashier/drawer')
@@ -38,10 +44,19 @@ export class OwnerDrawerController {
 
   @Post('moves')
   @HttpCode(200)
-  async move(@CurrentUser() user: CurrentUserData, @Body() dto: CashMoveDto) {
+  @UseInterceptors(RECEIPT_UPLOAD)
+  async move(@CurrentUser() user: CurrentUserData, @Body() dto: CashMoveDto, @UploadedFile() receipt?: Express.Multer.File) {
     const org = await this.org(user);
-    await this.drawer.move(org, await this.name(user), dto.kind, dto.amount, dto.reason);
+    await this.drawer.move(org, await this.name(user), dto, receipt);
     return this.drawer.state(org, true);
+  }
+
+  // La factura de una salida: se ve en el navegador, no se descarga (la subió alguien del equipo).
+  @Get('moves/:id/receipt')
+  async receipt(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Res({ passthrough: true }) res: Response) {
+    const receipt = await this.drawer.receipt(await this.org(user), id);
+    res.set({ 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store', 'Cross-Origin-Resource-Policy': 'same-origin' });
+    return new StreamableFile(receipt.data, { type: receipt.mime, disposition: 'inline; filename="factura"', length: receipt.size });
   }
 
   @Post('close')
@@ -96,9 +111,10 @@ export class StaffDrawerController {
 
   @Post('moves')
   @HttpCode(200)
-  async move(@Req() req: StaffRequest, @Body() dto: CashMoveDto) {
+  @UseInterceptors(RECEIPT_UPLOAD)
+  async move(@Req() req: StaffRequest, @Body() dto: CashMoveDto, @UploadedFile() receipt?: Express.Multer.File) {
     const staff = requireCashier(req);
-    await this.drawer.move(staff.organizationId, await this.name(staff.sub), dto.kind, dto.amount, dto.reason);
+    await this.drawer.move(staff.organizationId, await this.name(staff.sub), dto, receipt);
     return this.drawer.state(staff.organizationId, false);
   }
 

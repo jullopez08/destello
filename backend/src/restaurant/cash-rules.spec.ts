@@ -1,4 +1,4 @@
-import { closeOutcome, expectedCash } from './cash-rules';
+import { cashOutProblem, closeOutcome, expectedCash } from './cash-rules';
 
 describe('arqueo del cajón', () => {
   it('cuadra si la diferencia es menor de $500 (monedas)', () => {
@@ -17,6 +17,14 @@ describe('arqueo del cajón', () => {
 
   it('con la explicación se cierra aunque no cuadre', () => {
     expect(closeOutcome(92000, 100000, 92000, 'Di mal un vuelto')).toEqual({ kind: 'close' });
+  });
+
+  it('una salida pide motivo, detalle y factura, o decir que no la dieron', () => {
+    expect(cashOutProblem({ category: null, reason: 'Hielo', hasReceipt: true, noReceipt: false })).toMatch(/para qué/);
+    expect(cashOutProblem({ category: 'SUPPLIER', reason: ' ', hasReceipt: true, noReceipt: false })).toMatch(/detalle/);
+    expect(cashOutProblem({ category: 'SUPPLIER', reason: 'Hielo', hasReceipt: false, noReceipt: false })).toMatch(/factura/);
+    expect(cashOutProblem({ category: 'SUPPLIER', reason: 'Hielo', hasReceipt: true, noReceipt: false })).toBeNull();
+    expect(cashOutProblem({ category: 'OTHER', reason: 'Propina del domicilio', hasReceipt: false, noReceipt: true })).toBeNull();
   });
 
   it('lo esperado es la base + efectivo cobrado + entradas − salidas', () => {

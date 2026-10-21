@@ -10,3 +10,11 @@ export function isAllowedImage(buffer: Buffer): boolean {
   const webp = buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP';
   return png || jpeg || webp;
 }
+
+/** El tipo real de la imagen por sus primeros bytes (nunca el que dice el navegador), o null si no es PNG, JPG ni WebP. */
+export function imageMime(buffer: Buffer): 'image/png' | 'image/jpeg' | 'image/webp' | null {
+  if (!isAllowedImage(buffer)) return null;
+  if (buffer[0] === 0x89) return 'image/png';
+  if (buffer[0] === 0xff) return 'image/jpeg';
+  return 'image/webp';
+}

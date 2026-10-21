@@ -6,7 +6,8 @@ import { MoneyInput } from "@/components/ui/money-input"
 import { api, errorMessage } from "@/lib/api"
 import { HELP } from "@/lib/kitchen/help"
 import { money } from "@/lib/kitchen/format"
-import type { CashOutcome, CashState } from "@/lib/restaurant"
+import { CASH_OUT_LABELS, type CashOutcome, type CashOutReason, type CashState } from "@/lib/restaurant"
+import { CashMoveForm } from "./cash-move-form"
 
 const hm = (iso: string) => new Date(iso).toLocaleTimeString("es-CO", { hour: "numeric", minute: "2-digit" })
 const pesos = (raw: string) => Math.round(Number(raw) || 0)
@@ -19,7 +20,8 @@ export function CashDrawer({ base, owner, onState }: { base: string; owner: bool
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [opening, setOpening] = useState("")
-  const [move, setMove] = useState<{ kind: "IN" | "OUT"; amount: string; reason: string }>({ kind: "OUT", amount: "", reason: "" })
+  // Anotar efectivo que entra o sale va escondido: lo normal es que entre plata por las ventas (Julieth, 2026-10-21).
+  const [moving, setMoving] = useState(false)
   const [closing, setClosing] = useState(false)
   const [counted, setCounted] = useState("")
   const [note, setNote] = useState("")
@@ -78,30 +80,28 @@ export function CashDrawer({ base, owner, onState }: { base: string; owner: bool
       {owner && s.expected !== undefined ? (
         <div className="callout c-sky small">
           Debería haber <b className="num">{money(s.expected)}</b>: base, mesas en efectivo {money(s.tables ?? 0)}, pedidos que recogieron {money(s.pickups ?? 0)}, más entradas y menos salidas.
+          <div style={{ marginTop: 6 }}>Fuera del cajón: transferencias {money(s.transfer ?? 0)} y tarjeta {money(s.card ?? 0)}. Cuádralas con el banco y el datáfono.</div>
         </div>
       ) : null}
       {s.moves.map((m) => (
         <div key={m.id} className="row between nowrap small">
-          <span>{m.kind === "IN" ? "Entró" : "Salió"} · {m.reason} · {m.by} · {hm(m.at)}</span>
+          <span>
+            {m.kind === "IN" ? "Entró" : `Salió · ${CASH_OUT_LABELS[m.category as CashOutReason] ?? ""}`} · {m.reason} · {m.by} · {hm(m.at)}
+            {m.noReceipt ? <span className="chip warn" style={{ marginLeft: 6 }}>Sin factura</span> : null}
+          </span>
           <span className="num">{m.kind === "IN" ? "+" : "−"}{money(m.amount)}</span>
         </div>
       ))}
 
       {!closing ? (
         <>
-          <fieldset className="f">
-            <legend className="f-label">Entra o sale efectivo <HelpTip text={HELP.cashMove} /></legend>
-            <div className="seg">
-              {([["OUT", "Sale"], ["IN", "Entra"]] as const).map(([k, label]) => (
-                <label key={k}><input type="radio" name="cash-move" checked={move.kind === k} onChange={() => setMove({ ...move, kind: k })} /><span>{label}</span></label>
-              ))}
-            </div>
-            <MoneyInput value={move.amount} onChange={(amount) => setMove({ ...move, amount })} aria-label="Valor" />
-            <input value={move.reason} onChange={(e) => setMove({ ...move, reason: e.target.value })} maxLength={80} placeholder={move.kind === "OUT" ? "Pago al proveedor de hielo…" : "Lo que trajo el repartidor…"} aria-label="Motivo" />
-            <button type="button" className="btn soft sm" disabled={busy || !pesos(move.amount) || !move.reason.trim()} onClick={() => run("moves", { kind: move.kind, amount: pesos(move.amount), reason: move.reason.trim() }).then((ok) => ok && setMove({ ...move, amount: "", reason: "" }))}>Anotar</button>
-          </fieldset>
+          {moving ? (
+            <CashMoveForm busy={busy} onSave={(body) => run("moves", body).then(Boolean)} onCancel={() => setMoving(false)} />
+          ) : (
+            <button type="button" className="linkbtn small" onClick={() => setMoving(true)}>Anotar efectivo que entra o sale</button>
+          )}
           {error ? <div className="err" role="alert">{error}</div> : null}
-          <button type="button" className="btn soft" onClick={() => { setClosing(true); setOutcome(null) }}>Cerrar caja</button>
+          <button type="button" className="btn soft" onClick={() => { setClosing(true); setOutcome(null); setMoving(false) }}>Cerrar caja</button>
         </>
       ) : (
         <>
