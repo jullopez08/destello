@@ -50,7 +50,7 @@ export function Stat({ label, value, hint, now, before, beforeText }: { label: s
 }
 
 // Pedidos por día de producción: ayuda a saber qué días habrá más trabajo.
-/** `food`: negocio de comida (espárragos); si no, de postres y panes (barquillos). */
+/** `food`: negocio de comida (pinchos); si no, de postres y panes (barquillos). */
 export function WeekdayBars({ counts, food = false }: { counts: number[]; food?: boolean }) {
   const order = [1, 2, 3, 4, 5, 6, 0]
   const max = Math.max(1, ...counts)
