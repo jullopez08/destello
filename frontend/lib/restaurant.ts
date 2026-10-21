@@ -20,8 +20,12 @@ export interface KitchenBoard {
   normalMin: number
   maxMin: number
   tickets: { id: string; number: number; status: TicketStatus; sentAt: string; readyAt: string | null; table: string; waiter: string | null; lines: { name: string; qty: number; note: string | null }[] }[]
-  orders: { id: string; number: number; customer: string; delivery: "DELIVERY" | "PICKUP"; lines: { name: string; qty: number }[] }[]
+  today: string
+  orders: BoardOrder[]
+  /** Lo del siguiente día de producción (pasado el corte, o tras un día cerrado). */
+  next: { date: string; orders: BoardOrder[] } | null
 }
+export interface BoardOrder { id: string; number: number; customer: string; delivery: "DELIVERY" | "PICKUP"; lines: { name: string; qty: number }[] }
 
 export const minutesSince = (iso: string, now: number) => Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000))
 

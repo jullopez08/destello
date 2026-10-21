@@ -13,9 +13,17 @@ const lineName = (l: Named) =>
     .filter(Boolean)
     .join(' · ');
 const withNames = { presentation: { include: { items: { include: { product: true } }, sizes: true } } } as const;
+type BoardOrder = { id: string; number: number; customer: string; delivery: string; lines: (Named & { qty: number })[] };
+const boardOrder = (o: BoardOrder) => ({
+  id: o.id,
+  number: o.number,
+  customer: o.customer,
+  delivery: o.delivery,
+  lines: o.lines.map((l) => ({ name: lineName(l), qty: l.qty })),
+});
 
 // Pantalla de cocina (tablet fija): las comandas de las mesas con su reloj y los pedidos del día (domicilio o
-// recoger), todo en un solo lugar (Julieth, 2026-10-19). "Listo" descuenta los insumos igual que la producción.
+// recoger) y los del siguiente día de producción, todo en un solo lugar (Julieth, 2026-10-19). "Listo" descuenta los insumos igual que la producción.
 @Injectable()
 export class KitchenScreenService {
   constructor(
@@ -25,7 +33,8 @@ export class KitchenScreenService {
 
   async load(organizationId: string) {
     const now = new Date();
-    const [org, tickets, orders] = await Promise.all([
+    const today = toIsoDate(now);
+    const [org, tickets, orders, upcoming] = await Promise.all([
       this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { kitchenNormalMin: true, kitchenMaxMin: true } }),
       this.prisma.kitchenTicket.findMany({
         where: { organizationId, OR: [{ status: 'SENT' }, { status: 'READY', readyAt: { gte: new Date(now.getTime() - READY_VISIBLE_MS) } }] },
@@ -33,11 +42,19 @@ export class KitchenScreenService {
         include: { lines: { include: withNames }, session: { include: { table: true, waiter: { select: { name: true } } } } },
       }),
       this.prisma.order.findMany({
-        where: { organizationId, productionDate: toIsoDate(now), status: OrderStatus.PENDING, produced: false },
+        where: { organizationId, productionDate: today, status: OrderStatus.PENDING, produced: false },
         orderBy: { number: 'asc' },
         include: { lines: { include: withNames } },
       }),
+      // "Para mañana": lo del siguiente día de producción (pasado el corte, o tras un día cerrado), para ir viéndolo.
+      this.prisma.order.findMany({
+        where: { organizationId, productionDate: { gt: today }, status: OrderStatus.PENDING, produced: false },
+        orderBy: [{ productionDate: 'asc' }, { number: 'asc' }],
+        take: 60,
+        include: { lines: { include: withNames } },
+      }),
     ]);
+    const nextDate = upcoming[0]?.productionDate;
     return {
       now: now.toISOString(),
       normalMin: org.kitchenNormalMin,
@@ -52,13 +69,9 @@ export class KitchenScreenService {
         waiter: k.session.waiter?.name ?? null,
         lines: k.lines.map((l) => ({ name: lineName(l), qty: l.qty, note: l.note })),
       })),
-      orders: orders.map((o) => ({
-        id: o.id,
-        number: o.number,
-        customer: o.customer,
-        delivery: o.delivery,
-        lines: o.lines.map((l) => ({ name: lineName(l), qty: l.qty })),
-      })),
+      today,
+      orders: orders.map(boardOrder),
+      next: nextDate ? { date: nextDate, orders: upcoming.filter((o) => o.productionDate === nextDate).map(boardOrder) } : null,
     };
   }
 
