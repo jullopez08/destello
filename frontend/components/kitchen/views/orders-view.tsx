@@ -22,11 +22,33 @@ function inTab(o: Order, tab: OrderTab) {
   return o.status === "DELIVERED"
 }
 
+// Atrasado (Julieth, 2026-10-22): su día de producción pasó y no se produjo. Sale en rojo, primero, para revisar qué pasó.
+export const isLate = (o: Order, today: string) => o.status === "PENDING" && !o.produced && o.productionDate < today
+
+// Aviso de Hoy con los pedidos atrasados.
+export function LateOrdersAlert() {
+  const { data } = useKitchen()
+  const late = data.orders.filter((o) => isLate(o, data.today)).length
+  if (!late) return null
+  return (
+    <div className="lot-alerts" role="group" aria-label="Pedidos atrasados">
+      <div className="callout c-strawberry lot-alert">
+        <span>
+          Tienes <b>{late === 1 ? "1 pedido atrasado" : `${late} pedidos atrasados`}</b>: su día de producción ya pasó.
+        </span>
+        <a className="btn soft sm" href="#pedidos">Revisar</a>
+      </div>
+    </div>
+  )
+}
+
 export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTab) => void }) {
   const { data, act } = useKitchen()
   const { open } = useModal()
   const tabs: [OrderTab, string][] = [["pendiente", "Por producir"], ["listo", "Listos para enviar"], ["camino", "En camino"], ["entregado", "Entregados"], ["todos", "Todos"]]
-  const rows = data.orders.filter((o) => inTab(o, tab)).slice(0, 200)
+  const late = (o: Order) => isLate(o, data.today)
+  const rows = data.orders.filter((o) => inTab(o, tab)).sort((a, b) => Number(late(b)) - Number(late(a))).slice(0, 200)
+  const lateCount = data.orders.filter(late).length
   const count = (k: OrderTab) => data.orders.filter((o) => inTab(o, k)).length
 
   function statusChip(o: Order) {
@@ -39,7 +61,8 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
           <div className="small muted">{byId(data.couriers, o.courierId)?.name}</div>
         </>
       )
-    return o.produced ? <span className="chip banana">Listo para enviar</span> : <span className="chip warn">Por producir</span>
+    if (o.produced) return <span className="chip banana">Listo para enviar</span>
+    return late(o) ? <span className="chip bad">Atrasado</span> : <span className="chip warn">Por producir</span>
   }
 
   function actions(o: Order) {
@@ -86,7 +109,7 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
         <Icon name="plus" />
         Pedido a mano
       </button>
-      <Tabs value={tab} onChange={setTab} options={tabs.map(([k, t]) => [k, `${t} · ${count(k)}`] as [OrderTab, string])} />
+      <Tabs value={tab} onChange={setTab} options={tabs.map(([k, t]) => [k, `${t} · ${count(k)}`, k === "pendiente" && lateCount ? "alert" : undefined] as [OrderTab, string, string?])} />
       {rows.length ? (
         <div className="tbl cardify">
           <table>
@@ -95,7 +118,7 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
             </thead>
             <tbody>
               {rows.map((o) => (
-                <tr key={o.id}>
+                <tr key={o.id} className={late(o) ? "late" : undefined}>
                   <td className="num muted c-num">{o.number}</td>
                   <td className="c-title">
                     <b>{o.customer}</b>
@@ -112,7 +135,11 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
                     ) : (
                       "Recoge en cocina"
                     )}
-                    <div className="muted">Se produce: {dateLabel(o.productionDate, data.today)}</div>
+                    {late(o) ? (
+                      <div className="late-text">Debía producirse: {dateLabel(o.productionDate, data.today)}</div>
+                    ) : (
+                      <div className="muted">Se produce: {dateLabel(o.productionDate, data.today)}</div>
+                    )}
                   </td>
                   <td data-label="Pago"><span className={`chip ${o.payment === "CASH" ? "banana" : "lilac"}`}>{o.payment === "CASH" ? "Efectivo" : "Transferencia"}</span></td>
                   <td className="r num c-end" data-label="Total">

@@ -8,6 +8,7 @@ import type { Order } from "@/lib/kitchen/types"
 import { Empty, Kpi, PageHead, useModal } from "../shared"
 import { OrderForm } from "../forms/order-forms"
 import { LotAlerts } from "./lot-alerts"
+import { LateOrdersAlert } from "./orders-view"
 import { SupplyAlerts } from "./supply-batches-view"
 import { useSession } from "@/lib/session"
 
@@ -44,6 +45,7 @@ export function TodayView() {
           </button>
         </div>
       </PageHead>
+      <LateOrdersAlert />
       <LotAlerts />
       <SupplyAlerts />
       <div className="grid g4" data-tour="hoy-cifras">

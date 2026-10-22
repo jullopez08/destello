@@ -242,6 +242,11 @@
 .lot-alerts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .lot-alert { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 .lot-alert > span { flex: 1 1 220px; min-width: 0; }
+
+/* Pedidos atrasados (orders-view.tsx) */
+.tbl tr.late td { background: var(--strawberry); }
+.tbl.cardify tr.late { background: var(--strawberry); border-color: var(--cherry); }
+.late-text { color: var(--cherry); font-weight: 700; }
 /* Analítica de la masa (analytics-dough.tsx) */
 .dough-sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
 .dough-pending { display: inline-flex; margin-top: 14px; }
