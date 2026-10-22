@@ -41,19 +41,21 @@ export class OrdersService {
 
   // Editar (Julieth, 2026-10-21: el cliente cambia de idea o se escribió mal). Solo antes de producirlo, como
   // cancelar: después ya se gastó la masa. Sigue con su número y su día de producción; lo que ya estaba conserva
-  // su precio aunque hoy esté pausado o la edición cerrada.
+  // su precio aunque hoy esté pausado o la edición cerrada. Si su día de producción ya pasó, no se edita
+  // (Julieth, 2026-10-22): se cancela.
   async updateOrder(organizationId: string, id: string, dto: CreateOrderDto) {
     await this.ownOrder(id, organizationId);
+    const today = toIsoDate(new Date());
     await this.prisma.$transaction(async (tx) => {
       const before = await tx.orderLine.findMany({ where: { orderId: id } });
-      const lines = await this.orderLines(tx, organizationId, dto, toIsoDate(new Date()), before);
+      const lines = await this.orderLines(tx, organizationId, dto, today, before);
       const kept = new Map(before.map((l) => [lineKey(l), l.unitPrice]));
       // Con la condición en el mismo cambio: si justo se registró la producción, no se toca.
       const { count } = await tx.order.updateMany({
-        where: { id, organizationId, status: OrderStatus.PENDING, produced: false },
+        where: { id, organizationId, status: OrderStatus.PENDING, produced: false, productionDate: { gte: today } },
         data: orderFields(dto),
       });
-      if (!count) throw new BadRequestException('Solo se editan pedidos que aún no se han producido.');
+      if (!count) throw new BadRequestException('Solo se editan pedidos por producir hoy o más adelante.');
       await tx.orderLine.deleteMany({ where: { orderId: id } });
       await tx.orderLine.createMany({
         data: lines.map((l) => ({ ...l, orderId: id, unitPrice: kept.get(lineKey(l)) ?? l.unitPrice })),

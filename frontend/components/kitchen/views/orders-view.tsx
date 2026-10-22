@@ -49,7 +49,7 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
     if (o.status === "PENDING")
       return (
         <>
-          <button className="btn soft sm" onClick={() => open(<OrderForm order={o} />)}>Editar</button>
+          {o.productionDate >= data.today && <button className="btn soft sm" onClick={() => open(<OrderForm order={o} />)}>Editar</button>}
           <button
             className="btn ghost sm"
             onClick={() =>
