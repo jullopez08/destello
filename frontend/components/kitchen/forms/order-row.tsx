@@ -2,7 +2,7 @@
 
 import { byId, useKitchen } from "@/lib/kitchen/store"
 import { money } from "@/lib/kitchen/format"
-import type { Presentation } from "@/lib/kitchen/types"
+import type { Edition, Presentation } from "@/lib/kitchen/types"
 
 // Una línea del pedido. Según cómo se vende lo elegido pide más datos:
 // - Por unidad: el sabor y, si hace falta, otro empaque (vale para todo el pedido).
@@ -14,16 +14,24 @@ export const blankOrderRow = (): OrderRow => ({ presentationId: "", qty: "1", pr
 const optionLabel = (p: Presentation) =>
   `${p.name} · ${p.kind === "UNIT" ? `${money(p.price)} c/u` : p.kind === "SIZES" ? `desde ${money(p.price)}` : money(p.price)}`
 
+/** Lo de una edición especial solo se ofrece para un día entre sus fechas (como el servidor). */
+export const sellableOn = (id: string, editions: Edition[], day: string) => {
+  const own = editions.filter((e) => e.presentationIds.includes(id))
+  return !own.length || own.some((e) => day >= e.startDate && day <= e.endDate)
+}
+
 export function OrderRowPicker({
   row,
   update,
   rows,
   setRows,
+  day,
 }: {
   row: OrderRow
   update: (patch: Partial<OrderRow>) => void
   rows: OrderRow[]
   setRows: (rows: OrderRow[]) => void
+  day: string
 }) {
   const { data } = useKitchen()
   const p = byId(data.presentations, row.presentationId)
@@ -46,7 +54,7 @@ export function OrderRowPicker({
           }}
         >
           <option value="">Elige qué pidió</option>
-          {data.presentations.filter((x) => x.active || x.id === row.presentationId).map((x) => <option key={x.id} value={x.id}>{optionLabel(x)}</option>)}
+          {data.presentations.filter((x) => (x.active && sellableOn(x.id, data.editions, day)) || x.id === row.presentationId).map((x) => <option key={x.id} value={x.id}>{optionLabel(x)}</option>)}
         </select>
         {p && p.kind !== "BOX" ? (
           <select aria-label="Sabor" value={row.productId} onChange={(e) => update({ productId: e.target.value })}>

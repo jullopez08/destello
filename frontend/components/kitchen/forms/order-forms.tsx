@@ -111,7 +111,7 @@ export function OrderForm({ order }: { order?: Order }) {
         blank={blankOrderRow}
         addLabel="Agregar producto"
         className="k-order"
-        render={(r, update) => <OrderRowPicker row={r} update={update} rows={rows} setRows={setRows} />}
+        render={(r, update) => <OrderRowPicker row={r} update={update} rows={rows} setRows={setRows} day={pd} />}
       />
       <div className="fields">
         <div>

@@ -21,15 +21,16 @@ export class OrdersService {
   async createOrder(organizationId: string, dto: CreateOrderDto) {
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
-      const lines = await this.orderLines(tx, organizationId, dto, toIsoDate(now));
+      const org = await tx.organization.findUniqueOrThrow({ where: { id: organizationId } });
+      const earliest = productionDateFor(now, org.orderCutoff, org.closedDays);
+      const productionDate = dto.productionDate ?? earliest;
+      const problem = orderDateProblem(productionDate, earliest, toIsoDate(now), org.closedDays);
+      if (problem) throw new BadRequestException(problem);
+      const lines = await this.orderLines(tx, organizationId, dto, productionDate);
       const organization = await tx.organization.update({
         where: { id: organizationId },
         data: { nextOrderNumber: { increment: 1 } },
       });
-      const earliest = productionDateFor(now, organization.orderCutoff, organization.closedDays);
-      const productionDate = dto.productionDate ?? earliest;
-      const problem = orderDateProblem(productionDate, earliest, toIsoDate(now), organization.closedDays);
-      if (problem) throw new BadRequestException(problem);
       await tx.order.create({
         data: {
           organizationId,
@@ -59,7 +60,7 @@ export class OrdersService {
     }
     await this.prisma.$transaction(async (tx) => {
       const before = await tx.orderLine.findMany({ where: { orderId: id } });
-      const lines = await this.orderLines(tx, organizationId, dto, today, before);
+      const lines = await this.orderLines(tx, organizationId, dto, day, before);
       const kept = new Map(before.map((l) => [lineKey(l), l.unitPrice]));
       // Con la condición en el mismo cambio: si justo se registró la producción, no se toca.
       const { count } = await tx.order.updateMany({
@@ -75,8 +76,9 @@ export class OrdersService {
     return this.snapshot.load(organizationId);
   }
 
-  // Lo que se vende, de esta empresa, a la venta y con su edición abierta. `before`: lo que ya tenía el pedido.
-  private async orderLines(tx: Prisma.TransactionClient, organizationId: string, dto: CreateOrderDto, today: string, before: { presentationId: string }[] = []) {
+  // Lo que se vende, de esta empresa, a la venta y con su edición abierta el día del pedido (`day`, 2026-10-22:
+  // un pedido de noviembre para el 5 de diciembre puede llevar lo de Navidad). `before`: lo que ya tenía el pedido.
+  private async orderLines(tx: Prisma.TransactionClient, organizationId: string, dto: CreateOrderDto, day: string, before: { presentationId: string }[] = []) {
     const ids = [...new Set(dto.lines.map((l) => l.presentationId))];
     const presentations = await tx.presentation.findMany({
       where: { organizationId, id: { in: ids } },
@@ -86,7 +88,7 @@ export class OrdersService {
     for (const p of presentations) {
       if (before.some((l) => l.presentationId === p.id)) continue;
       if (!p.active) throw new BadRequestException(`"${p.name}" está pausada y no se puede vender.`);
-      assertEditionOpen(p, today);
+      assertEditionOpen(p, day);
     }
     const packaging = await tx.supply.findMany({ where: { organizationId, category: 'PACKAGING' }, select: { id: true } });
     return buildOrderLines(dto.lines, presentations, new Set(packaging.map((x) => x.id)));
@@ -206,12 +208,12 @@ export class OrdersService {
   }
 }
 
-// Lo de una edición especial solo se vende mientras alguna de sus ediciones
-// esté entre sus fechas. Ya no hay cupo: la cantidad la decide lo que se produzca.
-function assertEditionOpen(presentation: { name: string; editions: { edition: { startDate: string; endDate: string } }[] }, today: string) {
+// Lo de una edición especial solo se vende para un día entre las fechas de alguna
+// de sus ediciones. Ya no hay cupo: la cantidad la decide lo que se produzca.
+function assertEditionOpen(presentation: { name: string; editions: { edition: { startDate: string; endDate: string } }[] }, day: string) {
   if (!presentation.editions.length) return;
-  if (presentation.editions.some(({ edition }) => today >= edition.startDate && today <= edition.endDate)) return;
-  throw new BadRequestException(`"${presentation.name}" es de una edición especial que está cerrada.`);
+  if (presentation.editions.some(({ edition }) => day >= edition.startDate && day <= edition.endDate)) return;
+  throw new BadRequestException(`"${presentation.name}" es de una edición especial que no está abierta ese día.`);
 }
 
 function orderFields(dto: CreateOrderDto) {
