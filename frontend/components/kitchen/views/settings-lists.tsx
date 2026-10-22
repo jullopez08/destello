@@ -2,15 +2,12 @@
 
 import { Icon } from "@/components/ui/icon"
 import { HELP } from "@/lib/kitchen/help"
-import { useSession } from "@/lib/session"
 import { useKitchen } from "@/lib/kitchen/store"
-import { initials } from "@/lib/kitchen/format"
 import { Empty, HelpTip, useModal } from "../shared"
 import { AccountForm, BREB_TYPE, CourierForm } from "../forms/settings-forms"
-import { ChangePasswordForm } from "../forms/password-form"
 import { ConfirmForm } from "../forms/confirm-form"
 
-// ── Configuración: cuentas, repartidores, WhatsApp y tu cuenta ──
+// ── Configuración: cuentas, repartidores, y WhatsApp ──
 
 export function AccountsCard() {
   const { data } = useKitchen()
@@ -118,29 +115,6 @@ export function WhatsappCard() {
       <div>
         <button className="btn soft" type="button" disabled>Conectar WhatsApp · pronto</button>
       </div>
-    </div>
-  )
-}
-
-export function MyAccountCard() {
-  const { user } = useSession()
-  const { open } = useModal()
-  return (
-    <div className="card">
-      <h2>Tu cuenta</h2>
-      <div className="list">
-        <div className="it my-account">
-          <div className="row" style={{ minWidth: 0 }}>
-            <div className="avatar">{initials(user?.name ?? "")}</div>
-            <div style={{ minWidth: 0 }}>
-              <b>{user?.name}</b>
-              <div className="small muted" style={{ overflowWrap: "anywhere" }}>Dueña · {user?.email}</div>
-            </div>
-          </div>
-          <button className="btn soft sm" onClick={() => open(<ChangePasswordForm />)}>Cambiar contraseña</button>
-        </div>
-      </div>
-      <p className="small muted" style={{ marginTop: 10 }}>Si alguien entra a tu cuenta desde un dispositivo nuevo, te llega un correo.</p>
     </div>
   )
 }

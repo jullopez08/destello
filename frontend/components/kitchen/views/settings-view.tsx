@@ -11,7 +11,7 @@ import { TOUR_START_EVENT } from "@/lib/kitchen/tour"
 import { initials } from "@/lib/kitchen/format"
 import { Eyebrow, PageHead } from "../shared"
 import { BusinessForm } from "../forms/business-form"
-import { AccountsCard, CouriersCard, MyAccountCard, WhatsappCard } from "./settings-lists"
+import { AccountsCard, CouriersCard, WhatsappCard } from "./settings-lists"
 import { TeamCard } from "./team-card"
 import { TablesCard } from "./tables-card"
 
@@ -104,8 +104,6 @@ export function SettingsView() {
             <p className="small muted" style={{ marginTop: 8 }}>Imagen cuadrada de hasta 5 MB. Sale arriba en tu panel.</p>
           </div>
         </div>
-
-        <MyAccountCard />
       </div>
     </>
   )
