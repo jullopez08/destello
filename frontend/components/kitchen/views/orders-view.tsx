@@ -72,7 +72,26 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
     if (o.status === "PENDING")
       return (
         <>
-          {o.productionDate >= data.today && <button className="btn soft sm" onClick={() => open(<OrderForm order={o} />)}>Editar</button>}
+          <button className="btn soft sm" onClick={() => open(<OrderForm order={o} />)}>{late(o) ? "Cambiar el día" : "Editar"}</button>
+          {late(o) ? (
+            <button
+              className="btn soft sm"
+              onClick={() =>
+                open(
+                  <ConfirmForm
+                    title={`Pedido #${o.number} ya entregado`}
+                    text={<>Se hizo y salió sin registrarlo. Se descuentan los insumos, la masa y el empaque que lleva, y queda <b>entregado</b>.</>}
+                    label="Ya se entregó"
+                    path={`/orders/${o.id}/delivered-late`}
+                    method="POST"
+                    done={`Pedido #${o.number} entregado`}
+                  />,
+                )
+              }
+            >
+              Ya se entregó
+            </button>
+          ) : null}
           <button
             className="btn ghost sm"
             onClick={() =>

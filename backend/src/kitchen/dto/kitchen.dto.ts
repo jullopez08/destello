@@ -242,13 +242,13 @@ export class CreateOrderDto {
   address?: string;
   @IsIn(['TRANSFER', 'CASH']) payment!: 'TRANSFER' | 'CASH';
   @IsInt() @Min(0) fee!: number;
+  /** Para cuándo (AAAA-MM-DD); sin él, el siguiente día de producción. */
+  @IsOptional() @Matches(ISO_DATE) productionDate?: string;
   @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true }) @Type(() => OrderLineDto)
   lines!: OrderLineDto[];
 }
 
-export class SendOrderDto {
-  @IsString() @IsNotEmpty() courierId!: string;
-}
+export class SendOrderDto { @IsString() @IsNotEmpty() courierId!: string; }
 
 export class CreateEditionDto {
   @IsString() @IsNotEmpty() @MaxLength(80) name!: string;

@@ -27,6 +27,17 @@ export function productionDateFor(now: Date, cutoff: string, closedDays: number[
   return day;
 }
 
+// Día que se puede escoger para un pedido (Julieth, 2026-10-22, como el "Reprogramar" de Toast): desde el primero
+// posible (`earliest`, por la hora de corte) hasta MAX_ORDER_DAYS días, sin días cerrados.
+export const MAX_ORDER_DAYS = 60;
+
+export function orderDateProblem(day: string, earliest: string, today: string, closedDays: number[]): string | null {
+  if (day < earliest) return earliest === today ? 'Escoge hoy o un día después.' : 'Por la hora de corte, escoge desde el siguiente día de producción.';
+  if (closedDays.includes(weekdayOf(day))) return 'Ese día el negocio está cerrado.';
+  if (daysBetween(today, day) > MAX_ORDER_DAYS) return `Solo se toman pedidos hasta ${MAX_ORDER_DAYS} días adelante.`;
+  return null;
+}
+
 // Días de `from` a `to` (negativo si `to` ya pasó).
 export function daysBetween(from: string, to: string): number {
   return Math.round((new Date(`${to}T12:00:00`).getTime() - new Date(`${from}T12:00:00`).getTime()) / 86400000);

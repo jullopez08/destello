@@ -57,6 +57,7 @@ export const HELP = {
   orderCustomer: "El nombre de quien pide, para reconocer el pedido.",
   orderPhone: "El WhatsApp del cliente, para escribirle o llamarle. Opcional.",
   orderLines: "Lo que pidió: cada cosa con su cantidad, sabor y tamaño si aplica.",
+  orderDate: "El día en que se produce. Trae el primero posible; cámbialo si el cliente lo quiere para después.",
   orderDelivery: "Domicilio: lo lleva un repartidor. Recoge en cocina: el cliente pasa por él.",
   orderPayment: "Cómo te va a pagar el cliente.",
   orderAddress: "A dónde se lleva el pedido.",
@@ -99,7 +100,7 @@ export const HELP = {
   kitchenMax: "Pasado este tiempo, Destello le sugiere al mesero acercarse a la mesa y avisar la demora.",
 
   // Lo que explica cómo funciona cada sección: va en el "?" junto al título (PageHead help), no en el subtítulo.
-  pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos. Puedes editarlos hasta su día de producción y cancelarlos mientras no se produzcan.",
+  pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos. Mientras no se produzcan puedes editarlos, cambiarles el día o cancelarlos.",
   pageProduction: "Sale de los pedidos hasta la hora de corte. Primero se usa la masa de los lotes.",
   pageProducts: "Producto: lo que horneas, con sus gramos. Se vende en caja, por unidad o por tamaño, y el precio incluye el empaque.",
   pageRecipes: "Cada receta rinde una tanda en gramos. Las galletas van por lote; rollos y panes, sobre pedido.",

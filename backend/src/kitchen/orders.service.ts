@@ -3,6 +3,7 @@ import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { productionDateFor, toIsoDate } from './kitchen-rules';
+import { orderDateProblem } from './kitchen-dates';
 import { produce } from './produce';
 import { CreateEditionDto, CreateOrderDto } from './dto/kitchen.dto';
 import { buildOrderLines, lineKey } from './order-lines';
@@ -15,8 +16,8 @@ export class OrdersService {
     private readonly snapshot: KitchenSnapshotService,
   ) {}
 
-  // El pedido se produce el día que toca según la hora de corte y los días sin
-  // producción. Guarda el precio de cada línea tal como estaba al pedirla.
+  // El pedido se produce el día que escoja la dueña o, sin escoger, el que toca según la hora de corte y los días
+  // sin producción. Guarda el precio de cada línea tal como estaba al pedirla.
   async createOrder(organizationId: string, dto: CreateOrderDto) {
     const now = new Date();
     await this.prisma.$transaction(async (tx) => {
@@ -25,13 +26,17 @@ export class OrdersService {
         where: { id: organizationId },
         data: { nextOrderNumber: { increment: 1 } },
       });
+      const earliest = productionDateFor(now, organization.orderCutoff, organization.closedDays);
+      const productionDate = dto.productionDate ?? earliest;
+      const problem = orderDateProblem(productionDate, earliest, toIsoDate(now), organization.closedDays);
+      if (problem) throw new BadRequestException(problem);
       await tx.order.create({
         data: {
           organizationId,
           number: organization.nextOrderNumber - 1,
           ...orderFields(dto),
           orderedOn: toIsoDate(now),
-          productionDate: productionDateFor(now, organization.orderCutoff, organization.closedDays),
+          productionDate,
           lines: { create: lines },
         },
       });
@@ -40,22 +45,28 @@ export class OrdersService {
   }
 
   // Editar (Julieth, 2026-10-21: el cliente cambia de idea o se escribió mal). Solo antes de producirlo, como
-  // cancelar: después ya se gastó la masa. Sigue con su número y su día de producción; lo que ya estaba conserva
-  // su precio aunque hoy esté pausado o la edición cerrada. Si su día de producción ya pasó, no se edita
-  // (Julieth, 2026-10-22): se cancela.
+  // cancelar: después ya se gastó la masa. Sigue con su número; lo que ya estaba conserva su precio aunque hoy esté
+  // pausado o la edición cerrada. El día se puede cambiar (2026-10-22); uno atrasado tiene que pasar a otro.
   async updateOrder(organizationId: string, id: string, dto: CreateOrderDto) {
-    await this.ownOrder(id, organizationId);
-    const today = toIsoDate(new Date());
+    const order = await this.ownOrder(id, organizationId);
+    const now = new Date();
+    const today = toIsoDate(now);
+    const day = dto.productionDate ?? order.productionDate;
+    if (day !== order.productionDate || day < today) {
+      const org = await this.prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
+      const problem = orderDateProblem(day, productionDateFor(now, org.orderCutoff, org.closedDays), today, org.closedDays);
+      if (problem) throw new BadRequestException(problem);
+    }
     await this.prisma.$transaction(async (tx) => {
       const before = await tx.orderLine.findMany({ where: { orderId: id } });
       const lines = await this.orderLines(tx, organizationId, dto, today, before);
       const kept = new Map(before.map((l) => [lineKey(l), l.unitPrice]));
       // Con la condición en el mismo cambio: si justo se registró la producción, no se toca.
       const { count } = await tx.order.updateMany({
-        where: { id, organizationId, status: OrderStatus.PENDING, produced: false, productionDate: { gte: today } },
-        data: orderFields(dto),
+        where: { id, organizationId, status: OrderStatus.PENDING, produced: false },
+        data: { ...orderFields(dto), productionDate: day },
       });
-      if (!count) throw new BadRequestException('Solo se editan pedidos por producir hoy o más adelante.');
+      if (!count) throw new BadRequestException('Solo se editan pedidos que aún no se han producido.');
       await tx.orderLine.deleteMany({ where: { orderId: id } });
       await tx.orderLine.createMany({
         data: lines.map((l) => ({ ...l, orderId: id, unitPrice: kept.get(lineKey(l)) ?? l.unitPrice })),
@@ -103,6 +114,22 @@ export class OrdersService {
       throw new BadRequestException('Este pedido todavía no se puede marcar como entregado.');
     }
     await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.DELIVERED, deliveredAt: new Date() } });
+    return this.snapshot.load(organizationId);
+  }
+
+  // "Ya se entregó" (Julieth, 2026-10-22): un pedido atrasado que sí se hizo y salió sin registrarlo. Descuenta lo
+  // que lleva sin bloquear (ya se hizo) y queda entregado. Sin `deliveredAt`: ese efectivo no es del cajón de hoy.
+  async deliveredLate(organizationId: string, id: string) {
+    await this.ownOrder(id, organizationId);
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.order.updateMany({
+        where: { id, organizationId, status: OrderStatus.PENDING, produced: false, productionDate: { lt: toIsoDate(new Date()) } },
+        data: { produced: true, status: OrderStatus.DELIVERED },
+      });
+      if (!count) throw new BadRequestException('Solo se marca así un pedido atrasado.');
+      const lines = await tx.orderLine.findMany({ where: { orderId: id } });
+      await produce(tx, organizationId, lines, await this.snapshot.ruleData(organizationId, tx), false);
+    });
     return this.snapshot.load(organizationId);
   }
 

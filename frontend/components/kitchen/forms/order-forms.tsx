@@ -6,6 +6,7 @@ import { byId, orderSubtotal, orderTotal, pendingFor, useKitchen } from "@/lib/k
 import { linePrice, productionPlan } from "@/lib/kitchen/rules"
 import { dateLabel, longDate, money, phoneInput, phoneProblem } from "@/lib/kitchen/format"
 import type { Order } from "@/lib/kitchen/types"
+import { addDays, MAX_ORDER_DAYS, orderDateProblem } from "@/lib/kitchen/dates"
 import { Eyebrow, Field, HelpTip, LinesEditor, Seg, toNumber, useModal } from "../shared"
 import { blankOrderRow, OrderRowPicker, type OrderRow } from "./order-row"
 import { HELP } from "@/lib/kitchen/help"
@@ -20,11 +21,16 @@ const toRow = (l: Order["lines"][number]): OrderRow => ({
   presentationId: l.presentationId, qty: String(l.qty), productId: l.productId ?? "", sizeId: l.sizeId ?? "", packSupplyId: l.packSupplyId ?? "",
 })
 
-/** Nuevo pedido o, con `order`, editarlo antes de producirlo: lo que ya tenía conserva su precio (como el servidor). */
+/** Nuevo pedido o, con `order`, editarlo antes de producirlo: lo que ya tenía conserva su precio (como el servidor).
+ *  "¿Para cuándo?" trae el primer día posible; uno atrasado tiene que pasar a otro día. */
 export function OrderForm({ order }: { order?: Order }) {
   const { data, rules, mutate } = useKitchen()
   const { close } = useModal()
-  const pd = order?.productionDate ?? data.nextProductionDate
+  const earliest = data.nextProductionDate
+  const late = !!order && order.productionDate < data.today
+  const [pd, setPd] = useState(order && !late ? order.productionDate : earliest)
+  // Al editar se puede dejar su día aunque por la hora de corte ya no se pudiera escoger.
+  const minDay = order && !late && order.productionDate < earliest ? order.productionDate : earliest
   const [customer, setCustomer] = useState(order?.customer ?? "")
   const [phone, setPhone] = useState(order?.phone ? phoneInput(order.phone) : "")
   const [rows, setRows] = useState<OrderRow[]>(order ? order.lines.map(toRow) : [blankOrderRow()])
@@ -48,7 +54,7 @@ export function OrderForm({ order }: { order?: Order }) {
 
   return (
     <Modal
-      title={order ? `Editar pedido #${order.number}` : "Nuevo pedido"}
+      title={late ? `Cambiar el día del pedido #${order.number}` : order ? `Editar pedido #${order.number}` : "Nuevo pedido"}
       sub={`Se produce ${dateLabel(pd, data.today).toLowerCase()} (${longDate(pd)}). El domicilio lo cotiza el repartidor.`}
       wide
       onClose={close}
@@ -64,6 +70,8 @@ export function OrderForm({ order }: { order?: Order }) {
         if (dom && !address.trim()) throw new FormError("Escribe la dirección de entrega.")
         const badPhone = phoneProblem(phone)
         if (badPhone) throw new FormError(badPhone)
+        const badDay = pd === order?.productionDate && !late ? null : orderDateProblem(pd, earliest, data.today, data.settings.closedDays)
+        if (badDay) throw new FormError(badDay)
         await mutate(
           order ? `/orders/${order.id}` : "/orders",
           order ? "PUT" : "POST",
@@ -74,6 +82,7 @@ export function OrderForm({ order }: { order?: Order }) {
             address: dom ? address.trim() : undefined,
             payment,
             fee: Math.round(feeN),
+            productionDate: pd,
             lines: chosen.map((r) => ({
               presentationId: r.presentationId,
               qty: Math.round(toNumber(r.qty)),
@@ -90,7 +99,11 @@ export function OrderForm({ order }: { order?: Order }) {
       <div className="fields">
         <Field label="Cliente" help={HELP.orderCustomer}><input value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="Nombre" required /></Field>
         <Field label="WhatsApp" help={HELP.orderPhone}><input value={phone} onChange={(e) => setPhone(phoneInput(e.target.value))} inputMode="tel" placeholder="300 000 0000" /></Field>
+        <Field label="¿Para cuándo?" help={HELP.orderDate}>
+          <input type="date" value={pd} min={minDay} max={addDays(data.today, MAX_ORDER_DAYS)} onChange={(e) => e.target.value && setPd(e.target.value)} required />
+        </Field>
       </div>
+      {late ? <div className="callout c-strawberry small">Estaba para el {longDate(order.productionDate)}. Escoge el nuevo día.</div> : null}
       <div className="eyebrow">Qué pidió<HelpTip text={HELP.orderLines} /></div>
       <LinesEditor
         rows={rows}

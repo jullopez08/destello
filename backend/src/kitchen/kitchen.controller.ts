@@ -211,6 +211,12 @@ export class KitchenController {
     return this.orders.deliverOrder(requireOrganization(user), id);
   }
 
+  @Post('orders/:id/delivered-late')
+  @HttpCode(200)
+  deliveredLate(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.orders.deliveredLate(requireOrganization(user), id);
+  }
+
   @Post('orders/:id/cancel')
   @HttpCode(200)
   cancelOrder(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
