@@ -8,7 +8,7 @@ import type { MySubscription } from "@/lib/billing"
 import { useSession } from "@/lib/session"
 import { KitchenProvider, useKitchen } from "@/lib/kitchen/store"
 import { PAGES, pagesFor, TAB_PAGES } from "@/lib/kitchen/pages"
-import { initials, longDate } from "@/lib/kitchen/format"
+import { longDate } from "@/lib/kitchen/format"
 import { SubscriptionView } from "@/components/billing/subscription-view"
 import { PayBanner } from "@/components/billing/pay-banner"
 import { Empty, ModalHost } from "./shared"
@@ -27,6 +27,7 @@ import { CashierView } from "./views/cashier-view"
 import { SettingsView } from "./views/settings-view"
 import { SetupView } from "./views/setup-view"
 import { SectionTip, Tour } from "./tour"
+import { AccountMenu } from "./account-menu"
 
 // Navegación por #hash, como el diseño: cada sección tiene su enlace.
 function subscribeHash(cb: () => void) {
@@ -140,7 +141,7 @@ function KitchenPages({ subscription }: { subscription: MySubscription }) {
 }
 
 function Shell({ page, locked, cutoff, today, children }: { page: string; locked?: boolean; cutoff?: string; today?: string; children: React.ReactNode }) {
-  const { user, logout } = useSession()
+  const { user } = useSession()
 
   useEffect(() => {
     const on = document.querySelector<HTMLElement>(".nav a.on")
@@ -162,7 +163,7 @@ function Shell({ page, locked, cutoff, today, children }: { page: string; locked
             <small className="only-desktop">con Destello</small>
             <small className="only-mobile">{cutoff ? `Pedidos para hoy hasta las ${cutoff}` : "con Destello"}</small>
           </div>
-          <div className="avatar only-mobile" aria-hidden="true">{initials(user?.name ?? "")}</div>
+          <AccountMenu className="only-mobile" />
         </div>
         <nav className="nav" aria-label="Secciones">
           {pagesFor(!!user?.servesTables).map(([k, t, icon]) => (
@@ -192,8 +193,7 @@ function Shell({ page, locked, cutoff, today, children }: { page: string; locked
               <b>{user?.name}</b>
               <div className="small muted">{user?.organizationName}</div>
             </div>
-            <div className="avatar">{initials(user?.name ?? "")}</div>
-            <button className="btn ghost sm" onClick={logout}>Salir</button>
+            <AccountMenu />
           </div>
         </div>
         {children}

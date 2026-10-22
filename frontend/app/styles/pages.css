@@ -162,8 +162,6 @@
   .days span { width: 100%; max-width: 46px; height: auto; aspect-ratio: 1; font-size: 11px; }
   .settings .save-bar .btn { width: 100%; min-height: 50px; }
   .settings .it.courier { flex-wrap: wrap; }
-  .settings .it.my-account { flex-direction: column; align-items: stretch; }
-  .settings .it.my-account .btn { min-height: 44px; }
   .sub-facts { grid-template-columns: minmax(0, 1fr); }
   .pay-banner { flex-direction: column; align-items: stretch; text-align: left; }
   .pay-banner-go { text-align: center; }
