@@ -13,33 +13,42 @@ import { MoneyInput } from "@/components/ui/money-input"
 
 // ── Pedido a mano (los de WhatsApp los registra la dueña igual) ──
 
-export function OrderForm() {
+const lineKey = (l: { presentationId: string; productId?: string | null; sizeId?: string | null; packSupplyId?: string | null }) =>
+  [l.presentationId, l.productId || "", l.sizeId || "", l.packSupplyId || ""].join("|")
+
+const toRow = (l: Order["lines"][number]): OrderRow => ({
+  presentationId: l.presentationId, qty: String(l.qty), productId: l.productId ?? "", sizeId: l.sizeId ?? "", packSupplyId: l.packSupplyId ?? "",
+})
+
+/** Nuevo pedido o, con `order`, editarlo antes de producirlo: lo que ya tenía conserva su precio (como el servidor). */
+export function OrderForm({ order }: { order?: Order }) {
   const { data, rules, mutate } = useKitchen()
   const { close } = useModal()
-  const pd = data.nextProductionDate
-  const [customer, setCustomer] = useState("")
-  const [phone, setPhone] = useState("")
-  const [rows, setRows] = useState<OrderRow[]>([blankOrderRow()])
-  const [delivery, setDelivery] = useState<Order["delivery"]>("DELIVERY")
-  const [payment, setPayment] = useState<Order["payment"]>("TRANSFER")
-  const [address, setAddress] = useState("")
-  const [fee, setFee] = useState("5000")
+  const pd = order?.productionDate ?? data.nextProductionDate
+  const [customer, setCustomer] = useState(order?.customer ?? "")
+  const [phone, setPhone] = useState(order?.phone ? phoneInput(order.phone) : "")
+  const [rows, setRows] = useState<OrderRow[]>(order ? order.lines.map(toRow) : [blankOrderRow()])
+  const [delivery, setDelivery] = useState<Order["delivery"]>(order?.delivery ?? "DELIVERY")
+  const [payment, setPayment] = useState<Order["payment"]>(order?.payment ?? "TRANSFER")
+  const [address, setAddress] = useState(order?.address ?? "")
+  const [fee, setFee] = useState(order ? String(order.fee) : "5000")
+  const kept = new Map(order?.lines.map((l) => [lineKey(l), l.unitPrice]))
 
   const lines = rows
     .filter((r) => r.presentationId && toNumber(r.qty) > 0)
     .map((r) => ({ orderId: "nuevo", presentationId: r.presentationId, qty: toNumber(r.qty), productId: r.productId || null, sizeId: r.sizeId || null, packSupplyId: r.packSupplyId || null }))
-  const committed = pendingFor(data, pd).flatMap((o) => o.lines)
+  const committed = pendingFor(data, pd).filter((o) => o.id !== order?.id).flatMap((o) => o.lines)
   const plan = productionPlan([...committed, ...lines], rules)
   const dom = delivery === "DELIVERY"
   const sub = lines.reduce((sum, l) => {
     const p = byId(data.presentations, l.presentationId)
-    return sum + (p ? l.qty * linePrice(p, l) : 0)
+    return sum + (p ? l.qty * (kept.get(lineKey(l)) ?? linePrice(p, l)) : 0)
   }, 0)
   const feeN = dom ? toNumber(fee) || 0 : 0
 
   return (
     <Modal
-      title="Nuevo pedido"
+      title={order ? `Editar pedido #${order.number}` : "Nuevo pedido"}
       sub={`Se produce ${dateLabel(pd, data.today).toLowerCase()} (${longDate(pd)}). El domicilio lo cotiza el repartidor.`}
       wide
       onClose={close}
@@ -56,8 +65,8 @@ export function OrderForm() {
         const badPhone = phoneProblem(phone)
         if (badPhone) throw new FormError(badPhone)
         await mutate(
-          "/orders",
-          "POST",
+          order ? `/orders/${order.id}` : "/orders",
+          order ? "PUT" : "POST",
           {
             customer: customer.trim(),
             phone: phone.trim() || undefined,
@@ -73,7 +82,7 @@ export function OrderForm() {
               packSupplyId: r.packSupplyId || undefined,
             })),
           },
-          "Pedido agregado",
+          order ? `Pedido #${order.number} actualizado` : "Pedido agregado",
         )
         close()
       }}

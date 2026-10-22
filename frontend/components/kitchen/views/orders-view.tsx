@@ -48,23 +48,26 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
     if (o.status === "PENDING" && o.produced) return <button className="btn primary sm" onClick={() => open(<SendForm order={o} />)}>Enviar</button>
     if (o.status === "PENDING")
       return (
-        <button
-          className="btn ghost sm"
-          onClick={() =>
-            open(
-              <ConfirmForm
-                title={`Cancelar pedido #${o.number}`}
-                text={<>El pedido de <b>{o.customer}</b> sale de la producción.</>}
-                label="Cancelar pedido"
-                path={`/orders/${o.id}/cancel`}
-                method="POST"
-                done="Pedido cancelado"
-              />,
-            )
-          }
-        >
-          Cancelar
-        </button>
+        <>
+          <button className="btn soft sm" onClick={() => open(<OrderForm order={o} />)}>Editar</button>
+          <button
+            className="btn ghost sm"
+            onClick={() =>
+              open(
+                <ConfirmForm
+                  title={`Cancelar pedido #${o.number}`}
+                  text={<>El pedido de <b>{o.customer}</b> sale de la producción.</>}
+                  label="Cancelar pedido"
+                  path={`/orders/${o.id}/cancel`}
+                  method="POST"
+                  done="Pedido cancelado"
+                />,
+              )
+            }
+          >
+            Cancelar
+          </button>
+        </>
       )
     if (o.status === "ON_THE_WAY") return <button className="btn soft sm" onClick={() => act(`/orders/${o.id}/deliver`, "POST", undefined, `Pedido #${o.number} entregado`)}>Entregado</button>
     return null

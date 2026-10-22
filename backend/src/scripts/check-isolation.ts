@@ -86,6 +86,8 @@ function attempts(d: any, today: string) {
   if (order) {
     list.push(['Enviar un pedido ajeno', 'POST', `/kitchen/orders/${order.id}/send`, { courierId: courier.id }]);
     list.push(['Entregar un pedido ajeno', 'POST', `/kitchen/orders/${order.id}/deliver`]);
+    list.push(['Editar un pedido ajeno', 'PUT', `/kitchen/orders/${order.id}`,
+      { customer: 'x', delivery: 'PICKUP', payment: 'CASH', fee: 0, lines: order.lines.map((l: any) => ({ presentationId: l.presentationId, qty: 1 })) }]);
     list.push(['Cancelar un pedido ajeno', 'POST', `/kitchen/orders/${order.id}/cancel`]);
   }
   return list;

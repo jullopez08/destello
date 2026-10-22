@@ -46,7 +46,7 @@ export function OrderRowPicker({
           }}
         >
           <option value="">Elige qué pidió</option>
-          {data.presentations.filter((x) => x.active).map((x) => <option key={x.id} value={x.id}>{optionLabel(x)}</option>)}
+          {data.presentations.filter((x) => x.active || x.id === row.presentationId).map((x) => <option key={x.id} value={x.id}>{optionLabel(x)}</option>)}
         </select>
         {p && p.kind !== "BOX" ? (
           <select aria-label="Sabor" value={row.productId} onChange={(e) => update({ productId: e.target.value })}>

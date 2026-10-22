@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { KitchenSnapshotService } from './kitchen-snapshot.service';
 import { productionDateFor, toIsoDate } from './kitchen-rules';
 import { produce } from './produce';
 import { CreateEditionDto, CreateOrderDto } from './dto/kitchen.dto';
-import { buildOrderLines } from './order-lines';
+import { buildOrderLines, lineKey } from './order-lines';
 
 @Injectable()
 export class OrdersService {
@@ -19,46 +19,64 @@ export class OrdersService {
   // producción. Guarda el precio de cada línea tal como estaba al pedirla.
   async createOrder(organizationId: string, dto: CreateOrderDto) {
     const now = new Date();
-    const today = toIsoDate(now);
-
     await this.prisma.$transaction(async (tx) => {
-      const ids = [...new Set(dto.lines.map((l) => l.presentationId))];
-      const presentations = await tx.presentation.findMany({
-        where: { organizationId, id: { in: ids } },
-        include: { items: true, sizes: true, editions: { include: { edition: true } } },
-      });
-      if (presentations.length !== ids.length) throw new BadRequestException('Algún producto no existe.');
-
-      for (const p of presentations) {
-        if (!p.active) throw new BadRequestException(`"${p.name}" está pausada y no se puede vender.`);
-        assertEditionOpen(p, today);
-      }
-
-      const packaging = await tx.supply.findMany({ where: { organizationId, category: 'PACKAGING' }, select: { id: true } });
-      const lines = buildOrderLines(dto.lines, presentations, new Set(packaging.map((x) => x.id)));
-
+      const lines = await this.orderLines(tx, organizationId, dto, toIsoDate(now));
       const organization = await tx.organization.update({
         where: { id: organizationId },
         data: { nextOrderNumber: { increment: 1 } },
       });
-
       await tx.order.create({
         data: {
           organizationId,
           number: organization.nextOrderNumber - 1,
-          customer: dto.customer.trim(),
-          phone: dto.phone?.trim() || null,
-          address: dto.delivery === 'DELIVERY' ? dto.address?.trim() : null,
-          orderedOn: today,
+          ...orderFields(dto),
+          orderedOn: toIsoDate(now),
           productionDate: productionDateFor(now, organization.orderCutoff, organization.closedDays),
-          delivery: dto.delivery,
-          payment: dto.payment,
-          fee: dto.delivery === 'DELIVERY' ? dto.fee : 0,
           lines: { create: lines },
         },
       });
     });
     return this.snapshot.load(organizationId);
+  }
+
+  // Editar (Julieth, 2026-10-21: el cliente cambia de idea o se escribió mal). Solo antes de producirlo, como
+  // cancelar: después ya se gastó la masa. Sigue con su número y su día de producción; lo que ya estaba conserva
+  // su precio aunque hoy esté pausado o la edición cerrada.
+  async updateOrder(organizationId: string, id: string, dto: CreateOrderDto) {
+    await this.ownOrder(id, organizationId);
+    await this.prisma.$transaction(async (tx) => {
+      const before = await tx.orderLine.findMany({ where: { orderId: id } });
+      const lines = await this.orderLines(tx, organizationId, dto, toIsoDate(new Date()), before);
+      const kept = new Map(before.map((l) => [lineKey(l), l.unitPrice]));
+      // Con la condición en el mismo cambio: si justo se registró la producción, no se toca.
+      const { count } = await tx.order.updateMany({
+        where: { id, organizationId, status: OrderStatus.PENDING, produced: false },
+        data: orderFields(dto),
+      });
+      if (!count) throw new BadRequestException('Solo se editan pedidos que aún no se han producido.');
+      await tx.orderLine.deleteMany({ where: { orderId: id } });
+      await tx.orderLine.createMany({
+        data: lines.map((l) => ({ ...l, orderId: id, unitPrice: kept.get(lineKey(l)) ?? l.unitPrice })),
+      });
+    });
+    return this.snapshot.load(organizationId);
+  }
+
+  // Lo que se vende, de esta empresa, a la venta y con su edición abierta. `before`: lo que ya tenía el pedido.
+  private async orderLines(tx: Prisma.TransactionClient, organizationId: string, dto: CreateOrderDto, today: string, before: { presentationId: string }[] = []) {
+    const ids = [...new Set(dto.lines.map((l) => l.presentationId))];
+    const presentations = await tx.presentation.findMany({
+      where: { organizationId, id: { in: ids } },
+      include: { items: true, sizes: true, editions: { include: { edition: true } } },
+    });
+    if (presentations.length !== ids.length) throw new BadRequestException('Algún producto no existe.');
+    for (const p of presentations) {
+      if (before.some((l) => l.presentationId === p.id)) continue;
+      if (!p.active) throw new BadRequestException(`"${p.name}" está pausada y no se puede vender.`);
+      assertEditionOpen(p, today);
+    }
+    const packaging = await tx.supply.findMany({ where: { organizationId, category: 'PACKAGING' }, select: { id: true } });
+    return buildOrderLines(dto.lines, presentations, new Set(packaging.map((x) => x.id)));
   }
 
   // Sale con un repartidor. El cliente solo recibe el aviso de que va en camino.
@@ -165,4 +183,15 @@ function assertEditionOpen(presentation: { name: string; editions: { edition: { 
   if (!presentation.editions.length) return;
   if (presentation.editions.some(({ edition }) => today >= edition.startDate && today <= edition.endDate)) return;
   throw new BadRequestException(`"${presentation.name}" es de una edición especial que está cerrada.`);
+}
+
+function orderFields(dto: CreateOrderDto) {
+  return {
+    customer: dto.customer.trim(),
+    phone: dto.phone?.trim() || null,
+    address: dto.delivery === 'DELIVERY' ? dto.address?.trim() : null,
+    delivery: dto.delivery,
+    payment: dto.payment,
+    fee: dto.delivery === 'DELIVERY' ? dto.fee : 0,
+  };
 }

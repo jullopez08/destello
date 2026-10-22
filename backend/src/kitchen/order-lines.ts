@@ -34,3 +34,9 @@ export function buildOrderLines(lines: OrderLineDto[], presentations: Presentati
     return { ...line, unitPrice: linePrice(p, line) };
   });
 }
+
+type LineKey = { presentationId: string; productId: string | null; sizeId: string | null; packSupplyId: string | null };
+
+// Al editar un pedido, una línea que ya estaba (lo mismo, mismo sabor, tamaño y empaque) conserva el precio con
+// que se pidió; lo nuevo va al precio de hoy.
+export const lineKey = (l: LineKey) => [l.presentationId, l.productId, l.sizeId, l.packSupplyId].join('|');

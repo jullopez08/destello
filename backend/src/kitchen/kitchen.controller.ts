@@ -194,6 +194,11 @@ export class KitchenController {
     return this.orders.createOrder(requireOrganization(user), dto);
   }
 
+  @Put('orders/:id')
+  updateOrder(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: CreateOrderDto) {
+    return this.orders.updateOrder(requireOrganization(user), id, dto);
+  }
+
   @Post('orders/:id/send')
   @HttpCode(200)
   sendOrder(@CurrentUser() user: CurrentUserData, @Param('id') id: string, @Body() dto: SendOrderDto) {
