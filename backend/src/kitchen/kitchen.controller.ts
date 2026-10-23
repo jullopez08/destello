@@ -217,6 +217,12 @@ export class KitchenController {
     return this.orders.deliveredLate(requireOrganization(user), id);
   }
 
+  @Post('orders/:id/paid')
+  @HttpCode(200)
+  markPaid(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.orders.markPaid(requireOrganization(user), id);
+  }
+
   @Post('orders/:id/cancel')
   @HttpCode(200)
   cancelOrder(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {

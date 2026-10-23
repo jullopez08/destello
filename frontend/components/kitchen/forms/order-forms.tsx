@@ -191,6 +191,9 @@ export function SendForm({ order }: { order: Order }) {
       ) : (
         <div className="empty">No hay repartidores. Agrégalos en Configuración.</div>
       )}
+      {order.payment === "TRANSFER" && !order.paidAt ? (
+        <div className="callout c-strawberry small">Aún no has marcado el pago como recibido. Revisa tu banco antes de enviarlo.</div>
+      ) : null}
       <div className="callout c-banana small">
         {order.payment === "CASH" ? (
           <>

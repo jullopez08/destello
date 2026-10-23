@@ -100,7 +100,7 @@ export const HELP = {
   kitchenMax: "Pasado este tiempo, Destello le sugiere al mesero acercarse a la mesa y avisar la demora.",
 
   // Lo que explica cómo funciona cada sección: va en el "?" junto al título (PageHead help), no en el subtítulo.
-  pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos. Mientras no se produzcan puedes editarlos, cambiarles el día o cancelarlos.",
+  pageOrders: "Te llegan por WhatsApp; aquí los anotas hasta entregarlos. Mientras no se produzcan puedes editarlos o cancelarlos, y una transferencia queda «Por verificar» hasta que toques «Pago recibido».",
   pageProduction: "Sale de los pedidos hasta la hora de corte. Primero se usa la masa de los lotes.",
   pageProducts: "Producto: lo que horneas, con sus gramos. Se vende en caja, por unidad o por tamaño, y el precio incluye el empaque.",
   pageRecipes: "Cada receta rinde una tanda en gramos. Las galletas van por lote; rollos y panes, sobre pedido.",

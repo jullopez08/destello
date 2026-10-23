@@ -817,6 +817,8 @@ model Order {
   courierId      String?
   /// Cuándo se marcó "Entregado" (el efectivo de un pedido que recogen entra al cajón de ese turno)
   deliveredAt    DateTime?
+  /// Cuándo llegó la plata al negocio ("Pago recibido"; el efectivo al recoger o al salir con el repartidor). Sin él: por verificar
+  paidAt         DateTime?
   createdAt      DateTime     @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id])

@@ -151,7 +151,7 @@ export function TodayView() {
                     <div>
                       <b>{o.customer}</b>
                       <div className="small muted">
-                        Con {byId(data.couriers, o.courierId)?.name ?? "repartidor"} · {o.payment === "CASH" ? "cobra " + money(orderTotal(o)) : "ya pagó"}
+                        Con {byId(data.couriers, o.courierId)?.name ?? "repartidor"} · {o.payment === "CASH" ? "cobra " + money(orderTotal(o)) : o.paidAt ? "ya pagó" : "pago por verificar"}
                       </div>
                     </div>
                     <button className="btn soft sm" onClick={() => act(`/orders/${o.id}/deliver`, "POST", undefined, `Pedido #${o.number} entregado`)}>

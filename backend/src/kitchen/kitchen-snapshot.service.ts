@@ -159,6 +159,7 @@ export class KitchenSnapshotService {
         status: o.status,
         produced: o.produced,
         courierId: o.courierId,
+        paidAt: o.paidAt,
         lines: o.lines.map(({ orderId, presentationId, qty, unitPrice, productId, sizeId, packSupplyId }) => ({
           orderId,
           presentationId,

@@ -89,6 +89,7 @@ function attempts(d: any, today: string) {
     list.push(['Editar un pedido ajeno', 'PUT', `/kitchen/orders/${order.id}`,
       { customer: 'x', delivery: 'PICKUP', payment: 'CASH', fee: 0, lines: order.lines.map((l: any) => ({ presentationId: l.presentationId, qty: 1 })) }]);
     list.push(['Marcar entregado un pedido ajeno atrasado', 'POST', `/kitchen/orders/${order.id}/delivered-late`]);
+    list.push(['Marcar pagado un pedido ajeno', 'POST', `/kitchen/orders/${order.id}/paid`]);
     list.push(['Cancelar un pedido ajeno', 'POST', `/kitchen/orders/${order.id}/cancel`]);
   }
   return list;

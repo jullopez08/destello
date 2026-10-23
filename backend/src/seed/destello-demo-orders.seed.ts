@@ -42,6 +42,8 @@ export async function seedOrdersAndEditions(
         status: data.status ?? 'DELIVERED',
         produced: data.produced ?? true,
         courierId: data.courierId,
+        // Lo que ya salió está pagado; una transferencia por producir queda por verificar.
+        paidAt: (data.status ?? 'DELIVERED') === 'PENDING' ? null : new Date(),
         lines: { create: data.lines.map(([k, qty]) => ({ presentationId: P[k].id, qty, unitPrice: P[k].price })) },
       },
     });

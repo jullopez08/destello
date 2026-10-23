@@ -25,6 +25,16 @@ function inTab(o: Order, tab: OrderTab) {
 // Atrasado (Julieth, 2026-10-22): su día de producción pasó y no se produjo. Sale en rojo, primero, para revisar qué pasó.
 export const isLate = (o: Order, today: string) => o.status === "PENDING" && !o.produced && o.productionDate < today
 
+// Estado del pago (Julieth, 2026-10-22): la transferencia queda por verificar hasta "Pago recibido"; el efectivo
+// se recibe solo al recoger o al salir con el repartidor (como el servidor).
+export function payState(o: Order): { label: string; tone: string; sub?: string } {
+  const method = o.payment === "CASH" ? "Efectivo" : "Transferencia"
+  if (o.status === "CANCELLED") return { label: method, tone: "" }
+  if (o.paidAt) return { label: "Recibido", tone: "good", sub: method }
+  if (o.payment === "TRANSFER") return { label: "Por verificar", tone: "warn", sub: method }
+  return o.delivery === "PICKUP" ? { label: "Paga al recoger", tone: "banana" } : { label: "Efectivo", tone: "banana", sub: "Lo paga el repartidor" }
+}
+
 // Aviso de Hoy con los pedidos atrasados.
 export function LateOrdersAlert() {
   const { data } = useKitchen()
@@ -66,6 +76,31 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
   }
 
   function actions(o: Order) {
+    const pay =
+      o.payment === "TRANSFER" && !o.paidAt && o.status !== "CANCELLED" ? (
+        <button
+          className="btn soft sm"
+          onClick={() =>
+            open(
+              <ConfirmForm
+                title={`Pago del pedido #${o.number}`}
+                text={<>Revisa en tu banco que llegaron <b>{money(orderTotal(o))}</b> de {o.customer}.</>}
+                label="Sí, ya llegó"
+                path={`/orders/${o.id}/paid`}
+                method="POST"
+                done={`Pago del pedido #${o.number} recibido`}
+              />,
+            )
+          }
+        >
+          Pago recibido
+        </button>
+      ) : null
+    const step = stepActions(o)
+    return pay || step ? <>{pay}{step}</> : null
+  }
+
+  function stepActions(o: Order) {
     if (o.status === "PENDING" && o.produced && o.delivery === "PICKUP")
       return <button className="btn soft sm" onClick={() => act(`/orders/${o.id}/deliver`, "POST", undefined, `Pedido #${o.number} entregado`)}>Entregado</button>
     if (o.status === "PENDING" && o.produced) return <button className="btn primary sm" onClick={() => open(<SendForm order={o} />)}>Enviar</button>
@@ -160,7 +195,10 @@ export function OrdersView({ tab, setTab }: { tab: OrderTab; setTab: (t: OrderTa
                       <div className="muted">Se produce: {dateLabel(o.productionDate, data.today)}</div>
                     )}
                   </td>
-                  <td data-label="Pago"><span className={`chip ${o.payment === "CASH" ? "banana" : "lilac"}`}>{o.payment === "CASH" ? "Efectivo" : "Transferencia"}</span></td>
+                  <td data-label="Pago">
+                    {payState(o).tone ? <span className={`chip ${payState(o).tone}`}>{payState(o).label}</span> : <span className="small muted">{payState(o).label}</span>}
+                    {payState(o).sub ? <div className="small muted">{payState(o).sub}</div> : null}
+                  </td>
                   <td className="r num c-end" data-label="Total">
                     <b>{money(orderTotal(o))}</b>
                     {o.fee ? <div className="small muted">incluye {money(o.fee)} domicilio</div> : null}

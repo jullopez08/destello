@@ -133,6 +133,8 @@ export interface Order {
   status: OrderStatus
   produced: boolean
   courierId: string | null
+  /** Cuándo llegó la plata; null = por verificar o por cobrar. */
+  paidAt: string | null
   lines: OrderLine[]
 }
 

@@ -65,7 +65,8 @@ export class OrdersService {
       // Con la condición en el mismo cambio: si justo se registró la producción, no se toca.
       const { count } = await tx.order.updateMany({
         where: { id, organizationId, status: OrderStatus.PENDING, produced: false },
-        data: { ...orderFields(dto), productionDate: day },
+        // Otra forma de pago: hay que volver a recibirlo.
+        data: { ...orderFields(dto), productionDate: day, ...(dto.payment !== order.payment && { paidAt: null }) },
       });
       if (!count) throw new BadRequestException('Solo se editan pedidos que aún no se han producido.');
       await tx.orderLine.deleteMany({ where: { orderId: id } });
@@ -94,7 +95,8 @@ export class OrdersService {
     return buildOrderLines(dto.lines, presentations, new Set(packaging.map((x) => x.id)));
   }
 
-  // Sale con un repartidor. El cliente solo recibe el aviso de que va en camino.
+  // Sale con un repartidor. El cliente solo recibe el aviso de que va en camino. En efectivo, el repartidor le paga
+  // el pedido al negocio al recogerlo: queda pagado.
   async sendOrder(organizationId: string, id: string, courierId: string) {
     const order = await this.ownOrder(id, organizationId);
     if (order.status !== OrderStatus.PENDING || !order.produced) {
@@ -103,35 +105,46 @@ export class OrdersService {
     const courier = await this.prisma.courier.findUnique({ where: { id: courierId } });
     if (!courier || courier.organizationId !== organizationId) throw new NotFoundException('Repartidor no encontrado.');
 
-    await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.ON_THE_WAY, courierId } });
+    await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.ON_THE_WAY, courierId, ...cashPaid(order) } });
     return this.snapshot.load(organizationId);
   }
 
   // En camino → entregado. Un pedido que recogen en la cocina se entrega
-  // directo, apenas está producido.
+  // directo, apenas está producido (y si es en efectivo, ahí paga).
   async deliverOrder(organizationId: string, id: string) {
     const order = await this.ownOrder(id, organizationId);
     const pickupReady = order.status === OrderStatus.PENDING && order.produced && order.delivery === 'PICKUP';
     if (order.status !== OrderStatus.ON_THE_WAY && !pickupReady) {
       throw new BadRequestException('Este pedido todavía no se puede marcar como entregado.');
     }
-    await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.DELIVERED, deliveredAt: new Date() } });
+    await this.prisma.order.update({ where: { id }, data: { status: OrderStatus.DELIVERED, deliveredAt: new Date(), ...cashPaid(order) } });
     return this.snapshot.load(organizationId);
   }
 
   // "Ya se entregó" (Julieth, 2026-10-22): un pedido atrasado que sí se hizo y salió sin registrarlo. Descuenta lo
   // que lleva sin bloquear (ya se hizo) y queda entregado. Sin `deliveredAt`: ese efectivo no es del cajón de hoy.
   async deliveredLate(organizationId: string, id: string) {
-    await this.ownOrder(id, organizationId);
+    const order = await this.ownOrder(id, organizationId);
     await this.prisma.$transaction(async (tx) => {
       const { count } = await tx.order.updateMany({
         where: { id, organizationId, status: OrderStatus.PENDING, produced: false, productionDate: { lt: toIsoDate(new Date()) } },
-        data: { produced: true, status: OrderStatus.DELIVERED },
+        data: { produced: true, status: OrderStatus.DELIVERED, ...cashPaid(order) },
       });
       if (!count) throw new BadRequestException('Solo se marca así un pedido atrasado.');
       const lines = await tx.orderLine.findMany({ where: { orderId: id } });
       await produce(tx, organizationId, lines, await this.snapshot.ruleData(organizationId, tx), false);
     });
+    return this.snapshot.load(organizationId);
+  }
+
+  // "Pago recibido" (Julieth, 2026-10-22): la dueña revisó que la transferencia llegó (o le pagaron antes).
+  async markPaid(organizationId: string, id: string) {
+    await this.ownOrder(id, organizationId);
+    const { count } = await this.prisma.order.updateMany({
+      where: { id, organizationId, paidAt: null, status: { not: OrderStatus.CANCELLED } },
+      data: { paidAt: new Date() },
+    });
+    if (!count) throw new BadRequestException('Este pedido ya está pagado o cancelado.');
     return this.snapshot.load(organizationId);
   }
 
@@ -215,6 +228,9 @@ function assertEditionOpen(presentation: { name: string; editions: { edition: { 
   if (presentation.editions.some(({ edition }) => day >= edition.startDate && day <= edition.endDate)) return;
   throw new BadRequestException(`"${presentation.name}" es de una edición especial que no está abierta ese día.`);
 }
+
+// El efectivo se recibe al entregarlo o al dárselo al repartidor.
+const cashPaid = (o: { payment: string; paidAt: Date | null }) => (o.payment === 'CASH' && !o.paidAt ? { paidAt: new Date() } : {});
 
 function orderFields(dto: CreateOrderDto) {
   return {
